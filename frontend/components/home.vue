@@ -16,9 +16,20 @@
 </template>
 
 <script>
-    export default {
-        name: "home",
-        mounted() {
-        }
+
+import { sendHttpRequest } from '../lib/request'
+
+export default {
+    name: "home",
+    mounted() {
+        sendHttpRequest("GET", "parcelles").then((response) => {
+            //let data = JSON.parse(response.response)
+            console.log("success")
+            console.log(response)
+        }).catch((error) => {
+            console.log("error")
+            console.log(error)
+        })
     }
+}
 </script>

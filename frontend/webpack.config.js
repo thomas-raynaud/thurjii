@@ -2,13 +2,12 @@ const path = require('path')
 const webpack = require('webpack')
 const { VueLoaderPlugin } = require('vue-loader')
 const HtmlPlugin = require('html-webpack-plugin')
-const CopyPlugin = require('copy-webpack-plugin')
 
 let config = {
     entry:   [
-        './src/main.js',
-        './src/styles/main.css',
-        './node_modules/bootstrap/dist/css/bootstrap-grid.min.css'
+        './main.js',
+        './styles/main.css',
+        '../node_modules/bootstrap/dist/css/bootstrap-grid.min.css'
     ],
     output:  {
         filename: 'main.js',
@@ -25,7 +24,7 @@ let config = {
         }),
         new VueLoaderPlugin(),
         new HtmlPlugin({
-            template: './src/index.html'
+            template: './index.html'
         }),
         new webpack.DefinePlugin({
             __VUE_OPTIONS_API__: true,

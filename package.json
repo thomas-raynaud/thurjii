@@ -4,8 +4,9 @@
   "description": "Vineyard management website",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack --mode=production --config webpack.config.js",
-    "start": "webpack-dev-server --mode=development"
+    "build-frontend": "cd frontend; webpack --mode=production --config webpack.config.js",
+    "start-frontend": "cd frontend; webpack-dev-server --mode=development",
+    "start-backend": "cd backend; python3 manage.py runserver 8081"
   },
   "repository": {
     "type": "git",
@@ -28,7 +29,7 @@
     "webpack-dev-server": "^5.0.4"
   },
   "dependencies": {
-    "bootstrap": "^5.3.3",                                                            
+    "bootstrap": "^5.3.3",
     "jquery": "^3.7.1",
     "js-cookie": "^3.0.5",
     "sass": "^1.72.0",
