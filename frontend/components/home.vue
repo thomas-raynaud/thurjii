@@ -8,7 +8,7 @@
             </div>
             <div class="rightcolumn" style="width: 25%;">
                 <div class="card">
-                    <h2>Reminders</h2>
+                    <h2>Rappels</h2>
                 </div>
             </div>
         </div>

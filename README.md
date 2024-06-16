@@ -34,13 +34,28 @@ CREATE TABLE `guillot_broux`.`parcelle` (
 
 Installer Django : `python -m pip install Django`
 
+Lorsque des modifications sont faites sur le modèle des données (`backend/api/models.py`) :
+```
+python manage.py makemigrations api
+python manage.py migrate
+```
+
+Setup admin :
+```
+python manage.py createsuperuser
+```
+
 # Environnement de développement
 
 Pour démarrer le serveur : `npm run start-backend`
 Pour démarrer le site : `npm run start-frontend`
 
+# Accès aux applications :
+- [App Thurjii](http://localhost:8080)
+- [Site administration des données](http://localhost:8081/admin)
+
 # TODO
-- Reminders
+- Rappels
 - Planning
 - BDD
 - Gestion des parcelles
