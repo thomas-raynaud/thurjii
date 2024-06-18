@@ -1,7 +1,12 @@
-from django.urls import path
+from django.urls import include, path
+from rest_framework import routers
 
 from . import views
 
+router = routers.DefaultRouter()
+router.register('parcelles', views.ParcelleViewSet)
+
 urlpatterns = [
-    path("parcelles", views.parcelles, name="parcelles"),
+    path('', include(router.urls)),
+    path('media/<path:path>/', views.Media)
 ]

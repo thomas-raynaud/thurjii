@@ -1,13 +1,13 @@
-var mainUrl = "http://localhost:8081/api/"
+var main_url = "http://localhost:8081/api/"
 
-function sendHttpRequest(typeOfRequest, endpoint){
+function send_http_request(method, endpoint){
 	return new Promise((resolve, reject) => {
-		let xhr = new XMLHttpRequest();
+		let xhr = new XMLHttpRequest()
 
-		if (typeOfRequest === "GET")
-			xhr.open("GET", mainUrl + endpoint, true)
+		if (method === "GET")
+			xhr.open("GET", main_url + endpoint, true)
 		else
-			xhr.open("POST", mainUrl + endpoint)
+			xhr.open("POST", main_url + endpoint)
 		xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
 		xhr.onreadystatechange = function() {
 			if (this.readyState === XMLHttpRequest.DONE)
@@ -20,4 +20,4 @@ function sendHttpRequest(typeOfRequest, endpoint){
 	});
 }
 
-export { sendHttpRequest }
+export { send_http_request }
