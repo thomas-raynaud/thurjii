@@ -1,18 +1,25 @@
 <template>
     <div id="app">
-        <div class="header">
-            <h1>Thurjii</h1>
-            <p>Gestion du travail dans les vignes</p>
-        </div>
         <div class="topnav">
             <router-link to="/">
                 <div id="home-topnav">
+                    <img src="./images/favicon.ico" width="18px">
                     <p>Home</p>
+                </div>
+            </router-link>
+            <router-link to="/map">
+                <div id="map-topnav">
+                    <p>Carte</p>
                 </div>
             </router-link>
             <router-link to="/planning">
                 <div id="planning-topnav">
                     <p>Planning</p>
+                </div>
+            </router-link>
+            <router-link to="/about">
+                <div id="about-topnav">
+                    <p>A propos</p>
                 </div>
             </router-link>
         </div>

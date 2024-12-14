@@ -32,6 +32,10 @@ Setup admin :
 python manage.py createsuperuser
 ```
 
+# Base de données
+
+PostGreSQL
+
 # Environnement de développement
 
 Pour démarrer le serveur : `npm run start-backend`

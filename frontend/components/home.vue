@@ -10,7 +10,6 @@
                                 v-for="parcelle in parcelles"
                                 :key="parcelle.id"
                             >
-                                <!--<img src="../images/thumbnails/raytracing_thumb.png" height="180px" />-->
                                 <h3>{{ parcelle.nom }}</h3>
                             </div>
                         </div>
