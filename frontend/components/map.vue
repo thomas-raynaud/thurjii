@@ -45,28 +45,53 @@
     const map_url_bottom_right = computed(() => {
         return "https://mt0.google.com/vt/lyrs=s&hl=en&x=" + (coords.x + 1) + "&y=" + (coords.y + 1) + "&z=" + coords.z
     })
+
+    const TILE_SIZE = 256
+    //https://developers.google.com/maps/documentation/tile/2d-tiles-overview
+    //https://gis.stackexchange.com/questions/153839/how-to-transform-epsg3857-to-tile-pixel-coordinates-at-zoom-factor-0
+
+    function fromMercatorToPoint(x, y) {
+        return {
+            x: TILE_SIZE * x, // TODO
+            y: TILE_SIZE * y // TODO
+        }
+    }
+
+    function fromMercatorToTileCoord(x, y, zoom) {
+        let point = fromMercatorToPoint(x, y)
+        let scale = Math.pow(2, zoom)
+
+        return {
+            x: Math.floor(point.x * scale / TILE_SIZE),
+            y: Math.floor(point.y * scale / TILE_SIZE),
+            z: zoom
+        }
+    }
+
+    console.log(fromMercatorToTileCoord(544842, 5862290, 8))
 </script>
 
 <style scoped>
     #map-canvas {
-        width: 200px;
-        height: 200px;
+        width: 800px;
         overflow:hidden;
         display: grid;
+        /*https://www.w3schools.com/css/tryit.asp?filename=trycss_grid_display_inline-grid*/
+        grid-template-columns: auto auto;
+    }
+
+    #map-canvas img {
+        width: 400px;
     }
 </style>
 
 <template>
     <div>
-        <div id="map-canvas" ref="map_canvas" @mousemove="pan"@mouseup="map_selected=false" @mousedown="map_mousedown" @mouseleave="map_selected=false">
-            <div>
-                <img :src="map_url_top_left" />
-                <img :src="map_url_top_right" />
-            </div>
-            <div>
-                <img :src="map_url_bottom_left" />
-                <img :src="map_url_bottom_right" />
-            </div>
+        <div id="map-canvas" ref="map_canvas" @mousemove="pan" @mouseup="map_selected=false" @mousedown="map_mousedown" @mouseleave="map_selected=false">
+            <img :src="map_url_top_left" />
+            <img :src="map_url_top_right" />
+            <img :src="map_url_bottom_left" />
+            <img :src="map_url_bottom_right" />
         </div>
         <button @click="coords.y = coords.y - 1">Up</button>
         <button @click="coords.y = coords.y + 1">Bottom</button>

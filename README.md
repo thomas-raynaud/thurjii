@@ -3,6 +3,9 @@
 - Avoir une vue d'ensemble sur l'avancée du travail dans les vignes
 - Pouvoir comparer l'efficacité de l'équipe sur chaque saison (nombre d'heures passées par parcelle)
 - Pense-bête : noter les choses à penser, à quel endroit il faut réparer le palissage, ...
+- Statistiques sur bouteilles vendues, et outil pour générer des fichiers DTI+ pour la douane
+https://www.douane.gouv.fr/service-en-ligne/echanges-intra-ue-de-biens-en-dti-debweb2-dti-ex-deb
+https://www.youtube.com/watch?v=yDh_lG_Ir3U
 
 # Installation
 
@@ -35,6 +38,8 @@ python manage.py createsuperuser
 # Base de données
 
 PostGreSQL
+
+Doc PostGIS (addon for PostGreSQL) : https://postgis.net/docs/manual-2.1/using_postgis_dbmanagement.html#PostGIS_GeographyVSGeometry
 
 # Environnement de développement
 
