@@ -6,7 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build-frontend": "cd frontend; webpack --mode=production --config webpack.config.js",
     "start-frontend": "cd frontend; webpack-dev-server --mode=development",
-    "start-backend": "cd backend; python3 manage.py runserver 8081"
+    "start-backend": "cd backend; python manage.py runserver 8081"
   },
   "repository": {
     "type": "git",

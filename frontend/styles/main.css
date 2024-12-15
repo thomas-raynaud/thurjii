@@ -4,8 +4,14 @@
 
 body {
     font-family: Quicksand; /* Arial */
-    padding: 10px;
+    margin: 0;
     background: #f1f1f1;
+}
+
+div .body {
+    margin-left: 0px;
+    margin-right: 0px;
+    margin-top: 20px;
 }
 
 /* Style the top navigation bar */
@@ -25,7 +31,10 @@ body {
     color: #f2f2f2;
     align-items: center;
     padding: 14px 16px;
-    
+}
+
+.topnav p {
+    margin-bottom: 0;
 }
 
 .topnav div:hover {
@@ -49,10 +58,6 @@ body {
 .router-link-active div:hover {
     color: #f2f2f2;
     background-color: #333;
-}
-
-div .row {
-    margin-top: 20px;
 }
 
 .row p, .row li {

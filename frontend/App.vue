@@ -12,11 +12,6 @@
                     <p>Carte</p>
                 </div>
             </router-link>
-            <router-link to="/planning">
-                <div id="planning-topnav">
-                    <p>Planning</p>
-                </div>
-            </router-link>
             <router-link to="/about">
                 <div id="about-topnav">
                     <p>A propos</p>

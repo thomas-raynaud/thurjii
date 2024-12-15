@@ -7,7 +7,7 @@ let config = {
     entry:   [
         './main.js',
         './styles/main.css',
-        '../node_modules/bootstrap/dist/css/bootstrap-grid.min.css'
+        '../node_modules/bootstrap/dist/css/bootstrap.min.css'
     ],
     output:  {
         filename: 'main.js',

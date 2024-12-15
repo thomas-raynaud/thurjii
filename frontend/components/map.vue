@@ -78,6 +78,8 @@
         display: grid;
         /*https://www.w3schools.com/css/tryit.asp?filename=trycss_grid_display_inline-grid*/
         grid-template-columns: auto auto;
+        padding: 0;
+        margin: 0 10px;
     }
 
     #map-canvas img {
@@ -86,19 +88,21 @@
 </style>
 
 <template>
-    <div>
+    <div class="body row">
         <div id="map-canvas" ref="map_canvas" @mousemove="pan" @mouseup="map_selected=false" @mousedown="map_mousedown" @mouseleave="map_selected=false">
             <img :src="map_url_top_left" />
             <img :src="map_url_top_right" />
             <img :src="map_url_bottom_left" />
             <img :src="map_url_bottom_right" />
         </div>
-        <button @click="coords.y = coords.y - 1">Up</button>
-        <button @click="coords.y = coords.y + 1">Bottom</button>
-        <button @click="coords.x = coords.x - 1">Left</button>
-        <button @click="coords.x = coords.x + 1">Right</button>
-        <button @click="coords.z = coords.z + 1">Zoom in</button>
-        <button @click="coords.z = coords.z - 1">Zoom out</button>
+        <div>
+            <button @click="coords.y = coords.y - 1">Up</button>
+            <button @click="coords.y = coords.y + 1">Bottom</button>
+            <button @click="coords.x = coords.x - 1">Left</button>
+            <button @click="coords.x = coords.x + 1">Right</button>
+            <button @click="coords.z = coords.z + 1">Zoom in</button>
+            <button @click="coords.z = coords.z - 1">Zoom out</button>
+        </div>
         <p>{{ "x= " + coords.x + " y= " + coords.y + " z= " + coords.z }}</p>
     </div>
 </template>
