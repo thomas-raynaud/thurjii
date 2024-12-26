@@ -55,16 +55,27 @@
         map_url.value[grid_ind] = tile.url
     }
 
-    const map_grid = [
-        [ coords.x, coords.y ], [ coords.x + 1, coords.y ], [ coords.x + 2, coords.y ],
-        [ coords.x, coords.y + 1 ], [ coords.x + 1, coords.y + 1 ], [ coords.x + 2, coords.y + 1 ],
-        [ coords.x, coords.y + 2 ], [ coords.x + 1, coords.y + 2 ], [ coords.x + 2, coords.y + 2 ],
-    ]
+    const map_grid = []
 
-    onMounted(() => {
+    const load_map = () => {
+        // Update map grid
+        map_grid[0] = [ coords.x, coords.y ]
+        map_grid[1] = [ coords.x + 1, coords.y ]
+        map_grid[2] = [ coords.x + 2, coords.y ]
+        map_grid[3] = [ coords.x, coords.y + 1 ]
+        map_grid[4] = [ coords.x + 1, coords.y + 1 ]
+        map_grid[5] = [ coords.x + 2, coords.y + 1 ]
+        map_grid[6] = [ coords.x, coords.y + 2 ]
+        map_grid[7] = [ coords.x + 1, coords.y + 2 ]
+        map_grid[8] = [ coords.x + 2, coords.y + 2 ]
+        // Load tiles
         map_grid.forEach((el) => {
             get_tile(el[0], el[1], coords.z).then(tile => set_tile(tile))
         })
+    }
+
+    onMounted(() => {
+        load_map()
     })
 
     const pan = (e) => {
@@ -148,11 +159,34 @@
                 get_tile(coords.x + 2, coords.y + 2, coords.z).then(tile => set_tile(tile))
                 scroll_y -= 256
             }
-            canvas.scrollLeft = scroll_x
-            canvas.scrollTop = scroll_y
+            canvas.scrollLeft = Math.min(scroll_x, 256)
+            canvas.scrollTop = Math.min(scroll_y, 256)
             prev_x.value = e.clientX
             prev_y.value = e.clientY
         }
+    }
+
+    const zoom_in = () => {
+        let prev_z = coords.z
+        coords.z += 1
+        let nb_prev_rows = Math.pow(2, prev_z)
+        let nb_rows = Math.pow(2, coords.z)
+        // X
+        let rel_x = ((coords.x + 1) + (map_canvas.value.scrollLeft / 256)) / nb_prev_rows
+        let pos_x = rel_x * nb_rows
+        coords.x = Math.max(Math.floor(pos_x) - 1, 0)
+        map_canvas.value.scrollLeft = Math.floor((pos_x - (coords.x + 1)) * 256)
+        // Y
+        let rel_y = ((coords.y + 1) + (map_canvas.value.scrollTop / 256)) / nb_prev_rows
+        let pos_y = rel_y * nb_rows
+        coords.y = Math.max(Math.floor(pos_y) - 1, 0)
+        map_canvas.value.scrollTop = Math.floor((pos_y - (coords.y + 1)) * 256)        
+        load_map()
+    }
+
+    const zoom_out = () => {
+        coords.z -= 1
+        load_map()
     }
 
     const map_mousedown = (e) => {
@@ -219,8 +253,8 @@
             <img :src="map_url[8]" />
         </div>
         <div>
-            <button @click="coords.z = coords.z + 1">Zoom in</button>
-            <button @click="coords.z = coords.z - 1">Zoom out</button>
+            <button @click="zoom_in()">Zoom in</button>
+            <button @click="zoom_out()">Zoom out</button>
         </div>
         <p>{{ "x= " + coords.x + " y= " + coords.y + " z= " + coords.z }}</p>
     </div>
