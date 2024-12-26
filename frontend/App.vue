@@ -3,7 +3,7 @@
         <div class="topnav">
             <router-link to="/">
                 <div id="home-topnav">
-                    <img src="./images/favicon.ico" width="18px">
+                    <img src="./images/icon_white.ico" width="18px">
                     <p>Home</p>
                 </div>
             </router-link>
