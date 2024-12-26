@@ -1,10 +1,10 @@
 <script setup>
-    import { reactive, computed, ref, onMounted } from 'vue'
+    import { reactive, ref, onMounted } from 'vue'
 
     const coords = reactive({
         x: 0,
         y: 0,
-        z: 2
+        z: 3
     })
 
     const map_selected = ref(false)
@@ -21,10 +21,6 @@
     const map_source = "https://mt0.google.com/vt/lyrs=s&hl=en&"
 
     const get_tile = (x, y, z) => {
-        let rel_x = x - coords.x
-        let rel_y = y - coords.y
-        let grid_ind = (rel_y) * 3 + rel_x
-        map_grid_loaded[grid_ind] = false
         if(loading_tile.value == false) {
             loading_tile.value = true
             setTimeout(() => {loading_tile.value = false}, tile_timeout)
@@ -57,7 +53,6 @@
         let rel_y = tile.coords.y - coords.y
         let grid_ind = (rel_y) * 3 + rel_x
         map_url.value[grid_ind] = tile.url
-        map_grid_loaded[grid_ind] = true
     }
 
     const map_grid = [
@@ -66,18 +61,10 @@
         [ coords.x, coords.y + 2 ], [ coords.x + 1, coords.y + 2 ], [ coords.x + 2, coords.y + 2 ],
     ]
 
-    const map_grid_loaded = [
-        false, false, false,
-        false, false, false,
-        false, false, false
-    ]
-
     onMounted(() => {
         map_grid.forEach((el) => {
             get_tile(el[0], el[1], coords.z).then(tile => set_tile(tile))
         })
-        map_canvas.value.scrollLeft = 256
-        map_canvas.value.scrollRight = 256
     })
 
     const pan = (e) => {
@@ -87,61 +74,75 @@
             let scroll_x = canvas.scrollLeft + (prev_x.value - e.clientX)
             let scroll_y = canvas.scrollTop + (prev_y.value - e.clientY)
             let max_ind = Math.pow(2, coords.z)
+            let shift_x = 0
+            let shift_y = 0
             if (scroll_x < 0 && (coords.x - 1) >= 0) {
-                // shift tiles to the right
-                if (map_grid_loaded[1]) map_url.value[2] = map_url.value[1]
-                if (map_grid_loaded[0]) map_url.value[1] = map_url.value[0]
-                if (map_grid_loaded[4]) map_url.value[5] = map_url.value[4]
-                if (map_grid_loaded[3]) map_url.value[4] = map_url.value[3]
-                if (map_grid_loaded[7]) map_url.value[8] = map_url.value[7]
-                if (map_grid_loaded[6]) map_url.value[7] = map_url.value[6]
-                // load tiles at the left border
+                shift_x = -1
                 coords.x -= 1
+                // shift tiles to the right
+                map_url.value[2] = map_url.value[1]
+                map_url.value[1] = map_url.value[0]
+                map_url.value[5] = map_url.value[4]
+                map_url.value[4] = map_url.value[3]
+                map_url.value[8] = map_url.value[7]
+                map_url.value[7] = map_url.value[6]
+            }
+            else if (scroll_x > 256 && (coords.x + 3) < max_ind) {
+                shift_x = 1
+                coords.x += 1
+                // shift tiles to the left
+                map_url.value[0] = map_url.value[1]
+                map_url.value[1] = map_url.value[2]
+                map_url.value[3] = map_url.value[4]
+                map_url.value[4] = map_url.value[5]
+                map_url.value[6] = map_url.value[7]
+                map_url.value[7] = map_url.value[8]
+            }
+            if (scroll_y < 0 && (coords.y - 1) >= 0) {
+                shift_y = -1
+                coords.y -= 1
+                // shift tiles to the bottom
+                map_url.value[6] = map_url.value[3]
+                map_url.value[3] = map_url.value[0]
+                map_url.value[7] = map_url.value[4]
+                map_url.value[4] = map_url.value[1]
+                map_url.value[8] = map_url.value[5]
+                map_url.value[5] = map_url.value[2]
+            }
+            else if (scroll_y > 256 && (coords.y + 3) < max_ind) {
+                shift_y = 1
+                coords.y += 1
+                // shift tiles to the top
+                map_url.value[0] = map_url.value[3]
+                map_url.value[3] = map_url.value[6]
+                map_url.value[1] = map_url.value[4]
+                map_url.value[4] = map_url.value[7]
+                map_url.value[2] = map_url.value[5]
+                map_url.value[5] = map_url.value[8]
+            }
+            if (shift_x == -1) {
+                // load tiles at the left border
                 get_tile(coords.x, coords.y, coords.z).then(tile => set_tile(tile))
                 get_tile(coords.x, coords.y + 1, coords.z).then(tile => set_tile(tile))
                 get_tile(coords.x, coords.y + 2, coords.z).then(tile => set_tile(tile))
                 scroll_x += 256
             }
-            else if (scroll_x > 256 && (coords.x + 3) < max_ind) {
-                // shift tiles to the left
-                if (map_grid_loaded[1]) map_url.value[0] = map_url.value[1]
-                if (map_grid_loaded[2]) map_url.value[1] = map_url.value[2]
-                if (map_grid_loaded[4]) map_url.value[3] = map_url.value[4]
-                if (map_grid_loaded[5]) map_url.value[4] = map_url.value[5]
-                if (map_grid_loaded[7]) map_url.value[6] = map_url.value[7]
-                if (map_grid_loaded[8]) map_url.value[7] = map_url.value[8]
+            else if (shift_x == 1) {
                 // load tiles at the right border
-                coords.x += 1
                 get_tile(coords.x + 2, coords.y, coords.z).then(tile => set_tile(tile))
                 get_tile(coords.x + 2, coords.y + 1, coords.z).then(tile => set_tile(tile))
                 get_tile(coords.x + 2, coords.y + 2, coords.z).then(tile => set_tile(tile))
                 scroll_x -= 256
             }
-            if (scroll_y < 0 && (coords.y - 1) >= 0) {
-                // shift tiles to the bottom
-                if (map_grid_loaded[3]) map_url.value[6] = map_url.value[3]
-                if (map_grid_loaded[0]) map_url.value[3] = map_url.value[0]
-                if (map_grid_loaded[4]) map_url.value[7] = map_url.value[4]
-                if (map_grid_loaded[1]) map_url.value[4] = map_url.value[1]
-                if (map_grid_loaded[5]) map_url.value[8] = map_url.value[5]
-                if (map_grid_loaded[2]) map_url.value[5] = map_url.value[2]
+            if (shift_y == -1) {
                 // load tiles at the top border
-                coords.y -= 1
                 get_tile(coords.x, coords.y, coords.z).then(tile => set_tile(tile))
                 get_tile(coords.x + 1, coords.y, coords.z).then(tile => set_tile(tile))
                 get_tile(coords.x + 2, coords.y, coords.z).then(tile => set_tile(tile))
                 scroll_y += 256
             }
-            else if (scroll_y > 256 && (coords.y + 3) < max_ind) {
-                // shift tiles to the top
-                if (map_grid_loaded[3]) map_url.value[0] = map_url.value[3]
-                if (map_grid_loaded[6]) map_url.value[3] = map_url.value[6]
-                if (map_grid_loaded[4]) map_url.value[1] = map_url.value[4]
-                if (map_grid_loaded[7]) map_url.value[4] = map_url.value[7]
-                if (map_grid_loaded[5]) map_url.value[2] = map_url.value[5]
-                if (map_grid_loaded[8]) map_url.value[5] = map_url.value[8]
+            else if (shift_y == 1) {
                 // load tiles at the bottom border
-                coords.y += 1
                 get_tile(coords.x, coords.y + 2, coords.z).then(tile => set_tile(tile))
                 get_tile(coords.x + 1, coords.y + 2, coords.z).then(tile => set_tile(tile))
                 get_tile(coords.x + 2, coords.y + 2, coords.z).then(tile => set_tile(tile))
@@ -218,10 +219,6 @@
             <img :src="map_url[8]" />
         </div>
         <div>
-            <button @click="coords.y = coords.y - 1">Up</button>
-            <button @click="coords.y = coords.y + 1">Bottom</button>
-            <button @click="coords.x = coords.x - 1">Left</button>
-            <button @click="coords.x = coords.x + 1">Right</button>
             <button @click="coords.z = coords.z + 1">Zoom in</button>
             <button @click="coords.z = coords.z - 1">Zoom out</button>
         </div>
