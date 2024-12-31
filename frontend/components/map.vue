@@ -16,7 +16,7 @@
     const map_canvas = ref(null)
 
     const loading_tile = ref(false)
-    const tile_timeout = 200
+    const tile_timeout = 50
 
     const map_source = "https://mt0.google.com/vt/lyrs=s&hl=en&"
 
@@ -24,7 +24,7 @@
         if(loading_tile.value == false) {
             loading_tile.value = true
             setTimeout(() => {loading_tile.value = false}, tile_timeout)
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 fetch(map_source + "x=" + x + "&y=" + y + "&z=" + z).then((image) => {
                     image.blob().then((blob) => {
                         resolve({
@@ -32,6 +32,18 @@
                             url: URL.createObjectURL(blob)
                         })
                     })
+                })
+                .catch(error => {
+                    if (z == 1) {
+                        reject(error)
+                    }
+                    else {
+                        reject(error) // tmp
+                        // ... or load tile "above" (zoom - 1)
+                        // and display it with these css attributes:
+                        // transform: scale(200%) translate(64px, -64px);
+                        // clip-path: rect(128px 128px auto auto);
+                    }
                 })
             })
         }
@@ -71,6 +83,9 @@
         // Load tiles
         map_grid.forEach((el) => {
             get_tile(el[0], el[1], coords.z).then(tile => set_tile(tile))
+            .catch((error) => {
+                console.log(error)
+            })
         })
     }
 
@@ -79,7 +94,7 @@
     })
 
     const pan = (e) => {
-        if (map_selected.value) {
+        if (map_selected.value && coords.z > 1) {
             e.preventDefault()
             const canvas = map_canvas.value
             let scroll_x = canvas.scrollLeft + (prev_x.value - e.clientX)
@@ -166,26 +181,42 @@
         }
     }
 
-    const zoom_in = () => {
+    const zoom = (e) => {
+        e.preventDefault()
+        let z = coords.z - 1
+        if (e.deltaY < 0) {
+            z = coords.z + 1
+        }
+        if (z < 1 || z > 21)
+            return
         let prev_z = coords.z
-        coords.z += 1
+        coords.z = z
         let nb_prev_rows = Math.pow(2, prev_z)
         let nb_rows = Math.pow(2, coords.z)
+        let mouse_x = e.clientX - map_canvas.value.offsetLeft
+        let mouse_y = e.clientY - map_canvas.value.offsetTop
         // X
-        let rel_x = ((coords.x + 1) + (map_canvas.value.scrollLeft / 256)) / nb_prev_rows
+        let rel_x = (Math.floor(mouse_x / 256) + (coords.x + 1) + (((mouse_x % 256) - (256 - map_canvas.value.scrollLeft)) / 256)) / nb_prev_rows
+        let rel_v_x = mouse_x / 512
         let pos_x = rel_x * nb_rows
-        coords.x = Math.max(Math.floor(pos_x) - 1, 0)
-        map_canvas.value.scrollLeft = Math.floor((pos_x - (coords.x + 1)) * 256)
+        let pos_left = pos_x - rel_v_x * 2
+        let e_pos_left = Math.floor(pos_left)
+        let dec_pos_left = pos_left - e_pos_left
+        coords.x = e_pos_left
+        map_canvas.value.scrollLeft = dec_pos_left * 256
         // Y
-        let rel_y = ((coords.y + 1) + (map_canvas.value.scrollTop / 256)) / nb_prev_rows
+        let rel_y = (Math.floor(mouse_y / 256) + (coords.y + 1) + (((mouse_y % 256) - (256 - map_canvas.value.scrollTop)) / 256)) / nb_prev_rows
+        let rel_v_y = mouse_y / 512
         let pos_y = rel_y * nb_rows
-        coords.y = Math.max(Math.floor(pos_y) - 1, 0)
-        map_canvas.value.scrollTop = Math.floor((pos_y - (coords.y + 1)) * 256)        
-        load_map()
-    }
-
-    const zoom_out = () => {
-        coords.z -= 1
+        let pos_top = pos_y - rel_v_y * 2
+        let e_pos_top = Math.floor(pos_top)
+        let dec_pos_top = pos_top - e_pos_top
+        coords.y = e_pos_top
+        map_canvas.value.scrollTop = dec_pos_top * 256
+        if (coords.z == 1) {
+            map_canvas.value.scrollLeft = 0
+            map_canvas.value.scrollTop = 0
+        }
         load_map()
     }
 
@@ -241,7 +272,13 @@
 
 <template>
     <div class="body row">
-        <div id="map-canvas" ref="map_canvas" @mousemove="pan" @mouseup="map_selected=false" @mousedown="map_mousedown" @mouseleave="map_selected=false">
+        <div id="map-canvas" ref="map_canvas"
+            @mousemove="pan"
+            @mouseup="map_selected=false"
+            @mousedown="map_mousedown"
+            @mouseleave="map_selected=false"
+            @wheel="zoom"
+        >
             <img :src="map_url[0]" />
             <img :src="map_url[1]" />
             <img :src="map_url[2]" />
@@ -251,10 +288,6 @@
             <img :src="map_url[6]" />
             <img :src="map_url[7]" />
             <img :src="map_url[8]" />
-        </div>
-        <div>
-            <button @click="zoom_in()">Zoom in</button>
-            <button @click="zoom_out()">Zoom out</button>
         </div>
         <p>{{ "x= " + coords.x + " y= " + coords.y + " z= " + coords.z }}</p>
     </div>
