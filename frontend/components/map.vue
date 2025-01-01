@@ -1,6 +1,13 @@
 <script setup>
     import { reactive, ref, onMounted } from 'vue'
 
+    const TILE_SIZE = 256
+    const TILES_X = 3 // Number of tiles to show on the X axis
+    const TILES_Y = 2
+
+    const Z_MIN = 3
+    const Z_MAX = 21
+
     const coords = reactive({
         x: 0,
         y: 0,
@@ -57,13 +64,13 @@
     }
 
     const set_tile = (tile) => {
-        if (tile.coords.x < coords.x || tile.coords.x > coords.x + 2 
-                || tile.coords.y < coords.y || tile.coords.y > coords.y + 2) {
+        if (tile.coords.x < coords.x || tile.coords.x > (coords.x + TILES_X)
+                || tile.coords.y < coords.y || tile.coords.y > (coords.y + TILES_Y)) {
             return
         }
         let rel_x = tile.coords.x - coords.x
         let rel_y = tile.coords.y - coords.y
-        let grid_ind = (rel_y) * 3 + rel_x
+        let grid_ind = (rel_y) * (TILES_X + 1) + rel_x
         map_url.value[grid_ind] = tile.url
     }
 
@@ -71,15 +78,12 @@
 
     const load_map = () => {
         // Update map grid
-        map_grid[0] = [ coords.x, coords.y ]
-        map_grid[1] = [ coords.x + 1, coords.y ]
-        map_grid[2] = [ coords.x + 2, coords.y ]
-        map_grid[3] = [ coords.x, coords.y + 1 ]
-        map_grid[4] = [ coords.x + 1, coords.y + 1 ]
-        map_grid[5] = [ coords.x + 2, coords.y + 1 ]
-        map_grid[6] = [ coords.x, coords.y + 2 ]
-        map_grid[7] = [ coords.x + 1, coords.y + 2 ]
-        map_grid[8] = [ coords.x + 2, coords.y + 2 ]
+        let ind_x, ind_y
+        for (let ind = 0; ind < (TILES_X + 1) * (TILES_Y + 1); ind++) {
+            ind_x = ind % (TILES_X + 1)
+            ind_y = Math.floor(ind / (TILES_X + 1))
+            map_grid[ind] = [ coords.x + ind_x, coords.y + ind_y ]
+        }
         // Load tiles
         map_grid.forEach((el) => {
             get_tile(el[0], el[1], coords.z).then(tile => set_tile(tile))
@@ -90,6 +94,13 @@
     }
 
     onMounted(() => {
+        map_canvas.value.style["width"] = (TILE_SIZE * TILES_X) + "px"
+        map_canvas.value.style["height"] = (TILE_SIZE * TILES_Y) + "px"
+        let template_columns = ""
+        for (let i = 0; i < TILES_X + 1; i++) {
+            template_columns += "auto "
+        }
+        map_canvas.value.style["grid-template-columns"] = template_columns
         load_map()
     })
 
@@ -102,80 +113,77 @@
             let max_ind = Math.pow(2, coords.z)
             let shift_x = 0
             let shift_y = 0
+            let i, j
             if (scroll_x < 0 && (coords.x - 1) >= 0) {
                 shift_x = -1
                 coords.x -= 1
                 // shift tiles to the right
-                map_url.value[2] = map_url.value[1]
-                map_url.value[1] = map_url.value[0]
-                map_url.value[5] = map_url.value[4]
-                map_url.value[4] = map_url.value[3]
-                map_url.value[8] = map_url.value[7]
-                map_url.value[7] = map_url.value[6]
+                for (i = 0; i < TILES_Y + 1; i++) {
+                    for (j = (TILES_X + 1) * (i + 1) - 1; j > i * (TILES_X + 1); j--) {
+                        map_url.value[j] = map_url.value[j - 1]
+                    }
+                }
             }
-            else if (scroll_x > 256 && (coords.x + 3) < max_ind) {
+            else if (scroll_x > TILE_SIZE && (coords.x + (TILES_X + 1)) < max_ind) {
                 shift_x = 1
                 coords.x += 1
                 // shift tiles to the left
-                map_url.value[0] = map_url.value[1]
-                map_url.value[1] = map_url.value[2]
-                map_url.value[3] = map_url.value[4]
-                map_url.value[4] = map_url.value[5]
-                map_url.value[6] = map_url.value[7]
-                map_url.value[7] = map_url.value[8]
+                for (i = 0; i < TILES_Y + 1; i++) {
+                    for (j = i * (TILES_X + 1); j < (TILES_X + 1) * (i + 1) - 1; j++) {
+                        map_url.value[j] = map_url.value[j + 1]
+                    }
+                }
             }
             if (scroll_y < 0 && (coords.y - 1) >= 0) {
                 shift_y = -1
                 coords.y -= 1
                 // shift tiles to the bottom
-                map_url.value[6] = map_url.value[3]
-                map_url.value[3] = map_url.value[0]
-                map_url.value[7] = map_url.value[4]
-                map_url.value[4] = map_url.value[1]
-                map_url.value[8] = map_url.value[5]
-                map_url.value[5] = map_url.value[2]
+                for (i = 0; i < TILES_X + 1; i++) {
+                    for (j = TILES_Y; j > 0; j--) {
+                        map_url.value[j * (TILES_X + 1) + i] = map_url.value[(j - 1) * (TILES_X + 1) + i]
+                    }
+                }
             }
-            else if (scroll_y > 256 && (coords.y + 3) < max_ind) {
+            else if (scroll_y > TILE_SIZE && (coords.y + (TILES_Y + 1)) < max_ind) {
                 shift_y = 1
                 coords.y += 1
                 // shift tiles to the top
-                map_url.value[0] = map_url.value[3]
-                map_url.value[3] = map_url.value[6]
-                map_url.value[1] = map_url.value[4]
-                map_url.value[4] = map_url.value[7]
-                map_url.value[2] = map_url.value[5]
-                map_url.value[5] = map_url.value[8]
+                for (i = 0; i < TILES_X + 1; i++) {
+                    for (j = 0; j < TILES_Y; j++) {
+                        map_url.value[j * (TILES_X + 1) + i] = map_url.value[(j + 1) * (TILES_X + 1) + i]
+                    }
+                }
             }
             if (shift_x == -1) {
                 // load tiles at the left border
-                get_tile(coords.x, coords.y, coords.z).then(tile => set_tile(tile))
-                get_tile(coords.x, coords.y + 1, coords.z).then(tile => set_tile(tile))
-                get_tile(coords.x, coords.y + 2, coords.z).then(tile => set_tile(tile))
-                scroll_x += 256
+                for (i = 0; i < TILES_Y + 1; i++) {
+                    get_tile(coords.x, coords.y + i, coords.z).then(tile => set_tile(tile))
+                }
+                scroll_x += TILE_SIZE
             }
             else if (shift_x == 1) {
                 // load tiles at the right border
-                get_tile(coords.x + 2, coords.y, coords.z).then(tile => set_tile(tile))
-                get_tile(coords.x + 2, coords.y + 1, coords.z).then(tile => set_tile(tile))
-                get_tile(coords.x + 2, coords.y + 2, coords.z).then(tile => set_tile(tile))
-                scroll_x -= 256
+                for (i = 0; i < TILES_Y + 1; i++) {
+                    get_tile(coords.x + TILES_X, coords.y + i, coords.z).then(tile => set_tile(tile))
+                }
+                scroll_x -= TILE_SIZE
             }
             if (shift_y == -1) {
                 // load tiles at the top border
-                get_tile(coords.x, coords.y, coords.z).then(tile => set_tile(tile))
-                get_tile(coords.x + 1, coords.y, coords.z).then(tile => set_tile(tile))
-                get_tile(coords.x + 2, coords.y, coords.z).then(tile => set_tile(tile))
-                scroll_y += 256
+                for (i = 0; i < TILES_X + 1; i++) {
+                    get_tile(coords.x + i, coords.y, coords.z).then(tile => set_tile(tile))
+                }
+                scroll_y += TILE_SIZE
             }
             else if (shift_y == 1) {
                 // load tiles at the bottom border
-                get_tile(coords.x, coords.y + 2, coords.z).then(tile => set_tile(tile))
-                get_tile(coords.x + 1, coords.y + 2, coords.z).then(tile => set_tile(tile))
-                get_tile(coords.x + 2, coords.y + 2, coords.z).then(tile => set_tile(tile))
-                scroll_y -= 256
+                for (i = 0; i < TILES_X + 1; i++) {
+                    get_tile(coords.x + i, coords.y + TILES_Y, coords.z).then(tile => set_tile(tile))
+                }
+                scroll_y -= TILE_SIZE
             }
-            canvas.scrollLeft = Math.min(scroll_x, 256)
-            canvas.scrollTop = Math.min(scroll_y, 256)
+            canvas.scrollLeft = Math.min(scroll_x, TILE_SIZE)
+            canvas.scrollTop = Math.min(scroll_y, TILE_SIZE)
             prev_x.value = e.clientX
             prev_y.value = e.clientY
         }
@@ -187,7 +195,7 @@
         if (e.deltaY < 0) {
             z = coords.z + 1
         }
-        if (z < 1 || z > 21)
+        if (z < Z_MIN || z > Z_MAX)
             return
         let prev_z = coords.z
         coords.z = z
@@ -196,23 +204,23 @@
         let mouse_x = e.clientX - map_canvas.value.offsetLeft
         let mouse_y = e.clientY - map_canvas.value.offsetTop
         // X
-        let rel_x = (Math.floor(mouse_x / 256) + (coords.x + 1) + (((mouse_x % 256) - (256 - map_canvas.value.scrollLeft)) / 256)) / nb_prev_rows
-        let rel_v_x = mouse_x / 512
+        let rel_x = (Math.floor(mouse_x / TILE_SIZE) + (coords.x + 1) + (((mouse_x % TILE_SIZE) - (TILE_SIZE - map_canvas.value.scrollLeft)) / TILE_SIZE)) / nb_prev_rows
+        let rel_v_x = mouse_x / (TILES_X * TILE_SIZE)
         let pos_x = rel_x * nb_rows
-        let pos_left = pos_x - rel_v_x * 2
+        let pos_left = pos_x - rel_v_x * TILES_X
         let e_pos_left = Math.floor(pos_left)
         let dec_pos_left = pos_left - e_pos_left
         coords.x = e_pos_left
-        map_canvas.value.scrollLeft = dec_pos_left * 256
+        map_canvas.value.scrollLeft = dec_pos_left * TILE_SIZE
         // Y
-        let rel_y = (Math.floor(mouse_y / 256) + (coords.y + 1) + (((mouse_y % 256) - (256 - map_canvas.value.scrollTop)) / 256)) / nb_prev_rows
-        let rel_v_y = mouse_y / 512
+        let rel_y = (Math.floor(mouse_y / TILE_SIZE) + (coords.y + 1) + (((mouse_y % TILE_SIZE) - (TILE_SIZE - map_canvas.value.scrollTop)) / TILE_SIZE)) / nb_prev_rows
+        let rel_v_y = mouse_y / (TILES_Y * TILE_SIZE)
         let pos_y = rel_y * nb_rows
-        let pos_top = pos_y - rel_v_y * 2
+        let pos_top = pos_y - rel_v_y * TILES_Y
         let e_pos_top = Math.floor(pos_top)
         let dec_pos_top = pos_top - e_pos_top
         coords.y = e_pos_top
-        map_canvas.value.scrollTop = dec_pos_top * 256
+        map_canvas.value.scrollTop = dec_pos_top * TILE_SIZE
         if (coords.z == 1) {
             map_canvas.value.scrollLeft = 0
             map_canvas.value.scrollTop = 0
@@ -227,7 +235,6 @@
         map_selected.value = true
     }
 
-    const TILE_SIZE = 256
     //https://developers.google.com/maps/documentation/tile/2d-tiles-overview
     //https://gis.stackexchange.com/questions/153839/how-to-transform-epsg3857-to-tile-pixel-coordinates-at-zoom-factor-0
 
@@ -254,12 +261,12 @@
 
 <style scoped>
     #map-canvas {
-        width: 512px;
-        height: 512px;
+        /*width: 768px;
+        height: 512px;*/
         overflow:hidden;
         display: grid;
         /*https://www.w3schools.com/css/tryit.asp?filename=trycss_grid_display_inline-grid*/
-        grid-template-columns: auto auto auto;
+        /*grid-template-columns: auto auto auto auto;*/
         padding: 0;
         margin: 0 10px;
     }
@@ -279,15 +286,7 @@
             @mouseleave="map_selected=false"
             @wheel="zoom"
         >
-            <img :src="map_url[0]" />
-            <img :src="map_url[1]" />
-            <img :src="map_url[2]" />
-            <img :src="map_url[3]" />
-            <img :src="map_url[4]" />
-            <img :src="map_url[5]" />
-            <img :src="map_url[6]" />
-            <img :src="map_url[7]" />
-            <img :src="map_url[8]" />
+            <img v-for="ind in (TILES_X + 1) * (TILES_Y + 1)" :src="map_url[ind - 1]">
         </div>
         <p>{{ "x= " + coords.x + " y= " + coords.y + " z= " + coords.z }}</p>
     </div>
