@@ -1,49 +1,34 @@
 <script setup>
     import { reactive, computed, ref, onMounted } from 'vue'
+    import MapDisplay from './map_display.vue'
 
-    const TILE_SIZE = 256
-    const TILES_X = 3 // Number of tiles to show on the X axis
-    const TILES_Y = 2
-
-    const Z_MIN = 3
-    const Z_MAX = 21
-
-    const TILE_TIMEOUT = 50
-    const MAP_SOURCE = "https://mt0.google.com/vt/lyrs=s&hl=en&"
-
-    const map_grid = []
-
-    const coords = reactive({
-        x: 0,
-        y: 0,
-        z: 3
-    })
-
-    const cursor_coords = reactive({
-        x: 0,
-        y: 0
+    const store_map = reactive({
+        coords: {
+            x: 0,
+            y: 0,
+            z: 3
+        },
+        cursor_coords: {
+            x: 0,
+            y: 0
+        }
     })
 
     const merc_cords = computed(() => {
-        let m_coords = from_tile_coord_to_mercator(cursor_coords.x, cursor_coords.y, coords.z)
+        let m_coords = from_tile_coord_to_mercator(store_map.cursor_coords.x, store_map.cursor_coords.y, store_map.coords.z)
         return {
             x: Math.floor(m_coords.x * 100) / 100,
             y: Math.floor(m_coords.y * 100) / 100
         }
     })
 
-    const map_selected = ref(false)
-
     const prev_x = ref(0)
     const prev_y = ref(0)
 
-    const map_url = ref([])
     const map_container = ref(null)
     const map_display = ref(null)
     const map_canvas = ref(null)
 
-    const loading_tile = ref(false)
-    
     onMounted(() => {
         let width = (TILE_SIZE * TILES_X)
         let height = (TILE_SIZE * TILES_Y)
@@ -51,17 +36,10 @@
         let height_str = height + "px"
         map_container.value.style["width"] = width_str
         map_container.value.style["height"] = height_str
-        map_display.value.style["width"] = width_str
-        map_display.value.style["height"] = height_str
         map_canvas.value.style["width"] = width_str
         map_canvas.value.style["height"] = height_str
         map_canvas.value.width = width
         map_canvas.value.height = height
-        let template_columns = ""
-        for (let i = 0; i < TILES_X + 1; i++) {
-            template_columns += "auto "
-        }
-        map_display.value.style["grid-template-columns"] = template_columns
         load_map()
 
         let ctx = map_canvas.value.getContext("2d")
@@ -311,17 +289,6 @@
         margin: 0 10px;
     }
 
-    #map-display {
-        position: absolute;
-        overflow:hidden;
-        display: grid;
-    }
-
-    #map-display img {
-        width: 256px;
-        height: 256px;
-    }
-
     #map-canvas {
         position: absolute;
         z-index: 1;
@@ -336,9 +303,7 @@
                 @mousedown="map_mousedown"
                 @mouseleave="map_selected=false"
                 @wheel="zoom">
-            <div id="map-display" ref="map_display">
-                <img v-for="ind in (TILES_X + 1) * (TILES_Y + 1)" :src="map_url[ind - 1]">
-            </div>
+            <map-display />
             <canvas id="map-canvas" ref="map_canvas"></canvas>
         </div>
         <p>{{ "x= " + cursor_coords.x + " y= " + cursor_coords.y + " z= " + coords.z }}</p>
