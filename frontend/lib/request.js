@@ -1,24 +1,23 @@
-var backend_url = "http://localhost:8081/api/"
-var media_url = backend_url + "media/"
+const BACKEND_URL = "http://localhost:8081/api/"
+const MEDIA_URL = BACKEND_URL + "media/"
 
-function send_http_request(method, endpoint){
+const send_http_request = (method, endpoint) => {
 	return new Promise((resolve, reject) => {
 		let xhr = new XMLHttpRequest()
-
 		if (method === "GET")
-			xhr.open("GET", backend_url + endpoint, true)
+			xhr.open("GET", BACKEND_URL + endpoint, true)
 		else
-			xhr.open("POST", backend_url + endpoint)
+			xhr.open("POST", BACKEND_URL + endpoint)
 		xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
-		xhr.onreadystatechange = function() {
-			if (this.readyState === XMLHttpRequest.DONE)
-					resolve(this)
+		xhr.onreadystatechange = () => {
+			if (xhr.readyState === XMLHttpRequest.DONE)
+				resolve(xhr)
 		}
-		xhr.onerror = function() {
-			reject(this)
+		xhr.onerror = () => {
+			reject(xhr)
 		}
 		xhr.send()
-	});
+	})
 }
 
-export { send_http_request, backend_url, media_url }
+export { send_http_request, MEDIA_URL }

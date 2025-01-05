@@ -2,18 +2,18 @@
     <div id="app">
         <div class="topnav">
             <router-link to="/">
-                <div id="home-topnav">
+                <div>
                     <img src="./images/icon_white.ico" width="18px">
                     <p>Home</p>
                 </div>
             </router-link>
-            <router-link to="/map">
-                <div id="map-topnav">
+            <router-link to="/map-sandbox">
+                <div>
                     <p>Carte</p>
                 </div>
             </router-link>
             <router-link to="/about">
-                <div id="about-topnav">
+                <div>
                     <p>A propos</p>
                 </div>
             </router-link>

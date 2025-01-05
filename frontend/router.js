@@ -1,7 +1,7 @@
 import { createWebHashHistory, createRouter } from 'vue-router'  
-import home         from './components/home.vue'
-import map_canvas   from './components/map.vue'
-import about        from './components/about.vue'
+import home         from './pages/home.vue'
+import map_sandbox  from './pages/map_sandbox.vue'
+import about        from './pages/about.vue'
 
 const router = createRouter({
     history: createWebHashHistory(),
@@ -12,9 +12,9 @@ const router = createRouter({
             component: home
         },
         {
-            path: '/map',
-            name: 'map_canvas',
-            component: map_canvas
+            path: '/map-sandbox',
+            name: 'map_sandbox',
+            component: map_sandbox
         },
         {
             path: '/about',
@@ -25,5 +25,3 @@ const router = createRouter({
 })
 
 export default router
-
-

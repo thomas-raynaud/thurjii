@@ -36,26 +36,22 @@
     </div>
 </template>
 
-<script>
+<script setup>
+    import { ref, onMounted } from 'vue'
 
-import { send_http_request, media_url } from '../lib/request'
+    import { send_http_request, MEDIA_URL } from '../lib/request'
 
-export default {
-    name: "home",
-    data() {
-        return {
-            parcelles: []
-        }
-    },
-    mounted() {
+    const parcelles = ref([])
+
+    onMounted(() => {
         send_http_request("GET", "parcelles/").then((response) => {
             if (response.status == 0) {
                 console.log("Error when loading parcelles ...")
             }
             else {
-                this.parcelles = JSON.parse(response.response)
-                this.parcelles.forEach(parcelle => {
-                    parcelle.img_src = media_url + parcelle.image + "/"
+                parcelles.value = JSON.parse(response.response)
+                parcelles.value.forEach(parcelle => {
+                    parcelle.img_src = MEDIA_URL + parcelle.image + "/"
                 })
             }
             
@@ -63,6 +59,5 @@ export default {
             console.log("Error when loading parcelles ...")
             console.log(error)
         })
-    }
-}
+    })
 </script>

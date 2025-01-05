@@ -7,8 +7,5 @@
     </div>
 </template>
 
-<script>
-    export default {
-        name: "about"
-    }
+<script setup>
 </script>

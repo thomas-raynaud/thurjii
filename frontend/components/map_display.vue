@@ -1,46 +1,241 @@
-<script setup>
-    const Z_MIN = 3
-    const Z_MAX = 21
-
-    const TILE_TIMEOUT = 50
-    const MAP_SOURCE = "https://mt0.google.com/vt/lyrs=s&hl=en&"
-
-    const map_url = ref([])
-    const map_grid = []
-    const map_selected = ref(false)
-    const loading_tile = ref(false)
-
-    defineProps(['width'])
-    defineProps(['height'])
-
-    onMounted(() => {
-        let width_str = width + "px"
-        let height_str = height + "px"
-        map_display.value.style["width"] = width_str
-        map_display.value.style["height"] = height_str
-        let template_columns = ""
-        for (let i = 0; i < TILES_X + 1; i++) {
-            template_columns += "auto "
-        }
-        map_display.value.style["grid-template-columns"] = template_columns
-    })
-</script>
+<template>
+    <div ref="display" class="map-display">
+        <img v-for="ind in (nb_tiles_x + 1) * (nb_tiles_y + 1)" :src="tile_urls[ind - 1]">
+    </div>
+</template>
 
 <style scoped>
-    #map-display {
+    .map-display {
         position: absolute;
         overflow:hidden;
         display: grid;
     }
 
-    #map-display img {
+    .map-display img {
         width: 256px;
         height: 256px;
     }
 </style>
 
-<template>
-    <div id="map-display" ref="map_display">
-        <img v-for="ind in (TILES_X + 1) * (TILES_Y + 1)" :src="map_url[ind - 1]">
-    </div>
-</template>
+<script setup>
+    import { ref, useTemplateRef, onMounted } from 'vue'
+    import { map_store } from '../stores/map_store'
+    import { TILE_SIZE, get_dims_map, get_map_coords, get_mouse_pos } from '../lib/map_navigation'
+
+    const Z_MIN = 3
+    const Z_MAX = 21
+    const TILE_TIMEOUT = 50
+    const MAP_SOURCE = "https://mt0.google.com/vt/lyrs=s&hl=en&"
+
+    let map_selected = false
+    let loading_tile = false
+    let prev_x = 0
+    let prev_y = 0
+
+    const tile_urls = ref([])
+    const display = useTemplateRef('display')
+
+    const props = defineProps([ 'nbTilesX', 'nbTilesY' ])
+    const nb_tiles_x = ref(parseInt(props.nbTilesX))
+    const nb_tiles_y = ref(parseInt(props.nbTilesY))
+
+    onMounted(() => {
+        let dims = get_dims_map(nb_tiles_x.value, nb_tiles_y.value)
+        display.value.style["width"] = dims.width + "px"
+        display.value.style["height"] = dims.height + "px"
+        let template_columns = ""
+        for (let i = 0; i < nb_tiles_x.value + 1; i++) {
+            template_columns += "auto "
+        }
+        display.value.style["grid-template-columns"] = template_columns
+        load_map()
+    })
+
+    const load_tile = (x, y, z) => {
+        if (loading_tile) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve(load_tile(x, y, z))
+                }, TILE_TIMEOUT)
+            })
+        }
+        else {
+            loading_tile = true
+            setTimeout(() => { loading_tile = false }, TILE_TIMEOUT)
+            return new Promise((resolve, reject) => {
+                resolve()
+                fetch(MAP_SOURCE + "x=" + x + "&y=" + y + "&z=" + z).then((image) => {
+                    image.blob().then((blob) => {
+                        if (x >= map_store.coords.x && x <= (nb_tiles_x.value + map_store.coords.x) &&
+                            y >= map_store.coords.y && y <= (nb_tiles_y.value + map_store.coords.y)
+                        ) {
+                            let rel_x = x - map_store.coords.x
+                            let rel_y = y - map_store.coords.y
+                            let grid_ind = (rel_y) * (nb_tiles_x.value + 1) + rel_x
+                            tile_urls.value[grid_ind] = URL.createObjectURL(blob)
+                        }
+                        resolve()
+                    })
+                })
+                .catch(error => {
+                    reject(error)
+                    // ... or load tile "above" (zoom - 1)
+                    // and display it with these css attributes:
+                    // transform: scale(200%) translate(64px, -64px);
+                    // clip-path: rect(128px 128px auto auto);
+                })
+            })
+        }
+    }
+
+    const load_map = () => {
+        // Update map grid
+        let ind_x, ind_y
+        let grid_coords = []
+        for (let ind = 0; ind < (nb_tiles_x.value + 1) * (nb_tiles_y.value + 1); ind++) {
+            ind_x = ind % (nb_tiles_x.value + 1)
+            ind_y = Math.floor(ind / (nb_tiles_x.value + 1))
+            grid_coords[ind] = [ map_store.coords.x + ind_x, map_store.coords.y + ind_y ]
+        }
+        // Load tiles
+        grid_coords.forEach((el) => {
+            load_tile(el[0], el[1], map_store.coords.z).catch((error) => { console.log(error) })
+        })
+    }
+
+    const mousemove = (e) => {
+        let map_coords = get_map_coords(map_store.coords, e, display.value)
+        map_store.cursor_coords.x = Math.floor(map_coords.x * 1000) / 1000
+        map_store.cursor_coords.y = Math.floor(map_coords.y * 1000) / 1000
+        if (map_selected)
+            pan(e)
+    }
+
+    const mousedown = (e) => {
+        prev_x = e.clientX
+        prev_y = e.clientY
+        map_selected = true
+    }
+
+    const mouseup    = () => { map_selected = false }
+    const mouseleave = () => { map_selected = false }
+
+    const pan = (e) => {
+        let scroll_x = display.value.scrollLeft + (prev_x - e.clientX)
+        let scroll_y = display.value.scrollTop + (prev_y - e.clientY)
+        let max_ind = Math.pow(2, map_store.coords.z)
+        let shift_x = 0
+        let shift_y = 0
+        let i, j
+        if (scroll_x < 0 && (map_store.coords.x - 1) >= 0) {
+            shift_x = -1
+            map_store.coords.x -= 1
+            // shift tiles to the right
+            for (i = 0; i < nb_tiles_y.value + 1; i++) {
+                for (j = (nb_tiles_x.value + 1) * (i + 1) - 1; j > i * (nb_tiles_x.value + 1); j--) {
+                    tile_urls.value[j] = tile_urls.value[j - 1]
+                }
+            }
+        }
+        else if (scroll_x > TILE_SIZE && (map_store.coords.x + (nb_tiles_x.value + 1)) < max_ind) {
+            shift_x = 1
+            map_store.coords.x += 1
+            // shift tiles to the left
+            for (i = 0; i < nb_tiles_y.value + 1; i++) {
+                for (j = i * (nb_tiles_x.value + 1); j < (nb_tiles_x.value + 1) * (i + 1) - 1; j++) {
+                    tile_urls.value[j] = tile_urls.value[j + 1]
+                }
+            }
+        }
+        if (scroll_y < 0 && (map_store.coords.y - 1) >= 0) {
+            shift_y = -1
+            map_store.coords.y -= 1
+            // shift tiles to the bottom
+            for (i = 0; i < nb_tiles_x.value + 1; i++) {
+                for (j = nb_tiles_y.value; j > 0; j--) {
+                    tile_urls.value[j * (nb_tiles_x.value + 1) + i] = tile_urls.value[(j - 1) * (nb_tiles_x.value + 1) + i]
+                }
+            }
+        }
+        else if (scroll_y > TILE_SIZE && (map_store.coords.y + (nb_tiles_y.value + 1)) < max_ind) {
+            shift_y = 1
+            map_store.coords.y += 1
+            // shift tiles to the top
+            for (i = 0; i < nb_tiles_x.value + 1; i++) {
+                for (j = 0; j < nb_tiles_y.value; j++) {
+                    tile_urls.value[j * (nb_tiles_x.value + 1) + i] = tile_urls.value[(j + 1) * (nb_tiles_x.value + 1) + i]
+                }
+            }
+        }
+        if (shift_x == -1) {
+            // load tiles at the left border
+            for (i = 0; i < nb_tiles_y.value + 1; i++) {
+                load_tile(map_store.coords.x, map_store.coords.y + i, map_store.coords.z)
+            }
+            scroll_x += TILE_SIZE
+        }
+        else if (shift_x == 1) {
+            // load tiles at the right border
+            for (i = 0; i < nb_tiles_y.value + 1; i++) {
+                load_tile(map_store.coords.x + nb_tiles_x.value, map_store.coords.y + i, map_store.coords.z)
+            }
+            scroll_x -= TILE_SIZE
+        }
+        if (shift_y == -1) {
+            // load tiles at the top border
+            for (i = 0; i < nb_tiles_x.value + 1; i++) {
+                load_tile(map_store.coords.x + i, map_store.coords.y, map_store.coords.z)
+            }
+            scroll_y += TILE_SIZE
+        }
+        else if (shift_y == 1) {
+            // load tiles at the bottom border
+            for (i = 0; i < nb_tiles_x.value + 1; i++) {
+                load_tile(map_store.coords.x + i, map_store.coords.y + nb_tiles_y.value, map_store.coords.z)
+            }
+            scroll_y -= TILE_SIZE
+        }
+        display.value.scrollLeft = Math.min(scroll_x, TILE_SIZE)
+        display.value.scrollTop = Math.min(scroll_y, TILE_SIZE)
+        prev_x = e.clientX
+        prev_y = e.clientY
+    }
+
+    const zoom = (e) => {
+        let z = map_store.coords.z - 1
+        if (e.deltaY < 0) {
+            z = map_store.coords.z + 1
+        }
+        if (z < Z_MIN || z > Z_MAX)
+            return
+        let nb_rows = Math.pow(2, z)
+        let rel_point = get_map_coords(map_store.coords, e, display.value)
+        let mouse_pos = get_mouse_pos(e, display.value)
+        // X
+        let rel_v_x = mouse_pos.x / (nb_tiles_x.value * TILE_SIZE)
+        let pos_x = rel_point.x * nb_rows
+        let pos_left = pos_x - rel_v_x * nb_tiles_x.value
+        let e_pos_left = Math.floor(pos_left)
+        let dec_pos_left = pos_left - e_pos_left
+        map_store.coords.x = e_pos_left
+        display.value.scrollLeft = dec_pos_left * TILE_SIZE
+        // Y
+        let rel_v_y = mouse_pos.y / (nb_tiles_y.value * TILE_SIZE)
+        let pos_y = rel_point.y * nb_rows
+        let pos_top = pos_y - rel_v_y * nb_tiles_y.value
+        let e_pos_top = Math.floor(pos_top)
+        let dec_pos_top = pos_top - e_pos_top
+        map_store.coords.y = e_pos_top
+        display.value.scrollTop = dec_pos_top * TILE_SIZE
+        map_store.coords.z = z
+        if (map_store.coords.z == 1) {
+            display.value.scrollLeft = 0
+            display.value.scrollTop = 0
+        }
+        load_map()
+    }
+
+    defineExpose({
+        mousemove, mousedown, mousedown, mouseleave, mouseup, zoom
+    })
+</script>
