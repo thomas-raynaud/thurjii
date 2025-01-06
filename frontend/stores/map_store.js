@@ -6,8 +6,13 @@ export const map_store = reactive({
         y: 0,
         z: 3
     },
-    cursor_coords: {
+    cursor_rel_coords: {
         x: 0,
         y: 0
-    }
+    },
+    offset_display: {
+        x: 0,
+        y: 0
+    },
+    panning: false
 })

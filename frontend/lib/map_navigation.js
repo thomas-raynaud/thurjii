@@ -16,17 +16,25 @@ const get_mouse_pos = (event, element) => {
     }
 }
 
-const from_tile_coord_to_mercator = (x, y, z) => {
+const get_viewport_coords = (event, element, dims_vp) => {
+    let mouse_pos = get_mouse_pos(event, element)
+    return {
+        x: mouse_pos.x / (dims_vp[0] * TILE_SIZE),
+        y: mouse_pos.y / (dims_vp[1] * TILE_SIZE),
+    }
+}
+
+const from_rel_coords_to_mercator = (x, y) => {
     return {
         x: EQUATOR * ((x) - 0.5),
         y: EQUATOR * ((1 - y) - 0.5)
     }
 }
 
-const from_mercator_to_tile_coord = (x, y, z) => {
+const from_mercator_to_rel_coords = (x, y) => {
     return {
-        x: ((x + (EQUATOR / 2)) / EQUATOR) * Math.pow(2, z),
-        y: ((-y + (EQUATOR / 2)) / EQUATOR) * Math.pow(2, z)
+        x: x / EQUATOR + 0.5,
+        y: -(y / EQUATOR - 0.5)
     }
 }
 
@@ -41,6 +49,7 @@ export {
     TILE_SIZE,
     get_map_coords,
     get_mouse_pos,
+    get_viewport_coords,
     get_dims_map,
-    from_tile_coord_to_mercator, from_mercator_to_tile_coord
+    from_rel_coords_to_mercator, from_mercator_to_rel_coords
 }

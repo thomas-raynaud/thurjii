@@ -24,6 +24,7 @@
     import MapDisplay from './map_display.vue'
     import MapCanvas from './map_canvas.vue'
     import { get_dims_map } from '../lib/map_navigation'
+    import { map_store } from '../stores/map_store'
 
     const props = defineProps([ 'nbTilesX', 'nbTilesY' ])
     const nb_tiles_x = ref(parseInt(props.nbTilesX))
@@ -37,11 +38,15 @@
         let dims = get_dims_map(nb_tiles_x.value, nb_tiles_y.value)
         container.value.style["width"] = dims.width + "px"
         container.value.style["height"] = dims.height + "px"
+        canvas.value.draw()
     })
 
     const mousemove = (e) => {
         e.preventDefault()
         display.value.mousemove(e)
+        if (map_store.panning) {
+            canvas.value.draw()
+        }
     }
 
     const mousedown = (e) => {
@@ -60,5 +65,6 @@
     const mousewheel = (e) => {
         e.preventDefault()
         display.value.zoom(e)
+        canvas.value.draw()
     }
 </script>

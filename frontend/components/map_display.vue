@@ -20,14 +20,13 @@
 <script setup>
     import { ref, useTemplateRef, onMounted } from 'vue'
     import { map_store } from '../stores/map_store'
-    import { TILE_SIZE, get_dims_map, get_map_coords, get_mouse_pos } from '../lib/map_navigation'
+    import { TILE_SIZE, get_dims_map, get_map_coords, get_viewport_coords } from '../lib/map_navigation'
 
     const Z_MIN = 3
     const Z_MAX = 21
-    const TILE_TIMEOUT = 50
+    const TILE_TIMEOUT = 100
     const MAP_SOURCE = "https://mt0.google.com/vt/lyrs=s&hl=en&"
 
-    let map_selected = false
     let loading_tile = false
     let prev_x = 0
     let prev_y = 0
@@ -48,6 +47,14 @@
             template_columns += "auto "
         }
         display.value.style["grid-template-columns"] = template_columns
+        map_store.panning = false
+        map_store.coords.x = 0
+        map_store.coords.y = 0
+        map_store.coords.z = 3
+        map_store.offset_display.x = 0
+        map_store.offset_display.y = 0
+        display.value.scrollLeft = 0
+        display.value.scrollTop = 0
         load_map()
     })
 
@@ -104,21 +111,21 @@
     }
 
     const mousemove = (e) => {
-        let map_coords = get_map_coords(map_store.coords, e, display.value)
-        map_store.cursor_coords.x = Math.floor(map_coords.x * 1000) / 1000
-        map_store.cursor_coords.y = Math.floor(map_coords.y * 1000) / 1000
-        if (map_selected)
+        let map_rel_coords = get_map_coords(map_store.coords, e, display.value)
+        map_store.cursor_rel_coords.x = Math.floor(map_rel_coords.x * 1000) / 1000
+        map_store.cursor_rel_coords.y = Math.floor(map_rel_coords.y * 1000) / 1000
+        if (map_store.panning)
             pan(e)
     }
 
     const mousedown = (e) => {
         prev_x = e.clientX
         prev_y = e.clientY
-        map_selected = true
+        map_store.panning = true
     }
 
-    const mouseup    = () => { map_selected = false }
-    const mouseleave = () => { map_selected = false }
+    const mouseup    = () => { map_store.panning = false }
+    const mouseleave = () => { map_store.panning = false }
 
     const pan = (e) => {
         let scroll_x = display.value.scrollLeft + (prev_x - e.clientX)
@@ -195,8 +202,10 @@
             }
             scroll_y -= TILE_SIZE
         }
-        display.value.scrollLeft = Math.min(scroll_x, TILE_SIZE)
-        display.value.scrollTop = Math.min(scroll_y, TILE_SIZE)
+        map_store.offset_display.x = Math.min(scroll_x, TILE_SIZE)
+        display.value.scrollLeft = map_store.offset_display.x
+        map_store.offset_display.y = Math.min(scroll_y, TILE_SIZE)
+        display.value.scrollTop = map_store.offset_display.y
         prev_x = e.clientX
         prev_y = e.clientY
     }
@@ -208,25 +217,24 @@
         }
         if (z < Z_MIN || z > Z_MAX)
             return
-        let nb_rows = Math.pow(2, z)
-        let rel_point = get_map_coords(map_store.coords, e, display.value)
-        let mouse_pos = get_mouse_pos(e, display.value)
+        let nb_tiles_on_axis = Math.pow(2, z)
+        let vp_coords = get_viewport_coords(e, display.value, [ nb_tiles_x.value, nb_tiles_y.value ])
         // X
-        let rel_v_x = mouse_pos.x / (nb_tiles_x.value * TILE_SIZE)
-        let pos_x = rel_point.x * nb_rows
-        let pos_left = pos_x - rel_v_x * nb_tiles_x.value
+        let pos_x = map_store.cursor_rel_coords.x * nb_tiles_on_axis
+        let pos_left = pos_x - vp_coords.x * nb_tiles_x.value
         let e_pos_left = Math.floor(pos_left)
         let dec_pos_left = pos_left - e_pos_left
         map_store.coords.x = e_pos_left
-        display.value.scrollLeft = dec_pos_left * TILE_SIZE
+        map_store.offset_display.x = dec_pos_left * TILE_SIZE
+        display.value.scrollLeft = map_store.offset_display.x
         // Y
-        let rel_v_y = mouse_pos.y / (nb_tiles_y.value * TILE_SIZE)
-        let pos_y = rel_point.y * nb_rows
-        let pos_top = pos_y - rel_v_y * nb_tiles_y.value
+        let pos_y = map_store.cursor_rel_coords.y * nb_tiles_on_axis
+        let pos_top = pos_y - vp_coords.y * nb_tiles_y.value
         let e_pos_top = Math.floor(pos_top)
         let dec_pos_top = pos_top - e_pos_top
         map_store.coords.y = e_pos_top
-        display.value.scrollTop = dec_pos_top * TILE_SIZE
+        map_store.offset_display.y = dec_pos_top * TILE_SIZE
+        display.value.scrollTop = map_store.offset_display.y
         map_store.coords.z = z
         if (map_store.coords.z == 1) {
             display.value.scrollLeft = 0
