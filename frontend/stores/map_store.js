@@ -10,6 +10,10 @@ export const map_store = reactive({
         x: 0,
         y: 0
     },
+    cursor_rel_coords_rounded: {
+        x: 0,
+        y: 0
+    },
     offset_display: {
         x: 0,
         y: 0

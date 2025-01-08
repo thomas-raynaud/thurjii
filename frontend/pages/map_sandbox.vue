@@ -1,7 +1,7 @@
 <template>
     <div class="body row">
         <map-container nb-tiles-x="3" nb-tiles-y="2" />
-        <p>{{ "x= " + map_store.cursor_rel_coords.x + " y= " + map_store.cursor_rel_coords.y + " z= " + map_store.coords.z }}</p>
+        <p>{{ "x= " + map_store.cursor_rel_coords_rounded.x + " y= " + map_store.cursor_rel_coords_rounded.y + " z= " + map_store.coords.z }}</p>
         <p>{{ "mx= " + merc_coords.x}}</p>
         <p>{{ "my= " + merc_coords.y}}</p>
     </div>
