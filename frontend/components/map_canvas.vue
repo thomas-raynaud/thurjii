@@ -14,7 +14,8 @@
     import {
         TILE_SIZE,
         get_dims_map,
-        from_mercator_to_rel_coords
+        from_mercator_to_rel_coords,
+        from_rel_coords_to_mercator
     } from '../lib/map_navigation'
     import { map_store } from '../stores/map_store'
 
@@ -65,13 +66,21 @@
         ctx.clearRect(0, 0, canvas.value.width, canvas.value.height)
         ctx.beginPath()
         ctx.moveTo(line_on_canvas[0].x, line_on_canvas[0].y)
-        ctx.lineTo(line_on_canvas[1].x, line_on_canvas[1].y)
-        ctx.strokeStyle = 'black'
-        ctx.lineWidth = '2'
+        for (let i = 1; i < line.length; i++) {
+            ctx.lineTo(line_on_canvas[i].x, line_on_canvas[i].y)
+        }
+        ctx.strokeStyle = 'red'
+        ctx.lineWidth = '1'
         ctx.stroke()
     }
 
+    const mousedown = (e) => {
+        line.push(from_rel_coords_to_mercator(map_store.cursor_rel_coords.x, map_store.cursor_rel_coords.y))
+        draw()
+    }
+
     defineExpose({
-        draw
+        draw,
+        mousedown
     })
 </script>

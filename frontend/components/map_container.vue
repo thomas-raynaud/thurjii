@@ -51,7 +51,10 @@
 
     const mousedown = (e) => {
         e.preventDefault()
-        display.value.mousedown(e)
+        if (e.button == 1)
+            display.value.mousedown(e)
+        else if (e.button == 0)
+            canvas.value.mousedown(e)
     }
 
     const mouseup = () => {
