@@ -1,5 +1,6 @@
 <template>
     <div ref="container" class="map-container"
+            oncontextmenu="return false"
             @mousemove="mousemove"
             @mousedown="mousedown"
             @mouseup="mouseup"
@@ -44,16 +45,14 @@
     const mousemove = (e) => {
         e.preventDefault()
         display.value.mousemove(e)
-        if (map_store.panning) {
-            canvas.value.draw()
-        }
+        canvas.value.draw()
     }
 
     const mousedown = (e) => {
         e.preventDefault()
         if (e.button == 1)
             display.value.mousedown(e)
-        else if (e.button == 0)
+        else if (e.button == 0 || e.button == 2)
             canvas.value.mousedown(e)
     }
 
