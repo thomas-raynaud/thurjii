@@ -111,7 +111,7 @@
     }
 
     const mousemove = (e) => {
-        map_store.cursor_rel_coords = get_map_coords(map_store.coords, e, display.value)
+        map_store.cursor_rel_coords = get_map_coords(map_store.coords, [ e.clientX, e.clientY ], display.value)
         map_store.cursor_rel_coords_rounded.x = Math.floor(map_store.cursor_rel_coords.x * 1000) / 1000
         map_store.cursor_rel_coords_rounded.y = Math.floor(map_store.cursor_rel_coords.y * 1000) / 1000
         if (map_store.panning)
@@ -218,7 +218,7 @@
         if (z < Z_MIN || z > Z_MAX)
             return
         let nb_tiles_on_axis = Math.pow(2, z)
-        let vp_coords = get_viewport_coords(e, display.value, [ nb_tiles_x.value, nb_tiles_y.value ])
+        let vp_coords = get_viewport_coords([ e.clientX, e.clientY ], display.value, [ nb_tiles_x.value, nb_tiles_y.value ])
         // X
         let pos_x = map_store.cursor_rel_coords.x * nb_tiles_on_axis
         let pos_left = pos_x - vp_coords.x * nb_tiles_x.value

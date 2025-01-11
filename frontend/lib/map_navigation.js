@@ -1,23 +1,23 @@
 const TILE_SIZE = 256
 const EQUATOR = 40075016.68557849
 
-const get_map_coords = (coords, e, element) => {
-    let mouse_pos = get_mouse_pos(e, element)
+const get_map_coords = (coords, pos, element) => {
+    let mouse_pos = get_mouse_pos(pos, element)
     return {
         x: (Math.floor(mouse_pos.x / TILE_SIZE) + (coords.x + 1) + (((mouse_pos.x % TILE_SIZE) - (TILE_SIZE - element.scrollLeft)) / TILE_SIZE)) / Math.pow(2, coords.z),
         y: (Math.floor(mouse_pos.y / TILE_SIZE) + (coords.y + 1) + (((mouse_pos.y % TILE_SIZE) - (TILE_SIZE - element.scrollTop)) / TILE_SIZE)) / Math.pow(2, coords.z)
     }
 }
 
-const get_mouse_pos = (event, element) => {
+const get_mouse_pos = (pos, element) => {
     return {
-        x: event.clientX + document.documentElement.scrollLeft - element.parentElement.offsetLeft,
-        y: event.clientY + document.documentElement.scrollTop - element.parentElement.offsetTop
+        x: pos[0] + document.documentElement.scrollLeft - element.parentElement.offsetLeft,
+        y: pos[1] + document.documentElement.scrollTop - element.parentElement.offsetTop
     }
 }
 
-const get_viewport_coords = (event, element, dims_vp) => {
-    let mouse_pos = get_mouse_pos(event, element)
+const get_viewport_coords = (pos, element, dims_vp) => {
+    let mouse_pos = get_mouse_pos(pos, element)
     return {
         x: mouse_pos.x / (dims_vp[0] * TILE_SIZE),
         y: mouse_pos.y / (dims_vp[1] * TILE_SIZE),

@@ -18,5 +18,10 @@ export const map_store = reactive({
         x: 0,
         y: 0
     },
-    panning: false
+    panning: false,
+    state: 0, // 0 = select region, 1 = place lines,
+    line_cursor_coords: {
+        x: 0,
+        y: 0
+    }
 })

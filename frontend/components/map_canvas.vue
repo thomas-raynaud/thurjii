@@ -26,7 +26,8 @@
 
     const canvas = useTemplateRef("canvas")
 
-    let line = []
+    let ctx
+    let region = []
 
     onMounted(() => {
         let dims = get_dims_map(nb_tiles_x, nb_tiles_y)
@@ -34,6 +35,8 @@
         canvas.value.style["height"] = dims.height + "px"
         canvas.value.width = dims.width
         canvas.value.height = dims.height
+        ctx = canvas.value.getContext("2d")
+        map_store.state = 0
         draw()
     })
 
@@ -55,61 +58,77 @@
     }
 
     const draw = () => {
-        let ctx = canvas.value.getContext("2d")
         ctx.clearRect(0, 0, canvas.value.width, canvas.value.height)
-        if (line.length == 0)
+        if (region.length == 0)
             return
-        let line_on_canvas = []
-        for (let i = 0; i < line.length; i++) {
-            line_on_canvas[i] = mercator_to_canvas_pos(line[i])
+        let region_on_canvas = []
+        for (let i = 0; i < region.length; i++) {
+            region_on_canvas[i] = mercator_to_canvas_pos(region[i])
         }
         
         ctx.strokeStyle = 'red'
         ctx.lineWidth = '1'
         ctx.beginPath()
         let poly = new Path2D()
-        ctx.moveTo(line_on_canvas[0].x, line_on_canvas[0].y)
-        poly.moveTo(line_on_canvas[0].x, line_on_canvas[0].y)
-        for (let i = 1; i < line.length; i++) {
-            ctx.lineTo(line_on_canvas[i].x, line_on_canvas[i].y)
-            poly.lineTo(line_on_canvas[i].x, line_on_canvas[i].y)
+        ctx.moveTo(region_on_canvas[0].x, region_on_canvas[0].y)
+        poly.moveTo(region_on_canvas[0].x, region_on_canvas[0].y)
+        for (let i = 1; i < region.length; i++) {
+            ctx.lineTo(region_on_canvas[i].x, region_on_canvas[i].y)
+            poly.lineTo(region_on_canvas[i].x, region_on_canvas[i].y)
         }
-        ctx.lineTo(line_on_canvas[0].x, line_on_canvas[0].y)
-        poly.lineTo(line_on_canvas[0].x, line_on_canvas[0].y)
+        ctx.lineTo(region_on_canvas[0].x, region_on_canvas[0].y)
+        poly.lineTo(region_on_canvas[0].x, region_on_canvas[0].y)
+        poly.closePath()
         ctx.setLineDash([])
         ctx.stroke()
-        ctx.beginPath()
-        ctx.setLineDash([1, 2])
-        ctx.moveTo(line_on_canvas.at(-1).x, line_on_canvas.at(-1).y)
         let cursor_coords = rel_coords_to_canvas_pos(map_store.cursor_rel_coords)
-        ctx.lineTo(cursor_coords.x, cursor_coords.y)
-        ctx.stroke()
-        poly.closePath()
+        if (map_store.state == 0) {
+            ctx.beginPath()
+            ctx.setLineDash([1, 2])
+            ctx.moveTo(region_on_canvas.at(-1).x, region_on_canvas.at(-1).y)
+            ctx.lineTo(cursor_coords.x, cursor_coords.y)
+            ctx.stroke()
+        }
         ctx.fillStyle = "rgba(255, 0, 0, 0.25)"
         ctx.fill(poly, "evenodd")
-        if (line.length >= 2) {
+        if (map_store.state == 0 && region.length >= 2) {
             let triangle_cursor = new Path2D()
-            triangle_cursor.moveTo(line_on_canvas.at(-1).x, line_on_canvas.at(-1).y)
+            triangle_cursor.moveTo(region_on_canvas.at(-1).x, region_on_canvas.at(-1).y)
             triangle_cursor.lineTo(cursor_coords.x, cursor_coords.y)
-            triangle_cursor.lineTo(line_on_canvas[0].x, line_on_canvas[0].y)
+            triangle_cursor.lineTo(region_on_canvas[0].x, region_on_canvas[0].y)
             triangle_cursor.closePath()
             ctx.fill(triangle_cursor, "evenodd")
+        }
+        if (map_store.state == 1) {
+            // Show line cursor
         }
     }
 
     const mousedown = (e) => {
         if (e.button == 0) {
-            let new_point = from_rel_coords_to_mercator(map_store.cursor_rel_coords.x, map_store.cursor_rel_coords.y)
-            if (check_intersection_polygon(line, new_point)) {
-                line = []
-            }
-            else {
-                line.push(new_point)
+            if (map_store.state == 0) {
+                let new_point = from_rel_coords_to_mercator(map_store.cursor_rel_coords.x, map_store.cursor_rel_coords.y)
+                if (check_intersection_polygon(region, new_point)) {
+                    region = []
+                }
+                else {
+                    region.push(new_point)
+                }
             }
         }
         else if (e.button == 2) {
-            console.log(check_intersection_polygon(line.slice(1), line[0])) // true -> polygon incorrect
-            line = []
+            if (map_store.state == 0) {
+                if (check_intersection_polygon(region.slice(1), region[0])) {
+                    console.log("Region polygon is self-intersecting")
+                    region = []
+                }
+                else if (region.length <= 2) {
+                    region = []
+                }
+                else {
+                    map_store.state = 1
+                }
+            }
         }
         draw()
     }
