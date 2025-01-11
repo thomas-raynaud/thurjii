@@ -17,6 +17,7 @@
         from_mercator_to_rel_coords,
         from_rel_coords_to_mercator
     } from '../lib/map_navigation'
+    import { check_intersection_polygon } from '../lib/geometry'
     import { map_store } from '../stores/map_store'
 
     const props = defineProps([ 'nbTilesX', 'nbTilesY' ])
@@ -97,10 +98,19 @@
     }
 
     const mousedown = (e) => {
-        if (e.button == 0)
-            line.push(from_rel_coords_to_mercator(map_store.cursor_rel_coords.x, map_store.cursor_rel_coords.y))
-        else if (e.button == 2)
+        if (e.button == 0) {
+            let new_point = from_rel_coords_to_mercator(map_store.cursor_rel_coords.x, map_store.cursor_rel_coords.y)
+            if (check_intersection_polygon(line, new_point)) {
+                line = []
+            }
+            else {
+                line.push(new_point)
+            }
+        }
+        else if (e.button == 2) {
+            console.log(check_intersection_polygon(line.slice(1), line[0])) // true -> polygon incorrect
             line = []
+        }
         draw()
     }
 
