@@ -18,7 +18,7 @@
 </style>
 
 <script setup>
-    import { ref, useTemplateRef, onMounted } from 'vue'
+    import { ref, useTemplateRef, onMounted, onUnmounted } from 'vue'
     import { map_store } from '../stores/map_store'
     import { TILE_SIZE, get_dims_map, get_map_coords, get_viewport_coords } from '../lib/map_navigation'
 
@@ -48,14 +48,22 @@
         }
         display.value.style["grid-template-columns"] = template_columns
         map_store.panning = false
-        map_store.coords.x = 0
-        map_store.coords.y = 0
-        map_store.coords.z = 3
-        map_store.offset_display.x = 0
-        map_store.offset_display.y = 0
-        display.value.scrollLeft = 0
-        display.value.scrollTop = 0
+        map_store.coords.x = parseInt($cookies.get("coords_x"))
+        map_store.coords.y = parseInt($cookies.get("coords_y"))
+        map_store.coords.z = parseInt($cookies.get("coords_z"))
+        map_store.offset_display.x = parseInt($cookies.get("scroll_left"))
+        map_store.offset_display.y = parseInt($cookies.get("scroll_top"))
+        display.value.scrollLeft = map_store.offset_display.x
+        display.value.scrollTop = map_store.offset_display.y
         load_map()
+    })
+
+    onUnmounted(() => {
+        $cookies.set("coords_x", map_store.coords.x)
+        $cookies.set("coords_y", map_store.coords.y)
+        $cookies.set("coords_z", map_store.coords.z)
+        $cookies.set("scroll_left", map_store.offset_display.x)
+        $cookies.set("scroll_top", map_store.offset_display.x)
     })
 
     const load_tile = (x, y, z) => {
