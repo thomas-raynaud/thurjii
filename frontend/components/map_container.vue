@@ -45,7 +45,8 @@
     const mousemove = (e) => {
         e.preventDefault()
         display.value.mousemove(e)
-        canvas.value.draw()
+        if (map_store.state == 0 || map_store.panning)
+            canvas.value.draw()
     }
 
     const mousedown = (e) => {

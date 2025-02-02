@@ -100,7 +100,34 @@
             ctx.fill(triangle_cursor, "evenodd")
         }
         if (map_store.state == 1) {
+            // Compute bounding box
+            let region_min = { x: region[0].x, y: region[0].y }
+            let region_max = { x: region[0].x, y: region[0].y }
+            for (let i = 1; i < region.length; i++) {
+                region_min.x = Math.min(region_min.x, region[i].x)
+                region_min.y = Math.min(region_min.y, region[i].y)
+                region_max.x = Math.max(region_max.x, region[i].x)
+                region_max.y = Math.max(region_max.y, region[i].y)
+            }
+            let reg_start = mercator_to_canvas_pos(region_min)
+            let reg_end = mercator_to_canvas_pos(region_max)
+            let width = reg_end.x - reg_start.x
+            let height = reg_start.y - reg_end.y
+            ctx.beginPath()
+            ctx.rect(reg_start.x, reg_end.y, width, height)
+            ctx.fillStyle = "rgba(0, 0, 255, 0.25)"
+            ctx.fill()
             // Show line cursor
+            ctx.beginPath()
+            ctx.arc(reg_start.x + width / 2, reg_end.y + height / 2, 4, 0, 2 * Math.PI)
+            ctx.fillStyle = "black"
+            ctx.fill()
+            ctx.beginPath()
+            ctx.arc(reg_start.x + width / 2, reg_end.y + height / 2, 2, 0, 2 * Math.PI)
+            ctx.fillStyle = "white"
+            ctx.fill()
+            // Draw lines
+            //let step = 10 // in pixels
         }
     }
 

@@ -18,7 +18,7 @@
 </style>
 
 <script setup>
-    import { ref, useTemplateRef, onMounted, onUnmounted } from 'vue'
+    import { ref, useTemplateRef, onMounted } from 'vue'
     import { map_store } from '../stores/map_store'
     import { TILE_SIZE, get_dims_map, get_map_coords, get_viewport_coords } from '../lib/map_navigation'
 
@@ -48,23 +48,28 @@
         }
         display.value.style["grid-template-columns"] = template_columns
         map_store.panning = false
-        map_store.coords.x = parseInt($cookies.get("coords_x"))
-        map_store.coords.y = parseInt($cookies.get("coords_y"))
-        map_store.coords.z = parseInt($cookies.get("coords_z"))
-        map_store.offset_display.x = parseInt($cookies.get("scroll_left"))
-        map_store.offset_display.y = parseInt($cookies.get("scroll_top"))
+        let x = $cookies.get("coords_x")
+        let y = $cookies.get("coords_y")
+        let z = $cookies.get("coords_z")
+        let offset_x = $cookies.get("offset_display_x")
+        let offset_y = $cookies.get("offset_display_x")
+        map_store.coords.x = (x == null ? 0 : parseInt(x))
+        map_store.coords.y = (y == null ? 0 : parseInt(y))
+        map_store.coords.z = (z == null ? 3 : parseInt(z))
+        map_store.offset_display.x = (offset_x == null ? 0 : offset_x)
+        map_store.offset_display.y = (offset_y == null ? 0 : offset_y)
         display.value.scrollLeft = map_store.offset_display.x
         display.value.scrollTop = map_store.offset_display.y
         load_map()
     })
 
-    onUnmounted(() => {
+    const store_coords_cookie = () => {
         $cookies.set("coords_x", map_store.coords.x)
         $cookies.set("coords_y", map_store.coords.y)
         $cookies.set("coords_z", map_store.coords.z)
-        $cookies.set("scroll_left", map_store.offset_display.x)
-        $cookies.set("scroll_top", map_store.offset_display.x)
-    })
+        $cookies.set("offset_display_x", map_store.offset_display.x)
+        $cookies.set("offset_display_y", map_store.offset_display.y)
+    }
 
     const load_tile = (x, y, z) => {
         if (loading_tile) {
@@ -216,6 +221,7 @@
         display.value.scrollTop = map_store.offset_display.y
         prev_x = e.clientX
         prev_y = e.clientY
+        store_coords_cookie()
     }
 
     const zoom = (e) => {
@@ -248,6 +254,7 @@
             display.value.scrollLeft = 0
             display.value.scrollTop = 0
         }
+        store_coords_cookie()
         load_map()
     }
 
