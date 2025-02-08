@@ -1,6 +1,17 @@
 <template>
-    <div ref="display" class="map-display">
-        <img v-for="ind in (nb_tiles_x + 1) * (nb_tiles_y + 1)" :src="tile_urls[ind - 1]">
+    <div
+        ref="display" class="map-display"
+        :style="{
+            'grid-template-columns': Array(nb_tiles_x + 1).fill('auto').join(' '),
+            width: TILE_SIZE * nb_tiles_x_init + 'px',
+            height: TILE_SIZE * nb_tiles_y_init + 'px'
+        }"
+    >
+        <img
+            v-for="ind in (nb_tiles_x + 1) * (nb_tiles_y + 1)"
+            :src="tile_urls[ind - 1]"
+            :style="{ width: tile_size + 'px', height: tile_size + 'px'}"
+        />
     </div>
 </template>
 
@@ -18,9 +29,9 @@
 </style>
 
 <script setup>
-    import { ref, useTemplateRef, onMounted } from 'vue'
+    import { ref, useTemplateRef, onMounted, computed } from 'vue'
     import { map_store } from '../stores/map_store'
-    import { TILE_SIZE, get_dims_map, get_map_coords, get_viewport_coords } from '../lib/map_navigation'
+    import { TILE_SIZE, get_map_coords, get_viewport_coords } from '../lib/map_navigation'
 
     const Z_MIN = 3
     const Z_MAX = 21
@@ -35,18 +46,23 @@
     const display = useTemplateRef('display')
 
     const props = defineProps([ 'nbTilesX', 'nbTilesY' ])
-    const nb_tiles_x = ref(parseInt(props.nbTilesX))
-    const nb_tiles_y = ref(parseInt(props.nbTilesY))
+    const nb_tiles_x_init = ref(parseInt(props.nbTilesX))
+    const nb_tiles_y_init = ref(parseInt(props.nbTilesY))
+
+    const nb_tiles_x = computed(() => { return map_store.coords.z % 1 == 0.0 ? nb_tiles_x_init.value : nb_tiles_x_init.value * 2 })
+    const nb_tiles_y = computed(() => { return map_store.coords.z % 1 == 0.0 ? nb_tiles_y_init.value : nb_tiles_y_init.value * 2 })
+
+    const tile_size = computed(() => {
+        let zoom_dec = map_store.coords.z % 1
+        if (zoom_dec == 0.0) return TILE_SIZE
+        return 128 + 128 * zoom_dec
+    })
+
+    const z_coord = computed(() => {
+        return Math.ceil(map_store.coords.z)
+    })
 
     onMounted(() => {
-        let dims = get_dims_map(nb_tiles_x.value, nb_tiles_y.value)
-        display.value.style["width"] = dims.width + "px"
-        display.value.style["height"] = dims.height + "px"
-        let template_columns = ""
-        for (let i = 0; i < nb_tiles_x.value + 1; i++) {
-            template_columns += "auto "
-        }
-        display.value.style["grid-template-columns"] = template_columns
         map_store.panning = false
         let x = $cookies.get("coords_x")
         let y = $cookies.get("coords_y")
@@ -119,7 +135,7 @@
         }
         // Load tiles
         grid_coords.forEach((el) => {
-            load_tile(el[0], el[1], map_store.coords.z).catch((error) => { console.log(error) })
+            load_tile(el[0], el[1], z_coord.value).catch((error) => { console.log(error) })
         })
     }
 
@@ -157,7 +173,7 @@
                 }
             }
         }
-        else if (scroll_x > TILE_SIZE && (map_store.coords.x + (nb_tiles_x.value + 1)) < max_ind) {
+        else if (scroll_x > tile_size.value && (map_store.coords.x + (nb_tiles_x.value + 1)) < max_ind) {
             shift_x = 1
             map_store.coords.x += 1
             // shift tiles to the left
@@ -177,7 +193,7 @@
                 }
             }
         }
-        else if (scroll_y > TILE_SIZE && (map_store.coords.y + (nb_tiles_y.value + 1)) < max_ind) {
+        else if (scroll_y > tile_size.value && (map_store.coords.y + (nb_tiles_y.value + 1)) < max_ind) {
             shift_y = 1
             map_store.coords.y += 1
             // shift tiles to the top
@@ -190,34 +206,34 @@
         if (shift_x == -1) {
             // load tiles at the left border
             for (i = 0; i < nb_tiles_y.value + 1; i++) {
-                load_tile(map_store.coords.x, map_store.coords.y + i, map_store.coords.z)
+                load_tile(map_store.coords.x, map_store.coords.y + i, z_coord.value)
             }
-            scroll_x += TILE_SIZE
+            scroll_x += tile_size.value
         }
         else if (shift_x == 1) {
             // load tiles at the right border
             for (i = 0; i < nb_tiles_y.value + 1; i++) {
-                load_tile(map_store.coords.x + nb_tiles_x.value, map_store.coords.y + i, map_store.coords.z)
+                load_tile(map_store.coords.x + nb_tiles_x.value, map_store.coords.y + i, z_coord.value)
             }
-            scroll_x -= TILE_SIZE
+            scroll_x -= tile_size.value
         }
         if (shift_y == -1) {
             // load tiles at the top border
             for (i = 0; i < nb_tiles_x.value + 1; i++) {
-                load_tile(map_store.coords.x + i, map_store.coords.y, map_store.coords.z)
+                load_tile(map_store.coords.x + i, map_store.coords.y, z_coord.value)
             }
-            scroll_y += TILE_SIZE
+            scroll_y += tile_size.value
         }
         else if (shift_y == 1) {
             // load tiles at the bottom border
             for (i = 0; i < nb_tiles_x.value + 1; i++) {
-                load_tile(map_store.coords.x + i, map_store.coords.y + nb_tiles_y.value, map_store.coords.z)
+                load_tile(map_store.coords.x + i, map_store.coords.y + nb_tiles_y.value, z_coord.value)
             }
-            scroll_y -= TILE_SIZE
+            scroll_y -= tile_size.value
         }
-        map_store.offset_display.x = Math.min(scroll_x, TILE_SIZE)
+        map_store.offset_display.x = Math.min(scroll_x, tile_size.value)
         display.value.scrollLeft = map_store.offset_display.x
-        map_store.offset_display.y = Math.min(scroll_y, TILE_SIZE)
+        map_store.offset_display.y = Math.min(scroll_y, tile_size.value)
         display.value.scrollTop = map_store.offset_display.y
         prev_x = e.clientX
         prev_y = e.clientY
@@ -225,21 +241,23 @@
     }
 
     const zoom = (e) => {
-        let z = map_store.coords.z - 1
+        let z = map_store.coords.z - 0.1
         if (e.deltaY < 0) {
-            z = map_store.coords.z + 1
+            z = map_store.coords.z + 0.1
         }
+        if (z % 1 < 0.001 || z % 1 > 0.999) z = Math.round(z) // Avoid weird JS decimal calculations
         if (z < Z_MIN || z > Z_MAX)
             return
-        let nb_tiles_on_axis = Math.pow(2, z)
+        let nb_tiles_on_axis = Math.pow(2, Math.ceil(z))
         let vp_coords = get_viewport_coords([ e.clientX, e.clientY ], display.value, [ nb_tiles_x.value, nb_tiles_y.value ])
+        console.log(vp_coords)
         // X
         let pos_x = map_store.cursor_rel_coords.x * nb_tiles_on_axis
         let pos_left = pos_x - vp_coords.x * nb_tiles_x.value
         let e_pos_left = Math.floor(pos_left)
         let dec_pos_left = pos_left - e_pos_left
         map_store.coords.x = e_pos_left
-        map_store.offset_display.x = dec_pos_left * TILE_SIZE
+        map_store.offset_display.x = dec_pos_left * tile_size.value
         display.value.scrollLeft = map_store.offset_display.x
         // Y
         let pos_y = map_store.cursor_rel_coords.y * nb_tiles_on_axis
@@ -247,13 +265,9 @@
         let e_pos_top = Math.floor(pos_top)
         let dec_pos_top = pos_top - e_pos_top
         map_store.coords.y = e_pos_top
-        map_store.offset_display.y = dec_pos_top * TILE_SIZE
+        map_store.offset_display.y = dec_pos_top * tile_size.value
         display.value.scrollTop = map_store.offset_display.y
         map_store.coords.z = z
-        if (map_store.coords.z == 1) {
-            display.value.scrollLeft = 0
-            display.value.scrollTop = 0
-        }
         store_coords_cookie()
         load_map()
     }
