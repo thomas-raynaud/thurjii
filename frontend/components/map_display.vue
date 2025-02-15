@@ -49,8 +49,16 @@
     const nb_tiles_x_init = ref(parseInt(props.nbTilesX))
     const nb_tiles_y_init = ref(parseInt(props.nbTilesY))
 
-    const nb_tiles_x = computed(() => { return map_store.coords.z % 1 == 0.0 ? nb_tiles_x_init.value : nb_tiles_x_init.value * 2 })
-    const nb_tiles_y = computed(() => { return map_store.coords.z % 1 == 0.0 ? nb_tiles_y_init.value : nb_tiles_y_init.value * 2 })
+    const nb_tiles_x = computed(() => {
+        let z_mod_1 = map_store.coords.z % 1
+        if (z_mod_1 % 1 < 0.001 || z_mod_1 % 1 > 0.999) return nb_tiles_x_init.value
+        else return nb_tiles_x_init.value * 2
+    })
+    const nb_tiles_y = computed(() => {
+        let z_mod_1 = map_store.coords.z % 1
+        if (z_mod_1 % 1 < 0.001 || z_mod_1 % 1 > 0.999) return nb_tiles_y_init.value
+        else return nb_tiles_y_init.value * 2
+    })
 
     const tile_size = computed(() => {
         let zoom_dec = map_store.coords.z % 1
@@ -159,7 +167,7 @@
     const pan = (e) => {
         let scroll_x = display.value.scrollLeft + (prev_x - e.clientX)
         let scroll_y = display.value.scrollTop + (prev_y - e.clientY)
-        let max_ind = Math.pow(2, map_store.coords.z)
+        let max_ind = Math.pow(2, Math.ceil(map_store.coords.z))
         let shift_x = 0
         let shift_y = 0
         let i, j
@@ -173,6 +181,7 @@
                 }
             }
         }
+        
         else if (scroll_x > tile_size.value && (map_store.coords.x + (nb_tiles_x.value + 1)) < max_ind) {
             shift_x = 1
             map_store.coords.x += 1
@@ -241,14 +250,16 @@
     }
 
     const zoom = (e) => {
-        let z = map_store.coords.z - 0.1
         if (e.deltaY < 0) {
-            z = map_store.coords.z + 0.1
+            map_store.coords.z += 0.1
         }
-        if (z % 1 < 0.001 || z % 1 > 0.999) z = Math.round(z) // Avoid weird JS decimal calculations
-        if (z < Z_MIN || z > Z_MAX)
+        else
+            map_store.coords.z -= 0.1
+        if (map_store.coords.z % 1 < 0.001 || map_store.coords.z % 1 > 0.999)
+            map_store.coords.z = Math.round(map_store.coords.z) // Avoid weird JS decimal calculations
+        if (map_store.coords.z < Z_MIN || map_store.coords.z > Z_MAX)
             return
-        let nb_tiles_on_axis = Math.pow(2, Math.ceil(z))
+        let nb_tiles_on_axis = Math.pow(2, Math.ceil(map_store.coords.z))
         let vp_coords = get_viewport_coords([ e.clientX, e.clientY ], display.value, [ nb_tiles_x.value, nb_tiles_y.value ])
         console.log(vp_coords)
         // X
@@ -267,7 +278,6 @@
         map_store.coords.y = e_pos_top
         map_store.offset_display.y = dec_pos_top * tile_size.value
         display.value.scrollTop = map_store.offset_display.y
-        map_store.coords.z = z
         store_coords_cookie()
         load_map()
     }

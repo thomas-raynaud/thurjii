@@ -6,8 +6,8 @@
         <div class="col">
             <p>{{ map_store.state == 0 ? "Select a region" : "Place the lines" }}</p>
             <p>{{ "x= " + map_store.cursor_rel_coords_rounded.x + " y= " + map_store.cursor_rel_coords_rounded.y + " z= " + map_store.coords.z }}</p>
-            <p>{{ "mx= " + merc_coords.x}}</p>
-            <p>{{ "my= " + merc_coords.y}}</p>
+            <p>{{ "mx= " + merc_coords.x }}</p>
+            <p>{{ "my= " + merc_coords.y }}</p>
         </div>
     </div>
 </template>
