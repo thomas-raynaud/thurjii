@@ -1,13 +1,31 @@
 const TILE_SIZE = 256
 const EQUATOR = 40075016.68557849
 
-const get_map_coords = (coords, pos, element) => {
-    let mouse_pos = get_mouse_pos(pos, element)
-    let tile_size = element.children[0].height
+const get_tile_size_from_dom = (map_element) => {
+    return map_element.children[0].height
+}
+
+const get_tile_size_from_zoom = (zoom) => {
+    let zoom_dec = zoom % 1
+    if (zoom_dec == 0.0) return TILE_SIZE
+    return 128 + 128 * zoom_dec
+}
+
+const get_map_width = (map_element) => {
+    return map_element.clientWidth
+}
+
+const get_map_height = (map_element) => {
+    return map_element.clientHeight
+}
+
+const get_map_coords = (coords, pos, map_element) => {
+    let mouse_pos = get_mouse_pos(pos, map_element)
+    let tile_size = get_tile_size_from_dom(map_element)
     let z = Math.ceil(coords.z)
     return {
-        x: (Math.floor(mouse_pos.x / tile_size) + (coords.x + 1) + (((mouse_pos.x % tile_size) - (tile_size - element.scrollLeft)) / tile_size)) / Math.pow(2, z),
-        y: (Math.floor(mouse_pos.y / tile_size) + (coords.y + 1) + (((mouse_pos.y % tile_size) - (tile_size - element.scrollTop)) / tile_size)) / Math.pow(2, z)
+        x: (Math.floor(mouse_pos.x / tile_size) + (coords.x + 1) + (((mouse_pos.x % tile_size) - (tile_size - map_element.scrollLeft)) / tile_size)) / Math.pow(2, z),
+        y: (Math.floor(mouse_pos.y / tile_size) + (coords.y + 1) + (((mouse_pos.y % tile_size) - (tile_size - map_element.scrollTop)) / tile_size)) / Math.pow(2, z)
     }
 }
 
@@ -18,12 +36,11 @@ const get_mouse_pos = (pos, element) => {
     }
 }
 
-const get_viewport_coords = (pos, element, dims_vp) => {
-    let mouse_pos = get_mouse_pos(pos, element)
-    let tile_size = element.children[0].height
+const get_viewport_coords = (pos, map_element) => {
+    let mouse_pos = get_mouse_pos(pos, map_element)
     return {
-        x: mouse_pos.x / (dims_vp[0] * tile_size),
-        y: mouse_pos.y / (dims_vp[1] * tile_size),
+        x: mouse_pos.x / get_map_width(map_element),
+        y: mouse_pos.y / get_map_height(map_element),
     }
 }
 
@@ -48,11 +65,21 @@ const get_dims_map = (nb_tiles_x, nb_tiles_y) => {
     }
 }
 
+const get_nb_tiles_displayed = (map_element, zoom) => {
+    let tile_size = get_tile_size_from_zoom(zoom)
+    return {
+        x: get_map_width(map_element) / tile_size,
+        y: get_map_height(map_element) / tile_size
+    }
+}
+
 export {
     TILE_SIZE,
+    get_tile_size_from_zoom,
     get_map_coords,
     get_mouse_pos,
     get_viewport_coords,
     get_dims_map,
+    get_nb_tiles_displayed,
     from_rel_coords_to_mercator, from_mercator_to_rel_coords
 }
