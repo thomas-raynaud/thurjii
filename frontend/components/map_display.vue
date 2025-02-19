@@ -263,12 +263,16 @@
         if (z < Z_MIN || z > Z_MAX)
             return
         map_store.coords.z = z
-        let nb_tiles_on_axis = Math.pow(2, Math.ceil(z))
         let vp_coords = get_viewport_coords([ e.clientX, e.clientY ], display.value)
-        let nb_tiles_displayed = get_nb_tiles_displayed(display.value, z)
-        let current_tile_size = get_tile_size_from_zoom(z)
+        position_map(map_store.cursor_rel_coords, z, vp_coords)
+    }
+
+    const position_map = (pos, zoom, vp_coords) => {
+        let nb_tiles_on_axis = Math.pow(2, Math.ceil(zoom))
+        let nb_tiles_displayed = get_nb_tiles_displayed(display.value, zoom)
+        let current_tile_size = get_tile_size_from_zoom(zoom)
         // X
-        let pos_x = map_store.cursor_rel_coords.x * nb_tiles_on_axis
+        let pos_x = pos.x * nb_tiles_on_axis
         let pos_left = pos_x - (vp_coords.x * nb_tiles_displayed.x)
         let e_pos_left = Math.floor(pos_left)
         let dec_pos_left = pos_left - e_pos_left
@@ -276,7 +280,7 @@
         map_store.offset_display.x = dec_pos_left * current_tile_size
         display.value.scrollLeft = map_store.offset_display.x
         // Y
-        let pos_y = map_store.cursor_rel_coords.y * nb_tiles_on_axis
+        let pos_y = pos.y * nb_tiles_on_axis
         let pos_top = pos_y - (vp_coords.y * nb_tiles_displayed.y)
         let e_pos_top = Math.floor(pos_top)
         let dec_pos_top = pos_top - e_pos_top
@@ -288,6 +292,6 @@
     }
 
     defineExpose({
-        mousemove, mousedown, mousedown, mouseleave, mouseup, zoom
+        mousemove, mousedown, mousedown, mouseleave, mouseup, zoom, position_map
     })
 </script>

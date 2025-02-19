@@ -51,10 +51,10 @@ const from_rel_coords_to_mercator = (x, y) => {
     }
 }
 
-const from_mercator_to_rel_coords = (x, y) => {
+const from_mercator_to_rel_coords = (mc) => {
     return {
-        x: x / EQUATOR + 0.5,
-        y: -(y / EQUATOR - 0.5)
+        x: mc.x / EQUATOR + 0.5,
+        y: -(mc.y / EQUATOR - 0.5)
     }
 }
 

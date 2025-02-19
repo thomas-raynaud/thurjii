@@ -6,8 +6,15 @@
             @mouseup="mouseup"
             @mouseleave="mouseleave"
             @wheel="mousewheel">
-        <map-display ref="display" :nb-tiles-x="nb_tiles_x" :nb-tiles-y="nb_tiles_y" />
-        <map-canvas ref="canvas" :nb-tiles-x="nb_tiles_x" :nb-tiles-y="nb_tiles_y" />
+        <map-display
+            ref="display"
+            :nb-tiles-x="nb_tiles_x" :nb-tiles-y="nb_tiles_y"
+        />
+        <map-canvas
+            ref="canvas"
+            @position-map="(pos, zoom, vp_coords) => { display.position_map(pos, zoom, vp_coords) }"
+            :nb-tiles-x="nb_tiles_x" :nb-tiles-y="nb_tiles_y"
+        />
     </div>
 </template>
 
