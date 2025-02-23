@@ -12,7 +12,6 @@
 <script setup>
     import { useTemplateRef, onMounted } from 'vue'
     import {
-        TILE_SIZE,
         get_dims_map,
         from_mercator_to_rel_coords,
         from_rel_coords_to_mercator,
@@ -32,6 +31,10 @@
     let bounding_box = {
         start: { x: -1, y: -1},
         end: { x: -1, y: -1}
+    }
+    let line_cursor = {
+        x: -1,
+        y: -1
     }
 
     const emit = defineEmits([ 'positionMap' ])
@@ -117,12 +120,13 @@
             ctx.fillStyle = "rgba(0, 0, 255, 0.25)"
             ctx.fill()
             // Show line cursor
+            let line_cursor_canvas = rel_coords_to_canvas_pos(line_cursor)
             ctx.beginPath()
-            ctx.arc(reg_start.x + width / 2, reg_start.y + height / 2, 4, 0, 2 * Math.PI)
+            ctx.arc(line_cursor_canvas.x, line_cursor_canvas.y, 4, 0, 2 * Math.PI)
             ctx.fillStyle = "black"
             ctx.fill()
             ctx.beginPath()
-            ctx.arc(reg_start.x + width / 2, reg_start.y + height / 2, 2, 0, 2 * Math.PI)
+            ctx.arc(line_cursor_canvas.x, line_cursor_canvas.y, 2, 0, 2 * Math.PI)
             ctx.fillStyle = "white"
             ctx.fill()
             // Draw lines
@@ -172,10 +176,10 @@
                     let zoom_x = -Math.log2((width_bb * 1.1) / nb_tiles_x)
                     let zoom_y = -Math.log2((height_bb * 1.1) / nb_tiles_y)
                     let zoom = Math.min(zoom_x, zoom_y)
-                    let bb_center = { x: bb_start.x + width_bb / 2, y: bb_start.y + height_bb / 2 }
+                    line_cursor = { x: bb_start.x + width_bb / 2, y: bb_start.y + height_bb / 2 }
                     let vp_coords = { x: 0.5, y: 0.5 }
                     map_store.coords.z = zoom
-                    emit('positionMap', bb_center, zoom, vp_coords )
+                    emit('positionMap', line_cursor, zoom, vp_coords )
                 }
             }
         }
