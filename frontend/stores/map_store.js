@@ -23,5 +23,6 @@ export const map_store = reactive({
     line_cursor_coords: {
         x: 0,
         y: 0
-    }
+    },
+    line_rotating: false
 })

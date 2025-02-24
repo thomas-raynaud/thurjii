@@ -13,6 +13,7 @@
     import { useTemplateRef, onMounted } from 'vue'
     import {
         get_dims_map,
+        get_mouse_pos,
         from_mercator_to_rel_coords,
         from_rel_coords_to_mercator,
         get_tile_size_from_zoom
@@ -134,60 +135,72 @@
         }
     }
 
-    const mousedown = (e) => {
-        if (e.button == 0) {
-            if (map_store.state == 0) {
-                let new_point = from_rel_coords_to_mercator(map_store.cursor_rel_coords.x, map_store.cursor_rel_coords.y)
-                if (check_intersection_polygon(region, new_point)) {
-                    region = []
-                }
-                else {
-                    region.push(new_point)
-                }
-            }
+    const add_point_to_region = () => {
+        let new_point = from_rel_coords_to_mercator(map_store.cursor_rel_coords.x, map_store.cursor_rel_coords.y)
+        if (check_intersection_polygon(region, new_point)) {
+            region = []
         }
-        else if (e.button == 2) {
-            if (map_store.state == 0) {
-                if (check_intersection_polygon(region.slice(1), region[0])) {
-                    console.log("Region polygon is self-intersecting")
-                    region = []
-                }
-                else if (region.length <= 2) {
-                    region = []
-                }
-                else {
-                    map_store.state = 1
-                    // Compute bounding box
-                    let region_min = { x: region[0].x, y: region[0].y }
-                    let region_max = { x: region[0].x, y: region[0].y }
-                    for (let i = 1; i < region.length; i++) {
-                        region_min.x = Math.min(region_min.x, region[i].x)
-                        region_min.y = Math.max(region_min.y, region[i].y)
-                        region_max.x = Math.max(region_max.x, region[i].x)
-                        region_max.y = Math.min(region_max.y, region[i].y)
-                    }
-                    bounding_box.start = region_min
-                    bounding_box.end = region_max
-                    // Center map display on boundary box
-                    let bb_start = from_mercator_to_rel_coords(bounding_box.start)
-                    let bb_end = from_mercator_to_rel_coords(bounding_box.end)
-                    let width_bb = bb_end.x - bb_start.x
-                    let height_bb = bb_end.y - bb_start.y
-                    let zoom_x = -Math.log2((width_bb * 1.1) / nb_tiles_x)
-                    let zoom_y = -Math.log2((height_bb * 1.1) / nb_tiles_y)
-                    let zoom = Math.min(zoom_x, zoom_y)
-                    line_cursor = { x: bb_start.x + width_bb / 2, y: bb_start.y + height_bb / 2 }
-                    let vp_coords = { x: 0.5, y: 0.5 }
-                    map_store.coords.z = zoom
-                    emit('positionMap', line_cursor, zoom, vp_coords )
-                }
-            }
+        else {
+            region.push(new_point)
         }
-        draw()
+    }
+
+    const finish_region = () => {
+        if (check_intersection_polygon(region.slice(1), region[0])) {
+            console.log("Region polygon is self-intersecting")
+            region = []
+        }
+        else if (region.length <= 2) {
+            region = []
+        }
+        else {
+            map_store.state = 1
+            // Compute bounding box
+            let region_min = { x: region[0].x, y: region[0].y }
+            let region_max = { x: region[0].x, y: region[0].y }
+            for (let i = 1; i < region.length; i++) {
+                region_min.x = Math.min(region_min.x, region[i].x)
+                region_min.y = Math.max(region_min.y, region[i].y)
+                region_max.x = Math.max(region_max.x, region[i].x)
+                region_max.y = Math.min(region_max.y, region[i].y)
+            }
+            bounding_box.start = region_min
+            bounding_box.end = region_max
+            // Center map display on boundary box
+            let bb_start = from_mercator_to_rel_coords(bounding_box.start)
+            let bb_end = from_mercator_to_rel_coords(bounding_box.end)
+            let width_bb = bb_end.x - bb_start.x
+            let height_bb = bb_end.y - bb_start.y
+            let zoom_x = -Math.log2((width_bb * 1.1) / nb_tiles_x)
+            let zoom_y = -Math.log2((height_bb * 1.1) / nb_tiles_y)
+            let zoom = Math.min(zoom_x, zoom_y)
+            line_cursor = { x: bb_start.x + width_bb / 2, y: bb_start.y + height_bb / 2 }
+            let vp_coords = { x: 0.5, y: 0.5 }
+            map_store.coords.z = zoom
+            emit('positionMap', line_cursor, zoom, vp_coords )
+        }
+    }
+
+    const start_rotating = () => {
+        map_store.line_rotating = true
+    }
+
+    const stop_rotating = () => {
+        map_store.line_rotating = false
+    }
+
+    const rotate_lines = (e) => {
+        let pos = get_mouse_pos([ e.clientX, e.clientY ], canvas.value)
+        let dims_map = get_dims_map(nb_tiles_x, nb_tiles_y)
+        let theta = ((pos.x / dims_map.width) - 0.5) * (360 * 2)
     }
 
     defineExpose({
         draw,
-        mousedown
+        add_point_to_region,
+        finish_region,
+        start_rotating,
+        stop_rotating,
+        rotate_lines
     })
 </script>

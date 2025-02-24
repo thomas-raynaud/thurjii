@@ -51,25 +51,40 @@
 
     const mousemove = (e) => {
         e.preventDefault()
-        display.value.mousemove(e)
-        if (map_store.state == 0 || map_store.panning)
-            canvas.value.draw()
+        display.value.update_cursor_coords(e)
+        if (map_store.panning)
+            display.value.pan(e)
+        if (map_store.line_rotating)
+            canvas.value.rotate_lines(e)
+        canvas.value.draw()
     }
 
     const mousedown = (e) => {
         e.preventDefault()
-        if (e.button == 1)
-            display.value.mousedown(e)
-        else if (e.button == 0 || e.button == 2)
-            canvas.value.mousedown(e)
+        if (map_store.state == 0) {
+            if (e.button == 0)
+                canvas.value.add_point_to_region()
+            else if (e.button == 1)
+                display.value.start_panning(e)
+            else if (e.button == 2)
+                canvas.value.finish_region()
+        }
+        else if (map_store.state == 1) {
+            if (e.button == 0 && (e.shiftKey || e.ctrlKey)) {
+                canvas.value.start_rotating()
+            }
+        }
+        canvas.value.draw()
     }
 
     const mouseup = () => {
-        display.value.mouseup()
+        display.value.stop_panning()
+        canvas.value.stop_rotating()
     }
 
     const mouseleave = () => {
-        display.value.mouseleave()
+        display.value.stop_panning()
+        canvas.value.stop_rotating()
     }
 
     const mousewheel = (e) => {
