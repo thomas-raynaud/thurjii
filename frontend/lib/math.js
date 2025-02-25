@@ -9,4 +9,11 @@ const fix_decimal = (x) => {
         return x
 }
 
-export { fix_decimal }
+const degrees_to_radians = (deg) => {
+    return deg * (Math.PI / 180)
+}
+
+export {
+    fix_decimal,
+    degrees_to_radians,
+}

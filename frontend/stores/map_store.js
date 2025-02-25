@@ -24,5 +24,7 @@ export const map_store = reactive({
         x: 0,
         y: 0
     },
-    line_rotating: false
+    line_panning: false,
+    line_rotating: false,
+    line_spreading: false
 })

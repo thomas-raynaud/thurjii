@@ -52,10 +52,10 @@
     const mousemove = (e) => {
         e.preventDefault()
         display.value.update_cursor_coords(e)
-        if (map_store.panning)
-            display.value.pan(e)
-        if (map_store.line_rotating)
-            canvas.value.rotate_lines(e)
+        if (map_store.panning)              display.value.pan(e)
+        else if (map_store.line_panning)    canvas.value.pan_lines(e)
+        else if (map_store.line_rotating)   canvas.value.rotate_lines(e)
+        else if (map_store.line_spreading)  canvas.value.spread_lines(e)
         canvas.value.draw()
     }
 
@@ -71,7 +71,16 @@
         }
         else if (map_store.state == 1) {
             if (e.button == 0 && (e.shiftKey || e.ctrlKey)) {
-                canvas.value.start_rotating()
+                canvas.value.start_line_rotating()
+                canvas.value.rotate_lines(e)
+            }
+            else if (e.button == 0) {
+                canvas.value.start_line_panning()
+                canvas.value.pan_lines(e)
+            }
+            else if (e.button == 2) {
+                canvas.value.start_line_spreading()
+                canvas.value.spread_lines(e)
             }
         }
         canvas.value.draw()
@@ -79,17 +88,23 @@
 
     const mouseup = () => {
         display.value.stop_panning()
-        canvas.value.stop_rotating()
+        canvas.value.stop_line_panning()
+        canvas.value.stop_line_rotating()
+        canvas.value.stop_line_spreading()
     }
 
     const mouseleave = () => {
         display.value.stop_panning()
-        canvas.value.stop_rotating()
+        canvas.value.stop_line_panning()
+        canvas.value.stop_line_rotating()
+        canvas.value.stop_line_spreading()
     }
 
     const mousewheel = (e) => {
         e.preventDefault()
-        display.value.zoom(e)
-        canvas.value.draw()
+        if (map_store.state == 0) {
+            display.value.zoom(e)
+            canvas.value.draw()
+        }
     }
 </script>

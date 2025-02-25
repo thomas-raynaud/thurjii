@@ -14,11 +14,15 @@
     import {
         get_dims_map,
         get_mouse_pos,
+        get_map_coords,
         from_mercator_to_rel_coords,
         from_rel_coords_to_mercator,
         get_tile_size_from_zoom
     } from '../lib/map_navigation'
-    import { check_intersection_polygon } from '../lib/geometry'
+    import {
+        check_intersection_polygon, get_distance
+    } from '../lib/geometry'
+    import { degrees_to_radians } from '../lib/math'
     import { map_store } from '../stores/map_store'
 
     const props = defineProps([ 'nbTilesX', 'nbTilesY' ])
@@ -37,6 +41,8 @@
         x: -1,
         y: -1
     }
+    let line_theta
+    let line_step
 
     const emit = defineEmits([ 'positionMap' ])
 
@@ -48,24 +54,26 @@
         canvas.value.height = dims.height
         ctx = canvas.value.getContext("2d")
         map_store.state = 0
+        line_theta = 0
+        line_step = 10
         draw()
     })
 
-    const mercator_to_canvas_pos = (mc) => {
-        let rc = from_mercator_to_rel_coords(mc)
-        return rel_coords_to_canvas_pos(rc)
+    const from_rel_coords_to_canvas_pos = (rc) => {
+    let tile_size = get_tile_size_from_zoom(map_store.coords.z)
+    let tcx = rc.x * Math.pow(2, Math.ceil(map_store.coords.z))
+    let tcy = rc.y * Math.pow(2, Math.ceil(map_store.coords.z))
+    let pos_left = map_store.coords.x + (map_store.offset_display.x / tile_size)
+    let pos_top = map_store.coords.y + (map_store.offset_display.y / tile_size)
+    return {
+        x: (tcx - pos_left) * tile_size,
+        y: (tcy - pos_top) * tile_size
     }
+}
 
-    const rel_coords_to_canvas_pos = (rc) => {
-        let tile_size = get_tile_size_from_zoom(map_store.coords.z)
-        let tcx = rc.x * Math.pow(2, Math.ceil(map_store.coords.z))
-        let tcy = rc.y * Math.pow(2, Math.ceil(map_store.coords.z))
-        let pos_left = map_store.coords.x + (map_store.offset_display.x / tile_size)
-        let pos_top = map_store.coords.y + (map_store.offset_display.y / tile_size)
-        return {
-            x: (tcx - pos_left) * tile_size,
-            y: (tcy - pos_top) * tile_size
-        }
+    const from_mercator_to_canvas_pos = (mc) => {
+        let rc = from_mercator_to_rel_coords(mc)
+        return from_rel_coords_to_canvas_pos(rc)
     }
 
     const draw = () => {
@@ -74,7 +82,7 @@
             return
         let region_on_canvas = []
         for (let i = 0; i < region.length; i++) {
-            region_on_canvas[i] = mercator_to_canvas_pos(region[i])
+            region_on_canvas[i] = from_mercator_to_canvas_pos(region[i])
         }
         
         ctx.strokeStyle = 'red'
@@ -92,7 +100,7 @@
         poly.closePath()
         ctx.setLineDash([])
         ctx.stroke()
-        let cursor_coords = rel_coords_to_canvas_pos(map_store.cursor_rel_coords)
+        let cursor_coords = from_rel_coords_to_canvas_pos(map_store.cursor_rel_coords)
         if (map_store.state == 0) {
             ctx.beginPath()
             ctx.setLineDash([1, 2])
@@ -112,8 +120,8 @@
         }
         if (map_store.state == 1) {
             // Compute bounding box
-            let reg_start = mercator_to_canvas_pos(bounding_box.start)
-            let reg_end = mercator_to_canvas_pos(bounding_box.end)
+            let reg_start = from_mercator_to_canvas_pos(bounding_box.start)
+            let reg_end = from_mercator_to_canvas_pos(bounding_box.end)
             let width = reg_end.x - reg_start.x
             let height = reg_end.y - reg_start.y
             ctx.beginPath()
@@ -121,7 +129,7 @@
             ctx.fillStyle = "rgba(0, 0, 255, 0.25)"
             ctx.fill()
             // Show line cursor
-            let line_cursor_canvas = rel_coords_to_canvas_pos(line_cursor)
+            let line_cursor_canvas = from_rel_coords_to_canvas_pos(line_cursor)
             ctx.beginPath()
             ctx.arc(line_cursor_canvas.x, line_cursor_canvas.y, 4, 0, 2 * Math.PI)
             ctx.fillStyle = "black"
@@ -131,7 +139,16 @@
             ctx.fillStyle = "white"
             ctx.fill()
             // Draw lines
-            //let step = 10 // in pixels
+            let theta_rad = degrees_to_radians(line_theta)
+            let point_rotated = [
+                line_step * Math.cos(theta_rad),
+                line_step * Math.sin(theta_rad)
+            ]
+            let line = [ line_cursor_canvas.x + point_rotated[0], line_cursor_canvas.y + point_rotated[1] ]
+            ctx.beginPath()
+            ctx.arc(line[0], line[1], 2, 0, 2 * Math.PI)
+            ctx.fillStyle = "white"
+            ctx.fill()
         }
     }
 
@@ -181,26 +198,35 @@
         }
     }
 
-    const start_rotating = () => {
-        map_store.line_rotating = true
-    }
+    const start_line_panning = () => { map_store.line_panning = true }
+    const stop_line_panning = () => { map_store.line_panning = false }
+    const start_line_rotating = () => { map_store.line_rotating = true }
+    const stop_line_rotating = () => { map_store.line_rotating = false }
+    const start_line_spreading = () => { map_store.line_spreading = true }
+    const stop_line_spreading = () => { map_store.line_spreading = false }
 
-    const stop_rotating = () => {
-        map_store.line_rotating = false
+    const pan_lines = (e) => {
+        line_cursor = get_map_coords(map_store.coords, map_store.offset_display, [ e.clientX, e.clientY ], canvas.value)
     }
 
     const rotate_lines = (e) => {
         let pos = get_mouse_pos([ e.clientX, e.clientY ], canvas.value)
         let dims_map = get_dims_map(nb_tiles_x, nb_tiles_y)
-        let theta = ((pos.x / dims_map.width) - 0.5) * (360 * 2)
+        line_theta = ((pos.x / dims_map.width) - 0.5) * (360 * 2)
+    }
+
+    const spread_lines = (e) => {
+        let line_cursor_canvas = from_rel_coords_to_canvas_pos(line_cursor)
+        let pos = get_mouse_pos([ e.clientX, e.clientY ], canvas.value)
+        line_step = get_distance(line_cursor_canvas, pos)
     }
 
     defineExpose({
         draw,
-        add_point_to_region,
-        finish_region,
-        start_rotating,
-        stop_rotating,
-        rotate_lines
+        add_point_to_region, finish_region,
+        start_line_panning, stop_line_panning,
+        start_line_rotating, stop_line_rotating,
+        start_line_spreading, stop_line_spreading,
+        pan_lines, rotate_lines, spread_lines
     })
 </script>

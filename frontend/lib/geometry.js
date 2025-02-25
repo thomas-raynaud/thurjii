@@ -62,6 +62,11 @@ const check_intersection_polygon = (poly, new_point) => {
     return false
 }
 
+const get_distance = (p1, p2) => {
+	return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2))
+}
+
 export {
-    check_intersection_polygon
+    check_intersection_polygon,
+	get_distance
 }

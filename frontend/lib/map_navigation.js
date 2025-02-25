@@ -1,3 +1,5 @@
+import { map_store } from "../stores/map_store"
+
 const TILE_SIZE = 256
 const EQUATOR = 40075016.68557849
 
@@ -19,13 +21,13 @@ const get_map_height = (map_element) => {
     return map_element.clientHeight
 }
 
-const get_map_coords = (coords, pos, map_element) => {
+const get_map_coords = (coords, offset, pos, map_element) => {
     let mouse_pos = get_mouse_pos(pos, map_element)
-    let tile_size = get_tile_size_from_dom(map_element)
+    let tile_size = get_tile_size_from_zoom(map_store.coords.z)
     let z = Math.ceil(coords.z)
     return {
-        x: (Math.floor(mouse_pos.x / tile_size) + (coords.x + 1) + (((mouse_pos.x % tile_size) - (tile_size - map_element.scrollLeft)) / tile_size)) / Math.pow(2, z),
-        y: (Math.floor(mouse_pos.y / tile_size) + (coords.y + 1) + (((mouse_pos.y % tile_size) - (tile_size - map_element.scrollTop)) / tile_size)) / Math.pow(2, z)
+        x: (Math.floor(mouse_pos.x / tile_size) + (coords.x + 1) + (((mouse_pos.x % tile_size) - (tile_size - offset.x)) / tile_size)) / Math.pow(2, z),
+        y: (Math.floor(mouse_pos.y / tile_size) + (coords.y + 1) + (((mouse_pos.y % tile_size) - (tile_size - offset.y)) / tile_size)) / Math.pow(2, z)
     }
 }
 
@@ -81,5 +83,5 @@ export {
     get_viewport_coords,
     get_dims_map,
     get_nb_tiles_displayed,
-    from_rel_coords_to_mercator, from_mercator_to_rel_coords
+    from_rel_coords_to_mercator, from_mercator_to_rel_coords,
 }
