@@ -20,7 +20,10 @@
         get_tile_size_from_zoom
     } from '../lib/map_navigation'
     import {
-        check_intersection_polygon, get_distance
+        check_intersection_polygon,
+        get_distance,
+        translate,
+        rotate
     } from '../lib/geometry'
     import { degrees_to_radians } from '../lib/math'
     import { map_store } from '../stores/map_store'
@@ -140,15 +143,33 @@
             ctx.fill()
             // Draw lines
             let theta_rad = degrees_to_radians(line_theta)
-            let point_rotated = [
-                line_step * Math.cos(theta_rad),
-                line_step * Math.sin(theta_rad)
-            ]
-            let line = [ line_cursor_canvas.x + point_rotated[0], line_cursor_canvas.y + point_rotated[1] ]
+            // p1 space
+            let p0 = [ 20, 0 ]
+            let p2 = [ -20, 0 ]
+            // cursor space
+            let p1 = [ line_step, 0]
+            p0 = rotate(p0, Math.PI / 2)
+            p2 = rotate(p2, Math.PI / 2)
+            p0 = translate(p0, [ line_step, 0 ])
+            p2 = translate(p2, [ line_step, 0 ])
+            // world space
+            p0 = rotate(p0, theta_rad)
+            p2 = rotate(p2, theta_rad)
+            p0 = translate(p0, [ line_cursor_canvas.x, line_cursor_canvas.y ])
+            p2 = translate(p2, [ line_cursor_canvas.x, line_cursor_canvas.y ])
+            p1 = rotate(p1, theta_rad)
+            p1 = translate(p1, [ line_cursor_canvas.x, line_cursor_canvas.y ])
             ctx.beginPath()
-            ctx.arc(line[0], line[1], 2, 0, 2 * Math.PI)
+            ctx.strokeStyle = 'green'
+            ctx.lineWidth = '1'
+            ctx.moveTo(p0[0], p0[1])
+            ctx.lineTo(p2[0], p2[1])
+            ctx.stroke()
+            ctx.beginPath()
+            ctx.arc( p1[0], p1[1], 2, 0, 2 * Math.PI)
             ctx.fillStyle = "white"
             ctx.fill()
+
         }
     }
 

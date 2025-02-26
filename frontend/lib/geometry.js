@@ -66,7 +66,23 @@ const get_distance = (p1, p2) => {
 	return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2))
 }
 
+const rotate = (p, theta) => {
+	return [
+		p[0] * Math.cos(theta) - p[1] * Math.sin(theta),
+		p[0] * Math.sin(theta) + p[1] * Math.cos(theta)
+	]
+}
+
+const translate = (p, t) => {
+	return [
+		p[0] + t[0],
+		p[1] + t[1]
+	]
+}
+
 export {
     check_intersection_polygon,
-	get_distance
+	get_distance,
+	rotate,
+	translate
 }
