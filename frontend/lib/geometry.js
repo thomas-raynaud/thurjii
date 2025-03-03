@@ -67,22 +67,48 @@ const get_distance = (p1, p2) => {
 }
 
 const rotate = (p, theta) => {
-	return [
-		p[0] * Math.cos(theta) - p[1] * Math.sin(theta),
-		p[0] * Math.sin(theta) + p[1] * Math.cos(theta)
-	]
+	return {
+		x: p.x * Math.cos(theta) - p.y * Math.sin(theta),
+		y: p.x * Math.sin(theta) + p.y * Math.cos(theta)
+	}
 }
 
 const translate = (p, t) => {
-	return [
-		p[0] + t[0],
-		p[1] + t[1]
-	]
+	return {
+		x: p.x + t.x,
+		y: p.y + t.y
+	}
+}
+
+const get_lines_intersection_point = (a, b, c, d) => {
+    // Line AB represented as a1x + b1y = c1
+    const a1 = b.y - a.y
+    const b1 = a.x - b.x
+    const c1 = a1 * a.x + b1 * a.y
+    
+	// Line CD represented as a2x + b2y = c2
+    const a2 = d.y - c.y
+    const b2 = c.x - d.x
+    const c2 = a2 * c.x + b2 * c.y
+ 
+    const  det = a1 * b2 - a2 * b1
+ 
+    if (det == 0.0) {
+        // The lines are parallel
+        return [ Number.MAX_VALUE, Number.MAX_VALUE ]
+    }
+    else {
+		return {
+			x: (b2 * c1 - b1 * c2) / det,
+			y: (a1 * c2 - a2 * c1) / det
+		}
+    }
 }
 
 export {
     check_intersection_polygon,
 	get_distance,
 	rotate,
-	translate
+	translate,
+	get_lines_intersection_point
 }

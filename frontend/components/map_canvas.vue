@@ -23,7 +23,8 @@
         check_intersection_polygon,
         get_distance,
         translate,
-        rotate
+        rotate,
+        get_lines_intersection_point
     } from '../lib/geometry'
     import { degrees_to_radians } from '../lib/math'
     import { map_store } from '../stores/map_store'
@@ -46,6 +47,7 @@
     }
     let line_theta
     let line_step
+    let lines = []
 
     const emit = defineEmits([ 'positionMap' ])
 
@@ -143,30 +145,18 @@
             ctx.fill()
             // Draw lines
             let theta_rad = degrees_to_radians(line_theta)
-            // p1 space
-            let p0 = [ 20, 0 ]
-            let p2 = [ -20, 0 ]
-            // cursor space
-            let p1 = [ line_step, 0]
-            p0 = rotate(p0, Math.PI / 2)
-            p2 = rotate(p2, Math.PI / 2)
-            p0 = translate(p0, [ line_step, 0 ])
-            p2 = translate(p2, [ line_step, 0 ])
+            let p1 = { x: line_step, y: 0 }
             // world space
-            p0 = rotate(p0, theta_rad)
-            p2 = rotate(p2, theta_rad)
-            p0 = translate(p0, [ line_cursor_canvas.x, line_cursor_canvas.y ])
-            p2 = translate(p2, [ line_cursor_canvas.x, line_cursor_canvas.y ])
             p1 = rotate(p1, theta_rad)
-            p1 = translate(p1, [ line_cursor_canvas.x, line_cursor_canvas.y ])
+            p1 = translate(p1, line_cursor_canvas)
             ctx.beginPath()
             ctx.strokeStyle = 'green'
             ctx.lineWidth = '1'
-            ctx.moveTo(p0[0], p0[1])
-            ctx.lineTo(p2[0], p2[1])
+            ctx.moveTo(lines[0].start.x, lines[0].start.y)
+            ctx.lineTo(lines[0].end.x, lines[0].end.y)
             ctx.stroke()
             ctx.beginPath()
-            ctx.arc( p1[0], p1[1], 2, 0, 2 * Math.PI)
+            ctx.arc( p1.x, p1.y, 2, 0, 2 * Math.PI)
             ctx.fillStyle = "white"
             ctx.fill()
 
@@ -216,7 +206,44 @@
             let vp_coords = { x: 0.5, y: 0.5 }
             map_store.coords.z = zoom
             emit('positionMap', line_cursor, zoom, vp_coords )
+            compute_lines()
         }
+    }
+
+    const compute_lines = () => {
+        let line_cursor_canvas = from_rel_coords_to_canvas_pos(line_cursor)
+        let theta_rad = degrees_to_radians(line_theta)
+        // p1 space
+        let p0 = { x: 20, y: 0 }
+        let p2 = { x: -20, y: 0 }
+        // cursor space
+        let p1 = { x: line_step, y: 0 }
+        p0 = rotate(p0, Math.PI / 2)
+        p2 = rotate(p2, Math.PI / 2)
+        p0 = translate(p0, p1)
+        p2 = translate(p2, p1)
+        // world space
+        p0 = rotate(p0, theta_rad)
+        p2 = rotate(p2, theta_rad)
+        p0 = translate(p0, line_cursor_canvas)
+        p2 = translate(p2, line_cursor_canvas)
+        let intersections = []
+        lines = []
+        for (let i = 0; i < region.length; i++) {
+            let c = from_mercator_to_canvas_pos(region[i])
+            let d = from_mercator_to_canvas_pos(region[(i + 1) % region.length])
+            let intersection = get_lines_intersection_point(p0, p2, c, d)
+            if (
+                intersection.x != Number.MAX_VALUE
+                && intersection.x >= Math.min(c.x, d.x)
+                && intersection.x <= Math.max(c.x, d.x)
+                && intersection.y >= Math.min(c.y, d.y)
+                && intersection.y <= Math.max(c.y, d.y)
+            )
+
+                intersections.push(intersection)
+        }
+        lines.push({ start: intersections[0], end: intersections[1] })
     }
 
     const start_line_panning = () => { map_store.line_panning = true }
@@ -228,18 +255,21 @@
 
     const pan_lines = (e) => {
         line_cursor = get_map_coords(map_store.coords, map_store.offset_display, [ e.clientX, e.clientY ], canvas.value)
+        compute_lines()
     }
 
     const rotate_lines = (e) => {
         let pos = get_mouse_pos([ e.clientX, e.clientY ], canvas.value)
         let dims_map = get_dims_map(nb_tiles_x, nb_tiles_y)
         line_theta = ((pos.x / dims_map.width) - 0.5) * (360 * 2)
+        compute_lines()
     }
 
     const spread_lines = (e) => {
         let line_cursor_canvas = from_rel_coords_to_canvas_pos(line_cursor)
         let pos = get_mouse_pos([ e.clientX, e.clientY ], canvas.value)
         line_step = get_distance(line_cursor_canvas, pos)
+        compute_lines()
     }
 
     defineExpose({
