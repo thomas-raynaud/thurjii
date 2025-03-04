@@ -36,7 +36,6 @@
     const canvas = useTemplateRef("canvas")
 
     let ctx
-    let region = []
     let bounding_box = {
         start: { x: -1, y: -1},
         end: { x: -1, y: -1}
@@ -47,7 +46,6 @@
     }
     let line_theta
     let line_step
-    let lines = []
 
     const emit = defineEmits([ 'positionMap' ])
 
@@ -83,11 +81,11 @@
 
     const draw = () => {
         ctx.clearRect(0, 0, canvas.value.width, canvas.value.height)
-        if (region.length == 0)
+        if (map_store.region.length == 0)
             return
         let region_on_canvas = []
-        for (let i = 0; i < region.length; i++) {
-            region_on_canvas[i] = from_mercator_to_canvas_pos(region[i])
+        for (let i = 0; i < map_store.region.length; i++) {
+            region_on_canvas[i] = from_mercator_to_canvas_pos(map_store.region[i])
         }
         
         ctx.strokeStyle = 'red'
@@ -96,7 +94,7 @@
         let poly = new Path2D()
         ctx.moveTo(region_on_canvas[0].x, region_on_canvas[0].y)
         poly.moveTo(region_on_canvas[0].x, region_on_canvas[0].y)
-        for (let i = 1; i < region.length; i++) {
+        for (let i = 1; i < map_store.region.length; i++) {
             ctx.lineTo(region_on_canvas[i].x, region_on_canvas[i].y)
             poly.lineTo(region_on_canvas[i].x, region_on_canvas[i].y)
         }
@@ -115,7 +113,7 @@
         }
         ctx.fillStyle = "rgba(255, 0, 0, 0.25)"
         ctx.fill(poly, "evenodd")
-        if (map_store.state == 0 && region.length >= 2) {
+        if (map_store.state == 0 && map_store.region.length >= 2) {
             let triangle_cursor = new Path2D()
             triangle_cursor.moveTo(region_on_canvas.at(-1).x, region_on_canvas.at(-1).y)
             triangle_cursor.lineTo(cursor_coords.x, cursor_coords.y)
@@ -135,14 +133,12 @@
             ctx.fillStyle = "white"
             ctx.fill()
             // Draw lines
-            let theta_rad = degrees_to_radians(line_theta)
-            // world space
-            for (let i = 0; i < lines.length; i++) {
+            for (let i = 0; i < map_store.lines.length; i++) {
                 ctx.beginPath()
                 ctx.strokeStyle = 'green'
                 ctx.lineWidth = '1'
-                ctx.moveTo(lines[i].start.x, lines[i].start.y)
-                ctx.lineTo(lines[i].end.x, lines[i].end.y)
+                ctx.moveTo(map_store.lines[i].start.x, map_store.lines[i].start.y)
+                ctx.lineTo(map_store.lines[i].end.x, map_store.lines[i].end.y)
                 ctx.stroke()
             }
         }
@@ -150,32 +146,32 @@
 
     const add_point_to_region = () => {
         let new_point = from_rel_coords_to_mercator(map_store.cursor_rel_coords.x, map_store.cursor_rel_coords.y)
-        if (check_intersection_polygon(region, new_point)) {
-            region = []
+        if (check_intersection_polygon(map_store.region, new_point)) {
+            map_store.region = []
         }
         else {
-            region.push(new_point)
+            map_store.region.push(new_point)
         }
     }
 
     const finish_region = () => {
-        if (check_intersection_polygon(region.slice(1), region[0])) {
+        if (check_intersection_polygon(map_store.region.slice(1), map_store.region[0])) {
             console.log("Region polygon is self-intersecting")
-            region = []
+            map_store.region = []
         }
-        else if (region.length <= 2) {
-            region = []
+        else if (map_store.region.length <= 2) {
+            map_store.region = []
         }
         else {
             map_store.state = 1
             // Compute bounding box
-            let region_min = { x: region[0].x, y: region[0].y }
-            let region_max = { x: region[0].x, y: region[0].y }
-            for (let i = 1; i < region.length; i++) {
-                region_min.x = Math.min(region_min.x, region[i].x)
-                region_min.y = Math.max(region_min.y, region[i].y)
-                region_max.x = Math.max(region_max.x, region[i].x)
-                region_max.y = Math.min(region_max.y, region[i].y)
+            let region_min = { x: map_store.region[0].x, y: map_store.region[0].y }
+            let region_max = { x: map_store.region[0].x, y: map_store.region[0].y }
+            for (let i = 1; i < map_store.region.length; i++) {
+                region_min.x = Math.min(region_min.x, map_store.region[i].x)
+                region_min.y = Math.max(region_min.y, map_store.region[i].y)
+                region_max.x = Math.max(region_max.x, map_store.region[i].x)
+                region_max.y = Math.min(region_max.y, map_store.region[i].y)
             }
             bounding_box.start = region_min
             bounding_box.end = region_max
@@ -216,9 +212,9 @@
             p2t = rotate(p2t, theta_rad)
             p0t = translate(p0t, line_cursor_canvas)
             p2t = translate(p2t, line_cursor_canvas)
-            for (let i = 0; i < region.length; i++) {
-                let c = from_mercator_to_canvas_pos(region[i])
-                let d = from_mercator_to_canvas_pos(region[(i + 1) % region.length])
+            for (let i = 0; i < map_store.region.length; i++) {
+                let c = from_mercator_to_canvas_pos(map_store.region[i])
+                let d = from_mercator_to_canvas_pos(map_store.region[(i + 1) % map_store.region.length])
                 let intersection = get_lines_intersection_point(p0t, p2t, c, d)
                 if (
                     intersection.x != Number.MAX_VALUE
@@ -231,16 +227,16 @@
             }
             if (intersections.length >= 2) {
                 if (dir_step < 0)
-                    lines.unshift({ start: intersections[0], end: intersections[1] })
+                    map_store.lines.unshift({ start: intersections[0], end: intersections[1] })
                 else
-                    lines.push({ start: intersections[0], end: intersections[1] })
+                    map_store.lines.push({ start: intersections[0], end: intersections[1] })
             }
             line_pos += dir_step
         } while (intersections.length > 0)
     }
 
     const compute_lines = () => {
-        lines = []
+        map_store.lines = []
         get_lines_in_direction(0, line_step)
         get_lines_in_direction(-line_step, -line_step)
     }
