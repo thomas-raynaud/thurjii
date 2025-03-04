@@ -124,42 +124,27 @@
             ctx.fill(triangle_cursor, "evenodd")
         }
         if (map_store.state == 1) {
-            // Compute bounding box
-            let reg_start = from_mercator_to_canvas_pos(bounding_box.start)
-            let reg_end = from_mercator_to_canvas_pos(bounding_box.end)
-            let width = reg_end.x - reg_start.x
-            let height = reg_end.y - reg_start.y
-            ctx.beginPath()
-            ctx.rect(reg_start.x, reg_start.y, width, height)
-            ctx.fillStyle = "rgba(0, 0, 255, 0.25)"
-            ctx.fill()
             // Show line cursor
             let line_cursor_canvas = from_rel_coords_to_canvas_pos(line_cursor)
             ctx.beginPath()
-            ctx.arc(line_cursor_canvas.x, line_cursor_canvas.y, 4, 0, 2 * Math.PI)
+            ctx.arc(line_cursor_canvas.x, line_cursor_canvas.y, 2, 0, 2 * Math.PI)
             ctx.fillStyle = "black"
             ctx.fill()
             ctx.beginPath()
-            ctx.arc(line_cursor_canvas.x, line_cursor_canvas.y, 2, 0, 2 * Math.PI)
+            ctx.arc(line_cursor_canvas.x, line_cursor_canvas.y, 1, 0, 2 * Math.PI)
             ctx.fillStyle = "white"
             ctx.fill()
             // Draw lines
             let theta_rad = degrees_to_radians(line_theta)
-            let p1 = { x: line_step, y: 0 }
             // world space
-            p1 = rotate(p1, theta_rad)
-            p1 = translate(p1, line_cursor_canvas)
-            ctx.beginPath()
-            ctx.strokeStyle = 'green'
-            ctx.lineWidth = '1'
-            ctx.moveTo(lines[0].start.x, lines[0].start.y)
-            ctx.lineTo(lines[0].end.x, lines[0].end.y)
-            ctx.stroke()
-            ctx.beginPath()
-            ctx.arc( p1.x, p1.y, 2, 0, 2 * Math.PI)
-            ctx.fillStyle = "white"
-            ctx.fill()
-
+            for (let i = 0; i < lines.length; i++) {
+                ctx.beginPath()
+                ctx.strokeStyle = 'green'
+                ctx.lineWidth = '1'
+                ctx.moveTo(lines[i].start.x, lines[i].start.y)
+                ctx.lineTo(lines[i].end.x, lines[i].end.y)
+                ctx.stroke()
+            }
         }
     }
 
@@ -210,40 +195,54 @@
         }
     }
 
-    const compute_lines = () => {
+    const get_lines_in_direction = (start_pos, dir_step) => {
         let line_cursor_canvas = from_rel_coords_to_canvas_pos(line_cursor)
         let theta_rad = degrees_to_radians(line_theta)
+        let intersections
+        let line_pos = start_pos
         // p1 space
         let p0 = { x: 20, y: 0 }
         let p2 = { x: -20, y: 0 }
-        // cursor space
-        let p1 = { x: line_step, y: 0 }
-        p0 = rotate(p0, Math.PI / 2)
-        p2 = rotate(p2, Math.PI / 2)
-        p0 = translate(p0, p1)
-        p2 = translate(p2, p1)
-        // world space
-        p0 = rotate(p0, theta_rad)
-        p2 = rotate(p2, theta_rad)
-        p0 = translate(p0, line_cursor_canvas)
-        p2 = translate(p2, line_cursor_canvas)
-        let intersections = []
-        lines = []
-        for (let i = 0; i < region.length; i++) {
-            let c = from_mercator_to_canvas_pos(region[i])
-            let d = from_mercator_to_canvas_pos(region[(i + 1) % region.length])
-            let intersection = get_lines_intersection_point(p0, p2, c, d)
-            if (
-                intersection.x != Number.MAX_VALUE
-                && intersection.x >= Math.min(c.x, d.x)
-                && intersection.x <= Math.max(c.x, d.x)
-                && intersection.y >= Math.min(c.y, d.y)
-                && intersection.y <= Math.max(c.y, d.y)
-            )
+        let p0t, p2t // p0 and p2 transformed in other spaces
+        do {
+            intersections = []
+            // cursor space
+            p0t = rotate(p0, Math.PI / 2)
+            p2t = rotate(p2, Math.PI / 2)
+            p0t = translate(p0t, { x: line_pos, y: 0 })
+            p2t = translate(p2t, { x: line_pos, y: 0 })
+            // world space
+            p0t = rotate(p0t, theta_rad)
+            p2t = rotate(p2t, theta_rad)
+            p0t = translate(p0t, line_cursor_canvas)
+            p2t = translate(p2t, line_cursor_canvas)
+            for (let i = 0; i < region.length; i++) {
+                let c = from_mercator_to_canvas_pos(region[i])
+                let d = from_mercator_to_canvas_pos(region[(i + 1) % region.length])
+                let intersection = get_lines_intersection_point(p0t, p2t, c, d)
+                if (
+                    intersection.x != Number.MAX_VALUE
+                    && intersection.x >= Math.min(c.x, d.x)
+                    && intersection.x <= Math.max(c.x, d.x)
+                    && intersection.y >= Math.min(c.y, d.y)
+                    && intersection.y <= Math.max(c.y, d.y)
+                )
+                    intersections.push(intersection)
+            }
+            if (intersections.length >= 2) {
+                if (dir_step < 0)
+                    lines.unshift({ start: intersections[0], end: intersections[1] })
+                else
+                    lines.push({ start: intersections[0], end: intersections[1] })
+            }
+            line_pos += dir_step
+        } while (intersections.length > 0)
+    }
 
-                intersections.push(intersection)
-        }
-        lines.push({ start: intersections[0], end: intersections[1] })
+    const compute_lines = () => {
+        lines = []
+        get_lines_in_direction(0, line_step)
+        get_lines_in_direction(-line_step, -line_step)
     }
 
     const start_line_panning = () => { map_store.line_panning = true }
@@ -261,14 +260,14 @@
     const rotate_lines = (e) => {
         let pos = get_mouse_pos([ e.clientX, e.clientY ], canvas.value)
         let dims_map = get_dims_map(nb_tiles_x, nb_tiles_y)
-        line_theta = ((pos.x / dims_map.width) - 0.5) * (360 * 2)
+        line_theta = ((pos.x / dims_map.width) - 0.5) * 360
         compute_lines()
     }
 
     const spread_lines = (e) => {
         let line_cursor_canvas = from_rel_coords_to_canvas_pos(line_cursor)
         let pos = get_mouse_pos([ e.clientX, e.clientY ], canvas.value)
-        line_step = get_distance(line_cursor_canvas, pos)
+        line_step = Math.max(get_distance(line_cursor_canvas, pos), 2)
         compute_lines()
     }
 
