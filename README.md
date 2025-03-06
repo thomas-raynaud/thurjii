@@ -37,13 +37,36 @@ python manage.py createsuperuser
 
 # Base de données
 
-PostGreSQL
+## PostGreSQL
 
-Doc PostGIS (addon for PostGreSQL) : https://postgis.net/docs/manual-2.1/using_postgis_dbmanagement.html#PostGIS_GeographyVSGeometry
+- Installer PostGreSQL :
+```
+apt install postgresql
+```
+
+- Créer un rôle "superuser" pour l'utilisateur courant : `sudo -u postgres createuser [ owning_user ] -s -P`
+
+- Créer une base de données : `createdb thurjii`
+
+- `psql -d thurjii`
+
+## PgAdmin
+
+- Installer pgAdmin (interface utilisateur) :
+```
+$ curl -fsS https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --dearmor -o /usr/share/keyrings/packages-pgadmin-org.gpg
+$ sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$(lsb_release -cs) pgadmin4 main" > /etc/apt/sources.list.d/pgadmin4.list && apt update'
+$ sudo apt install pgadmin4
+```
+
+Pour exporter la structure de la base de données, clic droit sur le schéma où se trouvent les données de Thurjii, "ERD for Schema", puis clic sur le bouton SQL dans le menu du haut.
+
+Utiliser l'addon PostGIS ? Garder de côté cette possibilité. https://postgis.net/docs/manual-2.1/using_postgis_dbmanagement.html#PostGIS_GeographyVSGeometry
 
 # Environnement de développement
 
 Pour démarrer le serveur : `npm run start-backend`
+
 Pour démarrer le site : `npm run start-frontend`
 
 # Accès aux applications :

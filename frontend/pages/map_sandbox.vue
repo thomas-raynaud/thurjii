@@ -1,16 +1,6 @@
 <template>
     <div class="body row">
-        <div class="col">
-            <map-container nb-tiles-x="3" nb-tiles-y="2" />
-        </div>
-        <div class="col">
-            <p>{{ map_store.state == 0 ? "Select a region" : "Place the lines" }}</p>
-            <p>{{ "x= " + map_store.cursor_rel_coords_rounded.x + " y= " + map_store.cursor_rel_coords_rounded.y + " z= " + map_store.coords.z }}</p>
-            <p>{{ "mx= " + merc_coords.x }}</p>
-            <p>{{ "my= " + merc_coords.y }}</p>
-            <p v-show="map_store.state == 1">{{ "Number of lines: " + map_store.lines.length }}</p>
-            <p v-show="map_store.state == 1">{{ "Region area: " + area_region + " ha"}}</p>
-        </div>
+        <map-container nb-tiles-x="3" nb-tiles-y="2" />
     </div>
 </template>
 
