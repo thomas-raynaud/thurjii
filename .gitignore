@@ -2,9 +2,9 @@
 node_modules
 thurjii.code-workspace
 /dist
-backend/db.sqlite3
 backend/api/migrations
 backend/backend/media
+backend/backend/.thurjii_pgpass
 
 *.pyc
 **/__pycache__

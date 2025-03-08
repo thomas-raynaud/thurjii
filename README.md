@@ -22,10 +22,13 @@ python -m pip install Django
 python -m pip install djangorestframework
 python -m pip install django-cors-headers
 python -m pip install django-cors-middleware
+python -m pip install pillow
+python -m pip install psycopg2-binary
 ```
 
 Lorsque des modifications sont faites sur le modèle des données (`backend/api/models.py`) :
 ```
+cd backend
 python manage.py makemigrations api
 python manage.py migrate
 ```
@@ -57,6 +60,22 @@ apt install postgresql
 $ curl -fsS https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --dearmor -o /usr/share/keyrings/packages-pgadmin-org.gpg
 $ sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$(lsb_release -cs) pgadmin4 main" > /etc/apt/sources.list.d/pgadmin4.list && apt update'
 $ sudo apt install pgadmin4
+```
+
+## Configuration Django
+
+- Créer un fichier `.pg_service.conf` dans le répertoire `$HOME`, et le remplir sous cette forme :
+```
+[thurjii_db]
+host=localhost
+user=USER
+dbname=thurjii
+port=5432
+```
+
+- Créer un fichier `.thurjii_pgpass` dans le répertoire `backend/backend`, et le remplir sous cette forme :
+```
+localhost:5432:thurjii:USER:PASSWORD
 ```
 
 Pour exporter la structure de la base de données, clic droit sur le schéma où se trouvent les données de Thurjii, "ERD for Schema", puis clic sur le bouton SQL dans le menu du haut.
