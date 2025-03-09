@@ -44,7 +44,7 @@ python manage.py createsuperuser
 
 - Installer PostGreSQL :
 ```
-apt install postgresql
+apt install postgresql postgis
 ```
 
 - Créer un rôle "superuser" pour l'utilisateur courant : `sudo -u postgres createuser [ owning_user ] -s -P`
@@ -73,7 +73,7 @@ dbname=thurjii
 port=5432
 ```
 
-- Créer un fichier `.thurjii_pgpass` dans le répertoire `backend/backend`, et le remplir sous cette forme :
+- Créer un fichier `.thurjii_pgpass` dans le répertoire `backend`, et le remplir sous cette forme :
 ```
 localhost:5432:thurjii:USER:PASSWORD
 ```

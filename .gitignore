@@ -4,7 +4,7 @@ thurjii.code-workspace
 /dist
 backend/api/migrations
 backend/backend/media
-backend/backend/.thurjii_pgpass
+backend/.thurjii_pgpass
 
 *.pyc
 **/__pycache__
