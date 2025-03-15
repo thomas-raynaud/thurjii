@@ -18,10 +18,7 @@ npm run build-frontend
 
 Installer Django :
 ```
-python -m pip install Django
-python -m pip install djangorestframework
-python -m pip install django-cors-headers
-python -m pip install django-cors-middleware
+python -m pip install Django djangorestframework django-cors-headers django-cors-middleware
 python -m pip install pillow
 python -m pip install psycopg2-binary
 ```
@@ -42,16 +39,16 @@ python manage.py createsuperuser
 
 ## PostGreSQL
 
-- Installer PostGreSQL :
+- Installer PostGreSQL et ses packages dépendants :
 ```
-apt install postgresql postgis
+apt install postgresql postgis gdal-bin
 ```
 
 - Créer un rôle "superuser" pour l'utilisateur courant : `sudo -u postgres createuser [ owning_user ] -s -P`
 
 - Créer une base de données : `createdb thurjii`
 
-- `psql -d thurjii`
+- Pour avoir accès à la base : `psql -d thurjii`
 
 ## PgAdmin
 
@@ -77,6 +74,7 @@ port=5432
 ```
 localhost:5432:thurjii:USER:PASSWORD
 ```
+- Changer les permissions pour ce fichier : `chmod 600 .thurjii_pgpass`
 
 Pour exporter la structure de la base de données, clic droit sur le schéma où se trouvent les données de Thurjii, "ERD for Schema", puis clic sur le bouton SQL dans le menu du haut.
 
