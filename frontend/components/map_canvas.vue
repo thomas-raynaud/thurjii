@@ -11,6 +11,7 @@
 
 <script setup>
     import { useTemplateRef, onMounted } from 'vue'
+
     import {
         get_dims_map,
         get_mouse_pos,
@@ -28,6 +29,7 @@
     } from '../lib/geometry'
     import { degrees_to_radians } from '../lib/math'
     import { map_store } from '../stores/map_store'
+    import { STATE } from '../lib/enums'
 
     const props = defineProps([ 'nbTilesX', 'nbTilesY' ])
     const nb_tiles_x = parseInt(props.nbTilesX)
@@ -56,7 +58,7 @@
         canvas.value.width = dims.width
         canvas.value.height = dims.height
         ctx = canvas.value.getContext("2d")
-        map_store.state = 0
+        map_store.state = STATE.SELECT_REGION
         line_theta = 0
         line_step = 10
         draw()
@@ -104,7 +106,7 @@
         ctx.setLineDash([])
         ctx.stroke()
         let cursor_coords = from_rel_coords_to_canvas_pos(map_store.cursor_rel_coords)
-        if (map_store.state == 0) {
+        if (map_store.state == STATE.SELECT_REGION) {
             ctx.beginPath()
             ctx.setLineDash([1, 2])
             ctx.moveTo(region_on_canvas.at(-1).x, region_on_canvas.at(-1).y)
@@ -113,7 +115,7 @@
         }
         ctx.fillStyle = "rgba(255, 0, 0, 0.25)"
         ctx.fill(poly, "evenodd")
-        if (map_store.state == 0 && map_store.region.length >= 2) {
+        if (map_store.state == STATE.SELECT_REGION && map_store.region.length >= 2) {
             let triangle_cursor = new Path2D()
             triangle_cursor.moveTo(region_on_canvas.at(-1).x, region_on_canvas.at(-1).y)
             triangle_cursor.lineTo(cursor_coords.x, cursor_coords.y)
@@ -121,7 +123,7 @@
             triangle_cursor.closePath()
             ctx.fill(triangle_cursor, "evenodd")
         }
-        if (map_store.state == 1) {
+        if (map_store.state == STATE.PLACE_LINES) {
             // Show line cursor
             let line_cursor_canvas = from_rel_coords_to_canvas_pos(line_cursor)
             ctx.beginPath()
@@ -163,7 +165,7 @@
             map_store.region = []
         }
         else {
-            map_store.state = 1
+            map_store.state = STATE.PLACE_LINES
             // Compute bounding box
             let region_min = { x: map_store.region[0].x, y: map_store.region[0].y }
             let region_max = { x: map_store.region[0].x, y: map_store.region[0].y }

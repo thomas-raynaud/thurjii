@@ -1,5 +1,7 @@
 import { reactive } from 'vue'
 
+import { STATE } from '../lib/enums'
+
 export const map_store = reactive({
     coords: {
         x: 0,
@@ -19,7 +21,7 @@ export const map_store = reactive({
         y: 0
     },
     panning: false,
-    state: 0, // 0 = select region, 1 = place lines,
+    state: STATE.SELECT_REGION,
     line_cursor_coords: {
         x: 0,
         y: 0

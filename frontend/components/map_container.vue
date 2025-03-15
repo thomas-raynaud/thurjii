@@ -33,6 +33,7 @@
     import MapCanvas from './map_canvas.vue'
     import { get_dims_map } from '../lib/map_navigation'
     import { map_store } from '../stores/map_store'
+    import { STATE } from '../lib/enums'
 
     const props = defineProps([ 'nbTilesX', 'nbTilesY' ])
     const nb_tiles_x = ref(parseInt(props.nbTilesX))
@@ -61,7 +62,7 @@
 
     const mousedown = (e) => {
         e.preventDefault()
-        if (map_store.state == 0) {
+        if (map_store.state == STATE.SELECT_REGION) {
             if (e.button == 0)
                 canvas.value.add_point_to_region()
             else if (e.button == 1)
@@ -69,7 +70,7 @@
             else if (e.button == 2)
                 canvas.value.finish_region()
         }
-        else if (map_store.state == 1) {
+        else if (map_store.state == STATE.PLACE_LINES) {
             if (e.button == 0 && (e.shiftKey || e.ctrlKey)) {
                 canvas.value.start_line_rotating()
                 canvas.value.rotate_lines(e)
@@ -102,7 +103,7 @@
 
     const mousewheel = (e) => {
         e.preventDefault()
-        if (map_store.state == 0) {
+        if (map_store.state == STATE.SELECT_REGION) {
             display.value.zoom(e)
             canvas.value.draw()
         }

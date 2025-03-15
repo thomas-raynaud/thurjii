@@ -4,29 +4,41 @@
             <map-container nb-tiles-x="3" nb-tiles-y="2" />
         </div>
         <div class="col">
-            <p>{{ map_store.state == 0 ? "Select a region" : "Place the lines" }}</p>
-            <p>{{ "x= " + map_store.cursor_rel_coords_rounded.x + " y= " + map_store.cursor_rel_coords_rounded.y + " z= " + map_store.coords.z }}</p>
-            <p>{{ "mx= " + merc_coords.x }}</p>
-            <p>{{ "my= " + merc_coords.y }}</p>
-            <p v-show="map_store.state == 1">{{ "Number of lines: " + map_store.lines.length }}</p>
-            <p v-show="map_store.state == 1">{{ "Region area: " + area_region + " ha"}}</p>
         </div>
     </div>
 </template>
 
 <script setup>
-    import { computed, onMounted } from 'vue'
+    import { ref, computed, onMounted, onUnmounted } from 'vue'
+    import { useRoute } from 'vue-router'
 
     import MapContainer from '../components/map_container.vue'
     import { map_store } from '../stores/map_store'
     import { from_rel_coords_to_mercator } from '../lib/map_navigation'
     import { get_area } from '../lib/geometry'
+    import { send_http_request } from '../lib/request'
     import { STATE } from '../lib/enums'
 
+    const route = useRoute()
+    const parcelle = ref()
+
     onMounted(() => {
-        map_store.state = STATE.SELECT_REGION
+        map_store.state = STATE.DISPLAY_PLOT
         map_store.region = []
         map_store.lines = []
+        send_http_request("GET", "parcelles/" + route.params.id).then((response) => {
+            if (response.status == 0) {
+                console.log("Error when loading parcelles ...")
+            }
+            else {
+                parcelle.value = JSON.parse(response.response)
+                console.log(parcelle.value.region)
+            }
+            
+        }).catch((error) => {
+            console.log("Error when loading parcelles ...")
+            console.log(error)
+        })
     })
 
     const merc_coords = computed(() => {

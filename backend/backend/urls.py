@@ -14,10 +14,15 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
+from django.views.generic.base import RedirectView
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
+
+favicon_view = RedirectView.as_view(url='/static/favicon.ico', permanent=True)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include("api.urls")),
+    re_path(r'^favicon\.ico$', favicon_view),
 ]

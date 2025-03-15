@@ -22,7 +22,7 @@
                             :key="parcelle.id"
                         >
                             <img :src="parcelle.img_src" height="180px" />
-                            <span class="d-block">{{ parcelle.nom }}</span>
+                            <span class="d-block" @click="$router.push('parcelle/' + parcelle.id)">{{ parcelle.nom }}</span>
                         </div>
                     </div>
                 </div>
