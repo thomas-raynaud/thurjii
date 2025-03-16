@@ -15,8 +15,9 @@ class ParcelleSerializer(serializers.HyperlinkedModelSerializer):
         return obj.image.name"""
     
     def get_region(self, obj):
-        region = json.loads(obj.region.json)
-        return region['coordinates'][0]
+        region = json.loads(obj.region.json)['coordinates'][0]
+        out_region = [ { 'x': p[0], 'y': p[1] } for p in region ]
+        return out_region
 
     class Meta:
         model = Parcelle

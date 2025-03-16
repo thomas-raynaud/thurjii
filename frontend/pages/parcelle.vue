@@ -1,26 +1,32 @@
 <template>
     <div class="body row">
-        <div class="col">
-            <map-container nb-tiles-x="3" nb-tiles-y="2" />
+        <div class="col" v-show="parcelle_found">
+            <map-container
+                ref="map_container"
+                :nb-tiles-x="nb_tiles_x" :nb-tiles-y="nb_tiles_y"
+            />
         </div>
+        <p v-show="!parcelle_found">Parcelle #{{ route.params.id }} inexistante</p>
         <div class="col">
         </div>
     </div>
 </template>
 
 <script setup>
-    import { ref, computed, onMounted, onUnmounted } from 'vue'
+    import { ref, useTemplateRef, onMounted } from 'vue'
     import { useRoute } from 'vue-router'
 
     import MapContainer from '../components/map_container.vue'
     import { map_store } from '../stores/map_store'
-    import { from_rel_coords_to_mercator } from '../lib/map_navigation'
-    import { get_area } from '../lib/geometry'
     import { send_http_request } from '../lib/request'
     import { STATE } from '../lib/enums'
 
+    const map_container = useTemplateRef("map_container")
     const route = useRoute()
     const parcelle = ref()
+    const parcelle_found = ref()
+    const nb_tiles_x = ref(3)
+    const nb_tiles_y = ref(2)
 
     onMounted(() => {
         map_store.state = STATE.DISPLAY_PLOT
@@ -32,26 +38,15 @@
             }
             else {
                 parcelle.value = JSON.parse(response.response)
-                console.log(parcelle.value.region)
+                map_store.region = parcelle.value.region
+                parcelle_found.value = true
+                map_store.state = STATE.DISPLAY_PLOT
+                map_container.value.center_map_on_region()
             }
             
         }).catch((error) => {
             console.log("Error when loading parcelles ...")
             console.log(error)
         })
-    })
-
-    const merc_coords = computed(() => {
-        let m_coords = from_rel_coords_to_mercator(map_store.cursor_rel_coords.x, map_store.cursor_rel_coords.y)
-        return {
-            x: Math.floor(m_coords.x * 100) / 100,
-            y: Math.floor(m_coords.y * 100) / 100
-        }
-    })
-
-    const area_region = computed(() => {
-        let area = get_area(map_store.region)
-        let area_h = area / 10000
-        return Math.floor(area_h * 100) / 100
     })
 </script>

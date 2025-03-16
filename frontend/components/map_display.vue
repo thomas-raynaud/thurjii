@@ -34,7 +34,7 @@
     import {
         TILE_SIZE,
         get_map_coords,
-        get_nb_tiles_displayed,
+        get_dims_map,
         get_viewport_coords,
         get_tile_size_from_zoom
     } from '../lib/map_navigation'
@@ -268,8 +268,12 @@
 
     const position_map = (pos, zoom, vp_coords) => {
         let nb_tiles_on_axis = Math.pow(2, Math.ceil(zoom))
-        let nb_tiles_displayed = get_nb_tiles_displayed(display.value, zoom)
         let current_tile_size = get_tile_size_from_zoom(zoom)
+        let dims_map = get_dims_map(nb_tiles_x_init.value, nb_tiles_y_init.value)
+        let nb_tiles_displayed = {
+            x: dims_map.width / current_tile_size,
+            y: dims_map.height / current_tile_size
+        }
         // X
         let pos_x = pos.x * nb_tiles_on_axis
         let pos_left = pos_x - (vp_coords.x * nb_tiles_displayed.x)
@@ -286,6 +290,10 @@
         map_store.coords.y = e_pos_top
         map_store.offset_display.y = dec_pos_top * current_tile_size
         display.value.scrollTop = map_store.offset_display.y
+        console.log("zoom:" + zoom)
+        console.log("nb_tiles_on_axis: " + nb_tiles_on_axis)
+        console.log("nb_tiles_displayed: " + nb_tiles_displayed.x + " - " + nb_tiles_displayed.y)
+        console.log("current_tile_size: " + current_tile_size)
         store_coords_cookie()
         load_map()
     }
