@@ -84,8 +84,6 @@ const get_region_center_params = (region, dims_map) => {
     }
     let bb_start = from_mercator_to_rel_coords(region_min)
     let bb_end = from_mercator_to_rel_coords(region_max)
-    console.log("test - " + bb_start.x + " - " + bb_start.y)
-    console.log("test - " + bb_end.x + " - " + bb_end.y)
     // Get center position of boundary box
     let width_bb = bb_end.x - bb_start.x
     let height_bb = bb_end.y - bb_start.y

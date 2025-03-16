@@ -143,7 +143,6 @@
 
     const center_map_on_region = () => {
         let center_params = get_region_center_params(map_store.region, [ nb_tiles_x.value, nb_tiles_y.value ])
-        console.log(center_params)
         if (map_store.state == STATE.PLACE_LINES) {
             canvas.value.set_line_cursor(center_params.pos)
         }

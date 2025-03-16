@@ -290,10 +290,6 @@
         map_store.coords.y = e_pos_top
         map_store.offset_display.y = dec_pos_top * current_tile_size
         display.value.scrollTop = map_store.offset_display.y
-        console.log("zoom:" + zoom)
-        console.log("nb_tiles_on_axis: " + nb_tiles_on_axis)
-        console.log("nb_tiles_displayed: " + nb_tiles_displayed.x + " - " + nb_tiles_displayed.y)
-        console.log("current_tile_size: " + current_tile_size)
         store_coords_cookie()
         load_map()
     }

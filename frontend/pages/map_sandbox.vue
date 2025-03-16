@@ -1,6 +1,12 @@
 <template>
     <div class="body row">
-        <map-container nb-tiles-x="3" nb-tiles-y="2" />
+        <div class="col">
+            <map-container nb-tiles-x="3" nb-tiles-y="2" />
+        </div>
+        <div class="col">
+            <p>X : {{ merc_coords.x }}</p>
+            <p>Y : {{ merc_coords.y }}</p>
+        </div>
     </div>
 </template>
 
