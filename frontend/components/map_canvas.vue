@@ -224,6 +224,7 @@
         start_line_rotating, stop_line_rotating,
         start_line_spreading, stop_line_spreading,
         pan_lines, rotate_lines, spread_lines,
+        compute_lines,
         set_line_cursor
     })
 </script>

@@ -23,6 +23,12 @@
                         >
                             <img :src="parcelle.img_src" height="180px" />
                             <span class="d-block" @click="$router.push('parcelle/' + parcelle.id)">{{ parcelle.nom }}</span>
+                            <button
+                                type="button" class="btn btn-outline-dark"
+                                @click="delete_plot(parcelle.id)"
+                            >
+                                Delete
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -44,9 +50,13 @@
     const parcelles = ref([])
 
     onMounted(() => {
-        send_http_request("GET", "parcelles/").then((response) => {
+        load_plots()
+    })
+
+    const load_plots = () => {
+        send_http_request("GET", "parcelles").then((response) => {
             if (response.status == 0) {
-                console.log("Error when loading parcelles ...")
+                console.error("Error when loading plots ...")
             }
             else {
                 parcelles.value = JSON.parse(response.response)
@@ -56,8 +66,23 @@
             }
             
         }).catch((error) => {
-            console.log("Error when loading parcelles ...")
-            console.log(error)
+            console.error("Error when loading plots ...")
+            console.error(error)
         })
-    })
+    }
+
+    const delete_plot = (plot_id) => {
+        send_http_request("DELETE", "parcelles/" + plot_id).then((response) => {
+            if (response.status == 500) {
+                console.error("Could not delete plot #" + plot_id + " ...")
+            }
+            else {
+                load_plots()
+            }
+            load_plots()
+        }).catch((error) => {
+            console.error("Could not delete plot #" + plot_id + " ...")
+            console.error(error)
+        })
+    }
 </script>

@@ -1,4 +1,4 @@
-from .models import Parcelle
+from .models import Parcelle, Cepage, Taille, Pliage
 from rest_framework import serializers
 import json
 
@@ -22,3 +22,21 @@ class ParcelleSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Parcelle
         fields = [ 'id', 'nom', 'region', 'cepage', 'taille', 'pliage' ]
+
+
+class CepageSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Cepage
+        fields = [ 'id', 'nom' ]
+
+
+class TailleSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Taille
+        fields = [ 'id', 'nom' ]
+
+
+class PliageSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Pliage
+        fields = [ 'id', 'nom' ]

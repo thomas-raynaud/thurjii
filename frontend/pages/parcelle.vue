@@ -34,7 +34,7 @@
         map_store.lines = []
         send_http_request("GET", "parcelles/" + route.params.id).then((response) => {
             if (response.status == 0) {
-                console.log("Error when loading parcelles ...")
+                console.error("Error when loading plot #" + route.params.id + " ...")
             }
             else {
                 parcelle.value = JSON.parse(response.response)
@@ -45,8 +45,8 @@
             }
             
         }).catch((error) => {
-            console.log("Error when loading parcelles ...")
-            console.log(error)
+            console.error("Error when loading plot #" + route.params.id + " ...")
+            console.error(error)
         })
     })
 </script>

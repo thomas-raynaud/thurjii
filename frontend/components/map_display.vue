@@ -154,8 +154,6 @@
 
     const update_cursor_coords = (e) => {
         map_store.cursor_rel_coords = get_map_coords(map_store.coords, map_store.offset_display, [ e.clientX, e.clientY ], display.value)
-        map_store.cursor_rel_coords_rounded.x = Math.floor(map_store.cursor_rel_coords.x * 1000) / 1000
-        map_store.cursor_rel_coords_rounded.y = Math.floor(map_store.cursor_rel_coords.y * 1000) / 1000
     }
 
     const start_panning = (e) => {

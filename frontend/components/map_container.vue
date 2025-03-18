@@ -21,7 +21,6 @@
     .map-container {
         position: relative;
         padding: 0;
-        margin: 0 10px;
     }
 </style>
 
@@ -137,7 +136,7 @@
             map_store.state = STATE.PLACE_LINES
             // Center map display on region
             center_map_on_region()
-            compute_lines()
+            canvas.value.compute_lines()
         }
     }
 
