@@ -47,6 +47,6 @@
 
     watch(new_name, (new_val) => {
         if (new_data.value)
-            props.formData.name = new_val
+            props.formData.nom = new_val
     })
 </script>

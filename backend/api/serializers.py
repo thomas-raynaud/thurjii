@@ -2,11 +2,11 @@ from .models import Parcelle, Cepage, Taille, Pliage
 from rest_framework import serializers
 import json
 
-class ParcelleSerializer(serializers.HyperlinkedModelSerializer):
+class ParcelleSerializer(serializers.ModelSerializer):
     region = serializers.SerializerMethodField()
-    cepage = serializers.SlugRelatedField(slug_field='nom', read_only=True)
-    taille = serializers.SlugRelatedField(slug_field='nom', read_only=True)
-    pliage = serializers.SlugRelatedField(slug_field='nom', read_only=True)
+    cepage = serializers.PrimaryKeyRelatedField(queryset=Cepage.objects.all())
+    taille = serializers.PrimaryKeyRelatedField(queryset=Taille.objects.all())
+    pliage = serializers.PrimaryKeyRelatedField(queryset=Pliage.objects.all())
     """
     taille_img_x = serializers.DecimalField(max_digits=6, decimal_places=2, coerce_to_string=False)
     taille_img_y = serializers.DecimalField(max_digits=6, decimal_places=2, coerce_to_string=False)
@@ -24,19 +24,19 @@ class ParcelleSerializer(serializers.HyperlinkedModelSerializer):
         fields = [ 'id', 'nom', 'region', 'cepage', 'taille', 'pliage' ]
 
 
-class CepageSerializer(serializers.HyperlinkedModelSerializer):
+class CepageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cepage
         fields = [ 'id', 'nom' ]
 
 
-class TailleSerializer(serializers.HyperlinkedModelSerializer):
+class TailleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Taille
         fields = [ 'id', 'nom' ]
 
 
-class PliageSerializer(serializers.HyperlinkedModelSerializer):
+class PliageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pliage
         fields = [ 'id', 'nom' ]

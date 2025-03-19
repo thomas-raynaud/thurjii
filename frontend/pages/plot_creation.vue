@@ -7,7 +7,7 @@
         </div>
         <div class="col">
             <div class="mb-3">
-                <input class="form-control" v-model="plot_data.name" placeholder="Nom de la parcelle">
+                <input class="form-control" v-model="plot_data.nom" placeholder="Nom de la parcelle">
             </div>
             <select-or-create-form
                 :form-data="plot_data.cepage"
@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-    import { computed, ref, onMounted } from 'vue'
+    import { computed, ref, onMounted, toRaw } from 'vue'
 
     import MapContainer from '../components/map_container.vue'
     import SelectOrCreateForm from '../components/select_or_create_form.vue'
@@ -56,7 +56,7 @@
     import { send_http_request } from '../lib/request'
 
     const plot_data = ref({
-        name: "",
+        nom: "",
         cepage: { id: -1, nom: "" },
         taille: { id: -1, nom: "" },
         pliage: { id: -1, nom: "" }
@@ -73,14 +73,23 @@
         // Load cepages
         send_http_request("GET", "cepages").then((response) => {
             cepages.value = JSON.parse(response.response)
+        }).catch((error) => {
+            console.error("Error when loading cepages ...")
+            console.error(error)
         })
         // Load tailles
         send_http_request("GET", "tailles").then((response) => {
             tailles.value = JSON.parse(response.response)
+        }).catch((error) => {
+            console.error("Error when loading tailles ...")
+            console.error(error)
         })
         // Load pliages
         send_http_request("GET", "pliages").then((response) => {
             pliages.value = JSON.parse(response.response)
+        }).catch((error) => {
+            console.error("Error when loading pliages ...")
+            console.error(error)
         })
     })
 
@@ -98,11 +107,58 @@
         if (invalid_data.value)
             return
         console.log(plot_data.value)
-        /*send_http_request("POST", "parcelles").then((response) => {
-            $router.push('parcelle/' + parcelle.id)
-        }).catch((error) => {
-            console.error("Could not create plot ...")
-            console.error(error)
-        })*/
+        const plot_data_req = {
+            nom: plot_data.value.nom,
+            cepage: plot_data.value.cepage.id,
+            taille: plot_data.value.taille.id,
+            pliage: plot_data.value.pliage.id,
+            region: toRaw(map_store.region)
+        }
+        let post_promises = []
+        if (plot_data.value.cepage.id == -1) {
+            post_promises.push(new Promise((resolve, reject) => {
+                send_http_request("POST", "cepages", { nom: plot_data.value.cepage.nom })
+                .then((response) => {
+                    plot_data_req.cepage = JSON.parse(response.response).id
+                    resolve()
+                })
+                .catch((error) => { reject(error) })
+            }))
+        }
+        if (plot_data.value.taille.id == -1) {
+            post_promises.push(new Promise((resolve, reject) => {
+                send_http_request("POST", "tailles", { nom: plot_data.value.taille.nom })
+                .then((response) => {
+                    plot_data_req.taille = JSON.parse(response.response).id
+                    resolve()
+                })
+                .catch((error) => { reject(error) })
+            }))
+        }
+        if (plot_data.value.pliage.id == -1) {
+            post_promises.push(new Promise((resolve, reject) => {
+                send_http_request("POST", "pliages", { nom: plot_data.value.pliage.nom })
+                .then((response) => {
+                    plot_data_req.pliage = JSON.parse(response.response).id
+                    resolve()
+                })
+                .catch((error) => { reject(error) })
+            }))
+        }
+        Promise.all(post_promises).then(() => {
+            console.log(plot_data_req)
+            send_http_request("POST", "parcelles", plot_data_req)
+            .then((response) => {
+                console.log(response)
+                //$router.push('parcelle/' + parcelle.id)
+            })
+            .catch((error) => {
+                console.error("Could not create plot ...")
+                console.error(error)
+            })
+        })
+        .catch((errors) => {
+            console.error(errors)
+        })
     }
 </script>
