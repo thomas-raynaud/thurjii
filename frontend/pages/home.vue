@@ -59,9 +59,14 @@
                 console.error("Error when loading plots ...")
             }
             else {
-                parcelles.value = JSON.parse(response.response)
-                parcelles.value.forEach(parcelle => {
+                let parcelles_api = JSON.parse(response.response).features
+                parcelles.value = []
+                parcelles_api.forEach(parcelle_api => {
+                    let parcelle = parcelle_api.properties
+                    parcelle.id = parcelle_api.id
+                    parcelle.region = parcelle_api.geometry.coordinates[0]
                     parcelle.img_src = MEDIA_URL + parcelle.image + "/"
+                    parcelles.value.push(parcelle)
                 })
             }
             

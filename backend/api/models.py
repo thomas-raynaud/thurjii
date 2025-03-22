@@ -22,7 +22,7 @@ class Parcelle(models.Model):
     cepage = models.ForeignKey(Cepage, on_delete=models.RESTRICT)
     taille = models.ForeignKey(Taille, on_delete=models.RESTRICT)
     pliage = models.ForeignKey(Pliage, on_delete=models.RESTRICT)
-    region = modelsPG.PolygonField()
+    region = modelsPG.PolygonField() #srid=3857
     """
     image = models.ImageField(upload_to="parcelles/")
     taille_img_x = models.DecimalField(max_digits=6, decimal_places=2)

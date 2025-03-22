@@ -18,7 +18,8 @@ npm run build-frontend
 
 Installer Django :
 ```
-python -m pip install Django djangorestframework django-cors-headers django-cors-middleware
+python -m pip install Django djangorestframework django-cors-headers django-cors-middleware djangorestframework-gis
+python -m pip install 'gdal==3.9.1'
 python -m pip install pillow
 python -m pip install psycopg2-binary
 ```

@@ -92,8 +92,6 @@
             ctx.lineTo(region_on_canvas[i].x, region_on_canvas[i].y)
             poly.lineTo(region_on_canvas[i].x, region_on_canvas[i].y)
         }
-        ctx.lineTo(region_on_canvas[0].x, region_on_canvas[0].y)
-        poly.lineTo(region_on_canvas[0].x, region_on_canvas[0].y)
         poly.closePath()
         ctx.setLineDash([])
         ctx.stroke()

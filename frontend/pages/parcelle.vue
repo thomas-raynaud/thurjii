@@ -33,16 +33,14 @@
         map_store.region = []
         map_store.lines = []
         send_http_request("GET", "parcelles/" + route.params.id).then((response) => {
-            if (response.status == 0) {
-                console.error("Error when loading plot #" + route.params.id + " ...")
-            }
-            else {
-                parcelle.value = JSON.parse(response.response)
-                map_store.region = parcelle.value.region
-                parcelle_found.value = true
-                map_store.state = STATE.DISPLAY_PLOT
-                map_container.value.center_map_on_region()
-            }
+            let parcelle_api = JSON.parse(response.response)
+            parcelle.value = parcelle_api.properties
+            parcelle.value.id = parcelle_api.id
+            let region_api = parcelle_api.geometry.coordinates[0]
+            map_store.region = region_api.map((x) => { return { x: x[0], y: x[1] }})
+            parcelle_found.value = true
+            map_store.state = STATE.DISPLAY_PLOT
+            map_container.value.center_map_on_region()
             
         }).catch((error) => {
             console.error("Error when loading plot #" + route.params.id + " ...")

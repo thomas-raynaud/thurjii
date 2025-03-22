@@ -4,13 +4,9 @@ const MEDIA_URL = BACKEND_URL + "media/"
 const send_http_request = (method, endpoint, data={}) => {
 	return new Promise((resolve, reject) => {
 		let xhr = new XMLHttpRequest()
-		let data_rq = ""
-		let keys = Object.keys(data)
-		for (let key of keys) {
-			data_rq += key + "=" + data[key] + "&"
-		}
+		let data_rq = JSON.stringify(data)
 		xhr.open(method, BACKEND_URL + endpoint + "/", true)
-		xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
+		xhr.setRequestHeader("Content-Type", "application/json")
 		xhr.onreadystatechange = () => {
 			if (xhr.readyState === XMLHttpRequest.DONE)
 				resolve(xhr)

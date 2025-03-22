@@ -133,6 +133,7 @@
             map_store.region = []
         }
         else {
+            map_store.region.push(map_store.region[0])
             map_store.state = STATE.PLACE_LINES
             // Center map display on region
             center_map_on_region()

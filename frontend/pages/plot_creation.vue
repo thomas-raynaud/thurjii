@@ -47,6 +47,7 @@
 
 <script setup>
     import { computed, ref, onMounted, toRaw } from 'vue'
+    import { useRouter } from 'vue-router'
 
     import MapContainer from '../components/map_container.vue'
     import SelectOrCreateForm from '../components/select_or_create_form.vue'
@@ -54,6 +55,8 @@
     import { get_area } from '../lib/geometry'
     import { STATE } from '../lib/enums'
     import { send_http_request } from '../lib/request'
+
+    const router = useRouter()
 
     const plot_data = ref({
         nom: "",
@@ -106,20 +109,28 @@
             || plot_data.value.pliage.nom == ""
         if (invalid_data.value)
             return
-        console.log(plot_data.value)
+        let region = toRaw(map_store.region)
+        region = region.map((x) => [ x.x, x.y ])
+        // GEOJson format
         const plot_data_req = {
-            nom: plot_data.value.nom,
-            cepage: plot_data.value.cepage.id,
-            taille: plot_data.value.taille.id,
-            pliage: plot_data.value.pliage.id,
-            region: toRaw(map_store.region)
+            type: "Feature",
+            geometry: {
+                type: "Polygon",
+                coordinates: [ region ]
+            },
+            properties: {
+                nom: plot_data.value.nom,
+                cepage: plot_data.value.cepage.id,
+                taille: plot_data.value.taille.id,
+                pliage: plot_data.value.pliage.id
+            }
         }
         let post_promises = []
         if (plot_data.value.cepage.id == -1) {
             post_promises.push(new Promise((resolve, reject) => {
                 send_http_request("POST", "cepages", { nom: plot_data.value.cepage.nom })
                 .then((response) => {
-                    plot_data_req.cepage = JSON.parse(response.response).id
+                    plot_data_req.properties.cepage = JSON.parse(response.response).id
                     resolve()
                 })
                 .catch((error) => { reject(error) })
@@ -129,7 +140,7 @@
             post_promises.push(new Promise((resolve, reject) => {
                 send_http_request("POST", "tailles", { nom: plot_data.value.taille.nom })
                 .then((response) => {
-                    plot_data_req.taille = JSON.parse(response.response).id
+                    plot_data_req.properties.taille = JSON.parse(response.response).id
                     resolve()
                 })
                 .catch((error) => { reject(error) })
@@ -139,18 +150,17 @@
             post_promises.push(new Promise((resolve, reject) => {
                 send_http_request("POST", "pliages", { nom: plot_data.value.pliage.nom })
                 .then((response) => {
-                    plot_data_req.pliage = JSON.parse(response.response).id
+                    plot_data_req.properties.pliage = JSON.parse(response.response).id
                     resolve()
                 })
                 .catch((error) => { reject(error) })
             }))
         }
         Promise.all(post_promises).then(() => {
-            console.log(plot_data_req)
             send_http_request("POST", "parcelles", plot_data_req)
             .then((response) => {
-                console.log(response)
-                //$router.push('parcelle/' + parcelle.id)
+                let parcelle = JSON.parse(response.response)
+                router.push('parcelle/' + parcelle.id)
             })
             .catch((error) => {
                 console.error("Could not create plot ...")
