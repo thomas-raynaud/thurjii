@@ -157,9 +157,31 @@
             }))
         }
         Promise.all(post_promises).then(() => {
+            map_store.lines
             send_http_request("POST", "parcelles", plot_data_req)
             .then((response) => {
                 let parcelle = JSON.parse(response.response)
+                let lines_data_req = []
+                for (let i = 0; i < map_store.lines.length; i++) {
+                    // Convert lines coordinates from canvas space to mercator coords
+                    // ...
+                    let line_merc = []
+                    lines_data_req.push({
+                        parcelle: parcelle.id,
+                        location: {
+                            type: "LineString",
+                            coordinates: line_merc
+                        }
+                    })
+                }
+                send_http_request("POST", "rangs", lines_data_req)
+                .then((response) => {
+                    router.push('parcelle/' + parcelle.id)
+                })
+                .catch((error) => {
+                    console.error("Could not create lines associated to plot " + parcelle.id + " ...")
+                    console.error(error)
+                })
                 router.push('parcelle/' + parcelle.id)
             })
             .catch((error) => {

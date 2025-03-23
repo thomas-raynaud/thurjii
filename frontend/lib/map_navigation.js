@@ -19,7 +19,7 @@ const get_map_height = (map_element) => {
 
 const get_map_coords = (coords, offset, pos, map_element) => {
     let mouse_pos = get_mouse_pos(pos, map_element)
-    let tile_size = get_tile_size_from_zoom(map_store.coords.z)
+    let tile_size = get_tile_size_from_zoom(coords.z)
     let z = Math.ceil(coords.z)
     return {
         x: (Math.floor(mouse_pos.x / tile_size) + (coords.x + 1) + (((mouse_pos.x % tile_size) - (tile_size - offset.x)) / tile_size)) / Math.pow(2, z),
