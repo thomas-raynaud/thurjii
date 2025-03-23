@@ -22,7 +22,7 @@ class Parcelle(models.Model):
     cepage = models.ForeignKey(Cepage, on_delete=models.RESTRICT)
     taille = models.ForeignKey(Taille, on_delete=models.RESTRICT)
     pliage = models.ForeignKey(Pliage, on_delete=models.RESTRICT)
-    region = modelsPG.PolygonField() #srid=3857
+    region = modelsPG.PolygonField()
     """
     image = models.ImageField(upload_to="parcelles/")
     taille_img_x = models.DecimalField(max_digits=6, decimal_places=2)
@@ -33,10 +33,9 @@ class Parcelle(models.Model):
 
 class Rang(models.Model):
     parcelle = models.ForeignKey(Parcelle, on_delete=models.CASCADE)
-    p0 = modelsPG.PointField()
-    p1 = modelsPG.PointField()
+    location = modelsPG.LineStringField()
     def __str__(self):
-        return "Rang " + self.id + " de la parcelle " + self.parcelle.nom
+        return "Rang " + str(self.id) + " de la parcelle " + self.parcelle.nom
 
 class Saison(models.Model):
     annee = models.IntegerField(unique=True)

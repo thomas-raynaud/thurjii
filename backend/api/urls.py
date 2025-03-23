@@ -8,6 +8,7 @@ router.register('parcelles', views.ParcelleViewSet)
 router.register('cepages', views.CepageViewSet)
 router.register('tailles', views.TailleViewSet)
 router.register('pliages', views.PliageViewSet)
+router.register('rangs', views.RangViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

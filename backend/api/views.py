@@ -1,9 +1,11 @@
 from django.http import HttpResponse
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from django.conf import settings
+from rest_framework.response import Response
 
-from .models import Parcelle, Cepage, Taille, Pliage
-from .serializers import ParcelleSerializer, CepageSerializer, TailleSerializer, PliageSerializer
+
+from .models import Parcelle, Cepage, Taille, Pliage, Rang
+from .serializers import ParcelleSerializer, CepageSerializer, TailleSerializer, PliageSerializer, RangSerializer
 
 
 class ParcelleViewSet(viewsets.ModelViewSet):
@@ -21,6 +23,17 @@ class TailleViewSet(viewsets.ModelViewSet):
 class PliageViewSet(viewsets.ModelViewSet):
     queryset = Pliage.objects.all()
     serializer_class = PliageSerializer
+
+class RangViewSet(viewsets.ModelViewSet):
+    queryset = Rang.objects.all()
+    serializer_class = RangSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, many=isinstance(request.data,list))
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 def Media(_, path):
     try:

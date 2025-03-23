@@ -1,8 +1,6 @@
-from .models import Parcelle, Cepage, Taille, Pliage
+from .models import Parcelle, Cepage, Taille, Pliage, Rang
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
-import json
-
 
 class ParcelleSerializer(GeoFeatureModelSerializer):
     """
@@ -15,6 +13,13 @@ class ParcelleSerializer(GeoFeatureModelSerializer):
         model = Parcelle
         geo_field = "region"
         fields = [ 'id', 'nom', 'cepage', 'taille', 'pliage' ]
+
+
+class RangSerializer(GeoFeatureModelSerializer):
+    class Meta:
+        model = Rang
+        geo_field = "location"
+        fields = [ 'id', 'parcelle' ]
 
 
 class CepageSerializer(serializers.ModelSerializer):
