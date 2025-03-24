@@ -124,13 +124,21 @@
             ctx.arc(line_cursor_canvas.x, line_cursor_canvas.y, 1, 0, 2 * Math.PI)
             ctx.fillStyle = "white"
             ctx.fill()
+        }
+        if (map_store.state == STATE.PLACE_LINES || map_store.state == STATE.DISPLAY_PLOT) {
             // Draw lines
             for (let i = 0; i < map_store.lines.length; i++) {
+                let line = {}
+                Object.assign(line, map_store.lines[i])
+                if (map_store.state == STATE.DISPLAY_PLOT) {
+                    line.start = from_mercator_to_canvas_pos(line.start) 
+                    line.end = from_mercator_to_canvas_pos(line.end) 
+                }
                 ctx.beginPath()
                 ctx.strokeStyle = 'green'
                 ctx.lineWidth = '1'
-                ctx.moveTo(map_store.lines[i].start.x, map_store.lines[i].start.y)
-                ctx.lineTo(map_store.lines[i].end.x, map_store.lines[i].end.y)
+                ctx.moveTo(line.start.x, line.start.y)
+                ctx.lineTo(line.end.x, line.end.y)
                 ctx.stroke()
             }
         }

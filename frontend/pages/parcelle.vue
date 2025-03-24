@@ -13,7 +13,7 @@
 </template>
 
 <script setup>
-    import { ref, useTemplateRef, onMounted } from 'vue'
+    import { ref, useTemplateRef, onMounted, nextTick } from 'vue'
     import { useRoute } from 'vue-router'
 
     import MapContainer from '../components/map_container.vue'
@@ -32,19 +32,47 @@
         map_store.state = STATE.DISPLAY_PLOT
         map_store.region = []
         map_store.lines = []
-        send_http_request("GET", "parcelles/" + route.params.id).then((response) => {
-            let parcelle_api = JSON.parse(response.response)
-            parcelle.value = parcelle_api.properties
-            parcelle.value.id = parcelle_api.id
-            let region_api = parcelle_api.geometry.coordinates[0]
-            map_store.region = region_api.map((x) => { return { x: x[0], y: x[1] }})
+        let get_promises = []
+        get_promises.push(new Promise((resolve) => {
+            send_http_request("GET", "parcelles/" + route.params.id).then((response) => {
+                let parcelle_api = JSON.parse(response.response)
+                parcelle.value = parcelle_api.properties
+                parcelle.value.id = parcelle_api.id
+                let region_api = parcelle_api.geometry.coordinates[0]
+                map_store.region = region_api.map((x) => { return { x: x[0], y: x[1] }})
+                resolve()
+            }).catch((error) => {
+                console.error("Error when loading plot #" + route.params.id + " ...")
+                console.error(error)
+            })
+        }))
+        get_promises.push(new Promise((resolve) => {
+            send_http_request("GET", "parcelles/" + route.params.id + "/rangs").then((response) => {
+                let rangs_api = JSON.parse(response.response).features
+                for (let i = 0; i < rangs_api.length; i++) {
+                    map_store.lines.push({
+                        start: {
+                            x: rangs_api[i].geometry.coordinates[0][0],
+                            y: rangs_api[i].geometry.coordinates[0][1],
+                        },
+                        end: {
+                            x: rangs_api[i].geometry.coordinates[1][0],
+                            y: rangs_api[i].geometry.coordinates[1][1],
+                        }
+                    })
+                }
+                resolve()
+            }).catch((error) => {
+                console.error("Error when loading lines of plot #" + route.params.id + " ...")
+                console.error(error)
+            })
+        }))
+        Promise.all(get_promises).then(() => {
             parcelle_found.value = true
             map_store.state = STATE.DISPLAY_PLOT
-            map_container.value.center_map_on_region()
-            
-        }).catch((error) => {
-            console.error("Error when loading plot #" + route.params.id + " ...")
-            console.error(error)
+            nextTick(() => {
+                map_container.value.center_map_on_region()
+            })
         })
     })
 </script>

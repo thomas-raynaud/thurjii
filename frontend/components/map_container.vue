@@ -148,6 +148,7 @@
         }
         map_store.coords.z = center_params.zoom
         display.value.position_map(center_params.pos, center_params.zoom, { x: 0.5, y: 0.5 })
+        canvas.value.draw()
     }
 
     defineExpose({

@@ -12,5 +12,6 @@ router.register('rangs', views.RangViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('media/<path:path>/', views.Media)
+    path('media/<path:path>/', views.Media),
+    path('parcelles/<int:parcelle_id>/rangs/', views.LinesOfPlot.as_view())
 ]

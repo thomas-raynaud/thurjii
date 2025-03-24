@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, generics
 from django.conf import settings
 from rest_framework.response import Response
 
@@ -29,11 +29,17 @@ class RangViewSet(viewsets.ModelViewSet):
     serializer_class = RangSerializer
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, many=isinstance(request.data,list))
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            serializer = self.get_serializer(data=request.data, many=isinstance(request.data,list))
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+class LinesOfPlot(generics.ListAPIView):
+    serializer_class = RangSerializer
+    def get_queryset(self):
+        parcelle_id = self.kwargs['parcelle_id']
+        return Rang.objects.filter(parcelle=parcelle_id)
 
 def Media(_, path):
     try:
