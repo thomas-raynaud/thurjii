@@ -29,7 +29,7 @@ const router = createRouter({
             component: about
         },
         {
-            path: '/parcelle/:id',
+            path: '/parcelles/:id',
             name: 'parcelle',
             component: parcelle
         }

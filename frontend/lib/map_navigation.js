@@ -17,8 +17,10 @@ const get_map_height = (map_element) => {
     return map_element.clientHeight
 }
 
-const get_map_coords = (coords, offset, pos, map_element) => {
-    let mouse_pos = get_mouse_pos(pos, map_element)
+const get_map_coords = (coords, offset, pos, map_element=null) => {
+    let mouse_pos = { x: pos[0], y: pos[1] }
+    if (map_element != null)
+        mouse_pos = get_mouse_pos(pos, map_element)
     let tile_size = get_tile_size_from_zoom(coords.z)
     let z = Math.ceil(coords.z)
     return {

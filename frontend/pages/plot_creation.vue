@@ -53,6 +53,7 @@
     import SelectOrCreateForm from '../components/select_or_create_form.vue'
     import { map_store } from '../stores/map_store'
     import { get_area } from '../lib/geometry'
+    import { get_map_coords, from_rel_coords_to_mercator } from '../lib/map_navigation'
     import { STATE } from '../lib/enums'
     import { send_http_request } from '../lib/request'
 
@@ -163,26 +164,29 @@
                 let parcelle = JSON.parse(response.response)
                 let lines_data_req = []
                 for (let i = 0; i < map_store.lines.length; i++) {
-                    // Convert lines coordinates from canvas space to mercator coords
-                    // ...
-                    let line_merc = []
+                    // Convert line coordinates from canvas space to mercator coords
+                    let line_mc = []
+                    for (let pos of [ "start", "end" ]) {
+                        let p_rel_coords = get_map_coords(map_store.coords, map_store.offset_display, [ map_store.lines[i][pos].x, map_store.lines[i][pos].y ])
+                        let p_mc = from_rel_coords_to_mercator(p_rel_coords.x, p_rel_coords.y)
+                        line_mc.push([ p_mc.x, p_mc.y ])
+                    }
                     lines_data_req.push({
                         parcelle: parcelle.id,
                         location: {
                             type: "LineString",
-                            coordinates: line_merc
+                            coordinates: line_mc
                         }
                     })
                 }
                 send_http_request("POST", "rangs", lines_data_req)
                 .then((response) => {
-                    router.push('parcelle/' + parcelle.id)
+                    router.push('parcelles/' + parcelle.id)
                 })
                 .catch((error) => {
                     console.error("Could not create lines associated to plot " + parcelle.id + " ...")
                     console.error(error)
                 })
-                router.push('parcelle/' + parcelle.id)
             })
             .catch((error) => {
                 console.error("Could not create plot ...")

@@ -22,7 +22,7 @@
                             :key="parcelle.id"
                         >
                             <img :src="parcelle.img_src" height="180px" />
-                            <span class="d-block" @click="$router.push('parcelle/' + parcelle.id)">{{ parcelle.nom }}</span>
+                            <span class="d-block" @click="$router.push('parcelles/' + parcelle.id)">{{ parcelle.nom }}</span>
                             <button
                                 type="button" class="btn btn-outline-dark"
                                 @click="delete_plot(parcelle.id)"
