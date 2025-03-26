@@ -1,30 +1,42 @@
 <template>
-    <div class="body row">
-        <div class="col" v-show="parcelle_found">
-            <map-container
-                ref="map_container"
-                :nb-tiles-x="nb_tiles_x" :nb-tiles-y="nb_tiles_y"
-            />
+    <div class="body">
+        <div v-show="plot_found" class="row">
+            <div class="col" v-show="plot_found">
+                <map-container
+                    ref="map_container"
+                    :nb-tiles-x="nb_tiles_x" :nb-tiles-y="nb_tiles_y"
+                />
+            </div>
+            <div class="col">
+                <h3>{{ parcelle.nom }}</h3>
+                <button
+                    type="button" class="btn btn-danger"
+                    @click="delete_plot(parcelle.id)"
+                >
+                    Supprimer
+                </button>
+            </div>
         </div>
-        <p v-show="!parcelle_found">Parcelle #{{ route.params.id }} inexistante</p>
-        <div class="col">
-        </div>
+        <p v-show="!plot_found && !plot_loading">Parcelle #{{ route.params.id }} inexistante</p>
     </div>
 </template>
 
 <script setup>
     import { ref, useTemplateRef, onMounted, nextTick } from 'vue'
-    import { useRoute } from 'vue-router'
+    import { useRoute, useRouter } from 'vue-router'
 
     import MapContainer from '../components/map_container.vue'
     import { map_store } from '../stores/map_store'
     import { send_http_request } from '../lib/request'
     import { STATE } from '../lib/enums'
 
+    const router = useRouter()
+
     const map_container = useTemplateRef("map_container")
     const route = useRoute()
-    const parcelle = ref()
-    const parcelle_found = ref()
+    const parcelle = ref({})
+    const plot_found = ref(false)
+    const plot_loading = ref(true)
     const nb_tiles_x = ref(3)
     const nb_tiles_y = ref(2)
 
@@ -40,6 +52,8 @@
                 parcelle.value.id = parcelle_api.id
                 let region_api = parcelle_api.geometry.coordinates[0]
                 map_store.region = region_api.map((x) => { return { x: x[0], y: x[1] }})
+                plot_loading.value = false
+                plot_found.value = true
                 resolve()
             }).catch((error) => {
                 console.error("Error when loading plot #" + route.params.id + " ...")
@@ -68,11 +82,24 @@
             })
         }))
         Promise.all(get_promises).then(() => {
-            parcelle_found.value = true
             map_store.state = STATE.DISPLAY_PLOT
             nextTick(() => {
                 map_container.value.center_map_on_region()
             })
         })
     })
+
+    const delete_plot = (plot_id) => {
+        send_http_request("DELETE", "parcelles/" + plot_id).then((response) => {
+            if (response.status == 500) {
+                console.error("Could not delete plot #" + plot_id + " ...")
+            }
+            else {
+                router.push('/')
+            }
+        }).catch((error) => {
+            console.error("Could not delete plot #" + plot_id + " ...")
+            console.error(error)
+        })
+    }
 </script>

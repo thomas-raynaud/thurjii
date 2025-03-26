@@ -31,8 +31,8 @@ const get_map_coords = (coords, offset, pos, map_element=null) => {
 
 const get_mouse_pos = (pos, element) => {
     return {
-        x: pos[0] + document.documentElement.scrollLeft - element.parentElement.offsetLeft,
-        y: pos[1] + document.documentElement.scrollTop - element.parentElement.offsetTop
+        x: pos[0] + document.documentElement.scrollLeft - element.offsetLeft,
+        y: pos[1] + document.documentElement.scrollTop - element.offsetTop
     }
 }
 

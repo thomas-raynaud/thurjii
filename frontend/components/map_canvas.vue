@@ -202,7 +202,7 @@
     const stop_line_spreading = () => { map_store.line_spreading = false }
 
     const pan_lines = (e) => {
-        line_cursor = get_map_coords(map_store.coords, map_store.offset_display, [ e.clientX, e.clientY ], canvas.value)
+        line_cursor = get_map_coords(map_store.coords, map_store.offset_display, [ e.clientX, e.clientY ], canvas.value.parentElement)
         compute_lines()
     }
 

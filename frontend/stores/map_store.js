@@ -16,7 +16,6 @@ export const map_store = reactive({
         x: 0,
         y: 0
     },
-    panning: false,
     state: STATE.SELECT_REGION,
     line_cursor_coords: {
         x: 0,

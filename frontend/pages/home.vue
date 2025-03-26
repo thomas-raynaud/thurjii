@@ -2,33 +2,38 @@
     <div class="body row">
         <div class="col-8">
             <div class="card">
-                <div class="row align-items-center">
-                    <div class="col-md-auto">
-                        <h3>Les parcelles</h3>
+                <div class="card-body">
+                    <div class="row align-items-center mb-3">
+                        <div class="col-md-auto">
+                            <h3>Les parcelles</h3>
+                        </div>
+                        <div class="col">
+                            <button
+                                type="button" class="btn btn-light"
+                                @click="$router.push('creation-parcelle')"
+                            >
+                                Ajouter une parcelle
+                            </button>
+                        </div>
                     </div>
-                    <div class="col">
-                        <button
-                            type="button" class="btn btn-light"
-                            @click="$router.push('creation-parcelle')"
-                        >
-                            Ajouter une parcelle
-                        </button>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col">
-                        <div class="parcelle container"
+                    <div class="row row-cols-4">
+                        <div class="col"
                             v-for="parcelle in parcelles"
                             :key="parcelle.id"
                         >
-                            <img :src="parcelle.img_src" height="180px" />
-                            <span class="d-block" @click="$router.push('parcelles/' + parcelle.id)">{{ parcelle.nom }}</span>
-                            <button
-                                type="button" class="btn btn-outline-dark"
-                                @click="delete_plot(parcelle.id)"
-                            >
-                                Delete
-                            </button>
+                            <div class="card">
+                                <div class="card-img-top d-flex justify-content-center img-container">
+                                    <map-display
+                                        ref="map_displays" 
+                                        nb-tiles-x="1" nb-tiles-y="1"
+                                    />
+                                    <!--<img :src="parcelle.img_src" height="256px" class="card-img-top" />-->
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ parcelle.nom }}</h5>
+                                    <button class="btn btn-primary" @click="$router.push('parcelles/' + parcelle.id)">Voir détails</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -36,18 +41,33 @@
         </div>
         <div class="col-4">
             <div class="card">
-                <h2>Rappels</h2>
+                <div class="card-body">
+                    <h3 class="card-title">Rappels</h3>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
-<script setup>
-    import { ref, onMounted } from 'vue'
+<style scoped>
+    .img-container {
+        height: 256px;
+        background-color: black;
+        z-index: 1;
+    }
+</style>
 
+<script setup>
+    import { ref, onMounted, nextTick } from 'vue'
+
+    import MapDisplay from '../components/map_display.vue'
     import { send_http_request, MEDIA_URL } from '../lib/request'
+    import {
+        get_region_center_params
+    } from '../lib/map_navigation'
 
     const parcelles = ref([])
+    const map_displays = ref([])
 
     onMounted(() => {
         load_plots()
@@ -64,29 +84,20 @@
                 parcelles_api.forEach(parcelle_api => {
                     let parcelle = parcelle_api.properties
                     parcelle.id = parcelle_api.id
-                    parcelle.region = parcelle_api.geometry.coordinates[0]
+                    parcelle.region = parcelle_api.geometry.coordinates[0].map((x) => { return { x: x[0], y: x[1] }})
                     parcelle.img_src = MEDIA_URL + parcelle.image + "/"
                     parcelles.value.push(parcelle)
+                })
+                nextTick(() => {
+                    for (let i = 0; i < parcelles.value.length; i++) {
+                        let center_params = get_region_center_params(parcelles.value[i].region, [ 1, 1 ])
+                        map_displays.value[i].position_map(center_params.pos, center_params.zoom, { x: 0.5, y: 0.5 })
+                    }
                 })
             }
             
         }).catch((error) => {
             console.error("Error when loading plots ...")
-            console.error(error)
-        })
-    }
-
-    const delete_plot = (plot_id) => {
-        send_http_request("DELETE", "parcelles/" + plot_id).then((response) => {
-            if (response.status == 500) {
-                console.error("Could not delete plot #" + plot_id + " ...")
-            }
-            else {
-                load_plots()
-            }
-            load_plots()
-        }).catch((error) => {
-            console.error("Could not delete plot #" + plot_id + " ...")
             console.error(error)
         })
     }
