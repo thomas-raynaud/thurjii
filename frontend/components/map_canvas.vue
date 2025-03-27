@@ -207,7 +207,7 @@
     }
 
     const rotate_lines = (e) => {
-        let pos = get_mouse_pos([ e.clientX, e.clientY ], canvas.value)
+        let pos = get_mouse_pos([ e.clientX, e.clientY ], canvas.value.parentElement)
         let dims_map = get_dims_map(nb_tiles_x, nb_tiles_y)
         line_theta = ((pos.x / dims_map.width) - 0.5) * 360
         compute_lines()
@@ -215,7 +215,7 @@
 
     const spread_lines = (e) => {
         let line_cursor_canvas = from_rel_coords_to_canvas_pos(line_cursor)
-        let pos = get_mouse_pos([ e.clientX, e.clientY ], canvas.value)
+        let pos = get_mouse_pos([ e.clientX, e.clientY ], canvas.value.parentElement)
         line_step = Math.max(get_distance(line_cursor_canvas, pos), 2)
         compute_lines()
     }

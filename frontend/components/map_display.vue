@@ -91,6 +91,9 @@
     })
 
     const load_tile = (x, y, z) => {
+        if (z != z_coord.value) { // If zoom has changed, loading the tile is no longer relevant
+            return
+        }
         if (loading_tile) {
             return new Promise((resolve) => {
                 setTimeout(() => {
