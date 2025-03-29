@@ -9,6 +9,9 @@
             </div>
             <div class="col">
                 <h3>{{ parcelle.nom }}</h3>
+                <p>Cépage : {{ parcelle.nom_cepage }}</p>
+                <p>Taille : {{ parcelle.nom_taille }}</p>
+                <p>Pliage : {{ parcelle.nom_pliage }}</p>
                 <button
                     type="button" class="btn btn-danger"
                     @click="delete_plot(parcelle.id)"
@@ -85,6 +88,15 @@
             map_store.state = STATE.DISPLAY_PLOT
             nextTick(() => {
                 map_container.value.center_map_on_region()
+            })
+            send_http_request("GET", "cepages/" + parcelle.value.cepage).then((response) => {
+                parcelle.value.nom_cepage = JSON.parse(response.response).nom
+            })
+            send_http_request("GET", "tailles/" + parcelle.value.taille).then((response) => {
+                parcelle.value.nom_taille = JSON.parse(response.response).nom
+            })
+            send_http_request("GET", "pliages/" + parcelle.value.pliage).then((response) => {
+                parcelle.value.nom_pliage = JSON.parse(response.response).nom
             })
         })
     })

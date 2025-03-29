@@ -4,8 +4,8 @@ from django.conf import settings
 from rest_framework.response import Response
 
 
-from .models import Parcelle, Cepage, Taille, Pliage, Rang
-from .serializers import ParcelleSerializer, CepageSerializer, TailleSerializer, PliageSerializer, RangSerializer
+from .models import Parcelle, Cepage, Taille, Pliage, Rang, TypeTache
+from .serializers import ParcelleSerializer, CepageSerializer, TailleSerializer, PliageSerializer, RangSerializer, TypeTacheSerializer
 
 
 class ParcelleViewSet(viewsets.ModelViewSet):
@@ -34,6 +34,10 @@ class RangViewSet(viewsets.ModelViewSet):
             self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+class TypeTacheViewSet(viewsets.ModelViewSet):
+    queryset = TypeTache.objects.all()
+    serializer_class = TypeTacheSerializer
 
 class LinesOfPlot(generics.ListAPIView):
     serializer_class = RangSerializer
