@@ -38,10 +38,11 @@ class Rang(models.Model):
         return "Rang " + str(self.id) + " de la parcelle " + self.parcelle.nom
 
 class Saison(models.Model):
-    annee = models.IntegerField(unique=True)
-    terminee = models.BooleanField(default=False)
+    annee = models.IntegerField(unique=True, primary_key=True)
+    debut = models.DateField()
+    fin = models.DateField(null=True)
     def __str__(self):
-        return "Saison " + self.annee + (" (terminée)" if self.terminee else "")
+        return "Saison " + self.annee
 
 class TypeReparation(models.Model):
     nom = models.CharField(max_length=50)

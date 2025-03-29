@@ -10,6 +10,7 @@ router.register('tailles', views.TailleViewSet)
 router.register('pliages', views.PliageViewSet)
 router.register('rangs', views.RangViewSet)
 router.register('types_taches', views.TypeTacheViewSet)
+router.register('saisons', views.SaisonViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

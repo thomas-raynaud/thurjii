@@ -1,4 +1,4 @@
-from .models import Parcelle, Cepage, Taille, Pliage, Rang, TypeTache
+from .models import Parcelle, Cepage, Taille, Pliage, Rang, TypeTache, Saison
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
@@ -43,3 +43,8 @@ class TypeTacheSerializer(serializers.ModelSerializer):
     class Meta:
         model = TypeTache
         fields = [ 'id', 'nom' ]
+
+class SaisonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Saison
+        fields = [ 'annee', 'debut', 'fin' ]
