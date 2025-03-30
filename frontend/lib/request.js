@@ -1,7 +1,7 @@
 const BACKEND_URL = "http://localhost:8081/api/"
 const MEDIA_URL = BACKEND_URL + "media/"
 
-const send_http_request = (method, endpoint, data={}) => {
+const send_api = (method, endpoint, data={}) => {
 	return new Promise((resolve, reject) => {
 		let xhr = new XMLHttpRequest()
 		let data_rq = JSON.stringify(data)
@@ -18,4 +18,4 @@ const send_http_request = (method, endpoint, data={}) => {
 	})
 }
 
-export { send_http_request, MEDIA_URL }
+export { send_api, MEDIA_URL }

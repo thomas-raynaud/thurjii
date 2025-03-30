@@ -55,7 +55,7 @@
     import { get_area } from '../lib/geometry'
     import { get_map_coords, from_rel_coords_to_mercator } from '../lib/map_navigation'
     import { STATE } from '../lib/enums'
-    import { send_http_request } from '../lib/request'
+    import { send_api } from '../lib/request'
 
     const router = useRouter()
 
@@ -75,21 +75,21 @@
         map_store.region = []
         map_store.lines = []
         // Load cepages
-        send_http_request("GET", "cepages").then((response) => {
+        send_api("GET", "cepages").then((response) => {
             cepages.value = JSON.parse(response.response)
         }).catch((error) => {
             console.error("Error when loading cepages ...")
             console.error(error)
         })
         // Load tailles
-        send_http_request("GET", "tailles").then((response) => {
+        send_api("GET", "tailles").then((response) => {
             tailles.value = JSON.parse(response.response)
         }).catch((error) => {
             console.error("Error when loading tailles ...")
             console.error(error)
         })
         // Load pliages
-        send_http_request("GET", "pliages").then((response) => {
+        send_api("GET", "pliages").then((response) => {
             pliages.value = JSON.parse(response.response)
         }).catch((error) => {
             console.error("Error when loading pliages ...")
@@ -129,7 +129,7 @@
         let post_promises = []
         if (plot_data.value.cepage.id == -1) {
             post_promises.push(new Promise((resolve, reject) => {
-                send_http_request("POST", "cepages", { nom: plot_data.value.cepage.nom })
+                send_api("POST", "cepages", { nom: plot_data.value.cepage.nom })
                 .then((response) => {
                     plot_data_req.properties.cepage = JSON.parse(response.response).id
                     resolve()
@@ -139,7 +139,7 @@
         }
         if (plot_data.value.taille.id == -1) {
             post_promises.push(new Promise((resolve, reject) => {
-                send_http_request("POST", "tailles", { nom: plot_data.value.taille.nom })
+                send_api("POST", "tailles", { nom: plot_data.value.taille.nom })
                 .then((response) => {
                     plot_data_req.properties.taille = JSON.parse(response.response).id
                     resolve()
@@ -149,7 +149,7 @@
         }
         if (plot_data.value.pliage.id == -1) {
             post_promises.push(new Promise((resolve, reject) => {
-                send_http_request("POST", "pliages", { nom: plot_data.value.pliage.nom })
+                send_api("POST", "pliages", { nom: plot_data.value.pliage.nom })
                 .then((response) => {
                     plot_data_req.properties.pliage = JSON.parse(response.response).id
                     resolve()
@@ -159,7 +159,7 @@
         }
         Promise.all(post_promises).then(() => {
             map_store.lines
-            send_http_request("POST", "parcelles", plot_data_req)
+            send_api("POST", "parcelles", plot_data_req)
             .then((response) => {
                 let parcelle = JSON.parse(response.response)
                 let lines_data_req = []
@@ -179,7 +179,7 @@
                         }
                     })
                 }
-                send_http_request("POST", "rangs", lines_data_req)
+                send_api("POST", "rangs", lines_data_req)
                 .then((response) => {
                     router.push('parcelles/' + parcelle.id)
                 })

@@ -45,7 +45,7 @@ class LinesOfPlot(generics.ListAPIView):
         return Rang.objects.filter(parcelle=parcelle_id)
 
 class SaisonViewSet(viewsets.ModelViewSet):
-    queryset = Saison.objects.all()
+    queryset = Saison.objects.all().order_by("annee").reverse()
     serializer_class = SaisonSerializer
 
 def Media(_, path):

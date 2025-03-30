@@ -61,7 +61,7 @@
     import { ref, onMounted, nextTick } from 'vue'
 
     import MapDisplay from '../components/map_display.vue'
-    import { send_http_request, MEDIA_URL } from '../lib/request'
+    import { send_api, MEDIA_URL } from '../lib/request'
     import {
         get_region_center_params
     } from '../lib/map_navigation'
@@ -74,7 +74,7 @@
     })
 
     const load_plots = () => {
-        send_http_request("GET", "parcelles").then((response) => {
+        send_api("GET", "parcelles").then((response) => {
             if (response.status == 0) {
                 console.error("Error when loading plots ...")
             }

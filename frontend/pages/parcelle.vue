@@ -30,7 +30,7 @@
 
     import MapContainer from '../components/map_container.vue'
     import { map_store } from '../stores/map_store'
-    import { send_http_request } from '../lib/request'
+    import { send_api } from '../lib/request'
     import { STATE } from '../lib/enums'
 
     const router = useRouter()
@@ -49,7 +49,7 @@
         map_store.lines = []
         let get_promises = []
         get_promises.push(new Promise((resolve) => {
-            send_http_request("GET", "parcelles/" + route.params.id).then((response) => {
+            send_api("GET", "parcelles/" + route.params.id).then((response) => {
                 let parcelle_api = JSON.parse(response.response)
                 parcelle.value = parcelle_api.properties
                 parcelle.value.id = parcelle_api.id
@@ -64,7 +64,7 @@
             })
         }))
         get_promises.push(new Promise((resolve) => {
-            send_http_request("GET", "parcelles/" + route.params.id + "/rangs").then((response) => {
+            send_api("GET", "parcelles/" + route.params.id + "/rangs").then((response) => {
                 let rangs_api = JSON.parse(response.response).features
                 for (let i = 0; i < rangs_api.length; i++) {
                     map_store.lines.push({
@@ -89,20 +89,20 @@
             nextTick(() => {
                 map_container.value.center_map_on_region()
             })
-            send_http_request("GET", "cepages/" + parcelle.value.cepage).then((response) => {
+            send_api("GET", "cepages/" + parcelle.value.cepage).then((response) => {
                 parcelle.value.nom_cepage = JSON.parse(response.response).nom
             })
-            send_http_request("GET", "tailles/" + parcelle.value.taille).then((response) => {
+            send_api("GET", "tailles/" + parcelle.value.taille).then((response) => {
                 parcelle.value.nom_taille = JSON.parse(response.response).nom
             })
-            send_http_request("GET", "pliages/" + parcelle.value.pliage).then((response) => {
+            send_api("GET", "pliages/" + parcelle.value.pliage).then((response) => {
                 parcelle.value.nom_pliage = JSON.parse(response.response).nom
             })
         })
     })
 
     const delete_plot = (plot_id) => {
-        send_http_request("DELETE", "parcelles/" + plot_id).then((response) => {
+        send_api("DELETE", "parcelles/" + plot_id).then((response) => {
             if (response.status == 500) {
                 console.error("Could not delete plot #" + plot_id + " ...")
             }

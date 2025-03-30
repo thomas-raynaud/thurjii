@@ -40,9 +40,9 @@ class Rang(models.Model):
 class Saison(models.Model):
     annee = models.IntegerField(unique=True, primary_key=True)
     debut = models.DateField()
-    fin = models.DateField(null=True)
+    fin = models.DateField(blank=True)
     def __str__(self):
-        return "Saison " + self.annee
+        return "Saison " + str(self.annee)
 
 class TypeReparation(models.Model):
     nom = models.CharField(max_length=50)
