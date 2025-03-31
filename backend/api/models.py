@@ -40,7 +40,7 @@ class Rang(models.Model):
 class Saison(models.Model):
     annee = models.IntegerField(unique=True, primary_key=True)
     debut = models.DateField()
-    fin = models.DateField(blank=True)
+    fin = models.DateField(blank=True, null=True)
     def __str__(self):
         return "Saison " + str(self.annee)
 

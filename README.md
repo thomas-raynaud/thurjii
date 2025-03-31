@@ -14,12 +14,36 @@ npm install
 npm run build-frontend
 ```
 
+## Base de données
+
+### PostGreSQL
+
+- Installer PostGreSQL et ses packages dépendants :
+```
+apt install postgresql postgis gdal-bin libgdal-dev
+```
+
+- Créer un rôle "superuser" pour l'utilisateur courant : `sudo -u postgres createuser [ owning_user ] -s -P`
+
+- Créer une base de données : `createdb thurjii`
+
+- Pour avoir accès à la base : `psql -d thurjii`
+
+### PgAdmin
+
+- Installer pgAdmin (interface utilisateur) :
+```
+$ curl -fsS https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --dearmor -o /usr/share/keyrings/packages-pgadmin-org.gpg
+$ sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$(lsb_release -cs) pgadmin4 main" > /etc/apt/sources.list.d/pgadmin4.list && apt update'
+$ sudo apt install pgadmin4
+```
+
 ## Serveur Django
 
 Installer Django :
 ```
 python -m pip install Django djangorestframework django-cors-headers django-cors-middleware djangorestframework-gis
-python -m pip install 'gdal==3.9.1'
+python -m pip install 'gdal==x.y.z' ----> Pour voir la version à installer, voir la version de gdal installée : gdalinfo --version
 python -m pip install pillow
 python -m pip install psycopg2-binary
 ```
@@ -34,30 +58,6 @@ python manage.py migrate
 Setup admin :
 ```
 python manage.py createsuperuser
-```
-
-# Base de données
-
-## PostGreSQL
-
-- Installer PostGreSQL et ses packages dépendants :
-```
-apt install postgresql postgis gdal-bin
-```
-
-- Créer un rôle "superuser" pour l'utilisateur courant : `sudo -u postgres createuser [ owning_user ] -s -P`
-
-- Créer une base de données : `createdb thurjii`
-
-- Pour avoir accès à la base : `psql -d thurjii`
-
-## PgAdmin
-
-- Installer pgAdmin (interface utilisateur) :
-```
-$ curl -fsS https://www.pgadmin.org/static/packages_pgadmin_org.pub | sudo gpg --dearmor -o /usr/share/keyrings/packages-pgadmin-org.gpg
-$ sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/packages-pgadmin-org.gpg] https://ftp.postgresql.org/pub/pgadmin/pgadmin4/apt/$(lsb_release -cs) pgadmin4 main" > /etc/apt/sources.list.d/pgadmin4.list && apt update'
-$ sudo apt install pgadmin4
 ```
 
 ## Configuration Django
