@@ -4,8 +4,8 @@ from django.conf import settings
 from rest_framework.response import Response
 
 
-from .models import Parcelle, Cepage, Taille, Pliage, Rang, TypeTache, Saison
-from .serializers import ParcelleSerializer, CepageSerializer, TailleSerializer, PliageSerializer, RangSerializer, TypeTacheSerializer, SaisonSerializer
+from .models import *
+from .serializers import *
 
 class ParcelleViewSet(viewsets.ModelViewSet):
     queryset = Parcelle.objects.all()
@@ -47,6 +47,16 @@ class LinesOfPlot(generics.ListAPIView):
 class SaisonViewSet(viewsets.ModelViewSet):
     queryset = Saison.objects.all().order_by("annee").reverse()
     serializer_class = SaisonSerializer
+
+class TacheParcelleViewSet(viewsets.ModelViewSet):
+    queryset = TacheParcelle.objects.all()
+    serializer_class = TacheParcelleSerializer
+
+class TasksOfPlot(generics.ListAPIView):
+    serializer_class = TacheParcelleSerializer
+    def get_queryset(self):
+        parcelle_id = self.kwargs['parcelle_id']
+        return TacheParcelle.objects.filter(parcelle=parcelle_id)
 
 def Media(_, path):
     try:
