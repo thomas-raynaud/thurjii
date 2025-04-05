@@ -20,6 +20,42 @@
         form-check-label="Ajouter un nouveau type de pliage"
         form-new-data-placeholder="Nom du type de pliage"
     />
+    <div class="card">
+        <div class="card-body">
+            <h5>Tâches</h5>
+            <ul class="list-group mb-2">
+                <li class="list-group-item">
+                    <input class="form-check-input me-1" type="checkbox" value="" id="firstCheckbox">
+                    <label class="form-check-label" for="firstCheckbox">First checkbox</label>
+                </li>
+                <li class="list-group-item">
+                    <input class="form-check-input me-1" type="checkbox" value="" id="secondCheckbox">
+                    <label class="form-check-label" for="secondCheckbox">Second checkbox</label>
+                </li>
+                <li class="list-group-item">
+                    <input class="form-check-input me-1" type="checkbox" value="" id="thirdCheckbox">
+                    <label class="form-check-label" for="thirdCheckbox">Third checkbox</label>
+                </li>
+            </ul>
+            <div class="row align-items-center mb-3">
+                <div class="col-md-auto">
+                    <p class="mb-0">Autre :</p>
+                </div>
+                <div class="col">
+                    <input class="form-control" v-model="formTask.nom" placeholder="Nom de la tâche">
+                </div>
+                <div class="col">
+                    <button
+                        type="button" class="btn btn-light"
+                        @click="add_task()"
+                    >
+                        Ajouter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div class="invalid-feedback mb-3" :style="{'display': invalidData ? 'block' : 'none'}">
         Veuillez compléter tous les champs.
     </div>
@@ -35,6 +71,7 @@
     const cepages = ref([])
     const tailles = ref([])
     const pliages = ref([])
+    const formTask = ref({ nom: "" })
 
     onMounted(() => {
         // Load cepages
@@ -59,4 +96,8 @@
             console.error(error)
         })
     })
+
+    const add_task = () => {
+
+    }
 </script>
