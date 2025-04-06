@@ -63,7 +63,7 @@ class Reparation(models.Model):
             + " - date : " + self.date_accident
         )
 
-class TypeTache(models.Model):
+class Tache(models.Model):
     nom = models.CharField(max_length=50, unique=True)
     def __str__(self):
         return self.nom
@@ -71,7 +71,7 @@ class TypeTache(models.Model):
 class EtatRang(models.Model):
     rang = models.ForeignKey(Rang, on_delete=models.CASCADE)
     saison = models.ForeignKey(Saison, on_delete=models.CASCADE)
-    type_tache = models.ForeignKey(TypeTache, on_delete=models.CASCADE)
+    type_tache = models.ForeignKey(Tache, on_delete=models.CASCADE)
     fait = models.BooleanField(default=False)
     class Meta:
         constraints = [
@@ -85,7 +85,7 @@ class EtatRang(models.Model):
 
 class TacheParcelle(models.Model):
     parcelle = models.ForeignKey(Parcelle, on_delete=models.CASCADE)
-    type_tache = models.ForeignKey(TypeTache, on_delete=models.CASCADE)
+    type_tache = models.ForeignKey(Tache, on_delete=models.CASCADE)
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -98,7 +98,7 @@ class TacheParcelle(models.Model):
 
 class Log(models.Model):
     parcelle = models.ForeignKey(Parcelle, on_delete=models.CASCADE)
-    type_tache = models.ForeignKey(TypeTache, on_delete=models.RESTRICT)
+    type_tache = models.ForeignKey(Tache, on_delete=models.RESTRICT)
     nb_heures = models.DecimalField(max_digits=5, decimal_places=2)
     date = models.DateField(auto_now_add=True)
     commentaire = models.TextField(max_length=300)

@@ -24,17 +24,9 @@
         <div class="card-body">
             <h5>Tâches</h5>
             <ul class="list-group mb-2">
-                <li class="list-group-item">
-                    <input class="form-check-input me-1" type="checkbox" value="" id="firstCheckbox">
-                    <label class="form-check-label" for="firstCheckbox">First checkbox</label>
-                </li>
-                <li class="list-group-item">
-                    <input class="form-check-input me-1" type="checkbox" value="" id="secondCheckbox">
-                    <label class="form-check-label" for="secondCheckbox">Second checkbox</label>
-                </li>
-                <li class="list-group-item">
-                    <input class="form-check-input me-1" type="checkbox" value="" id="thirdCheckbox">
-                    <label class="form-check-label" for="thirdCheckbox">Third checkbox</label>
+                <li class="list-group-item" v-for="tache in formData.taches">
+                    <input class="form-check-input me-1" type="checkbox" :value="tache.checked">
+                    <label class="form-check-label">{{ tache.nom }}</label>
                 </li>
             </ul>
             <div class="row align-items-center mb-3">
@@ -42,7 +34,7 @@
                     <p class="mb-0">Autre :</p>
                 </div>
                 <div class="col">
-                    <input class="form-control" v-model="formTask.nom" placeholder="Nom de la tâche">
+                    <input class="form-control" v-model="new_task_name" placeholder="Nom de la tâche">
                 </div>
                 <div class="col">
                     <button
@@ -71,7 +63,7 @@
     const cepages = ref([])
     const tailles = ref([])
     const pliages = ref([])
-    const formTask = ref({ nom: "" })
+    const new_task_name = ref("")
 
     onMounted(() => {
         // Load cepages
@@ -98,6 +90,13 @@
     })
 
     const add_task = () => {
-
+        send_api("POST", "taches", { nom: new_task_name.value })
+        .then((response) => {
+            let tache = JSON.parse(response.response)
+            tache.checked = true
+            formData.value.taches.push(tache)
+            console.log(tache)
+        })
+        .catch((error) => { console.error(error) })
     }
 </script>

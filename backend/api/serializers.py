@@ -39,9 +39,9 @@ class PliageSerializer(serializers.ModelSerializer):
         model = Pliage
         fields = [ 'id', 'nom' ]
 
-class TypeTacheSerializer(serializers.ModelSerializer):
+class TacheSerializer(serializers.ModelSerializer):
     class Meta:
-        model = TypeTache
+        model = Tache
         fields = [ 'id', 'nom' ]
 
 class SaisonSerializer(serializers.ModelSerializer):

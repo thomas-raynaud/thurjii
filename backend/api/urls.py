@@ -9,7 +9,7 @@ router.register('cepages', views.CepageViewSet)
 router.register('tailles', views.TailleViewSet)
 router.register('pliages', views.PliageViewSet)
 router.register('rangs', views.RangViewSet)
-router.register('types_taches', views.TypeTacheViewSet)
+router.register('taches', views.TacheViewSet)
 router.register('saisons', views.SaisonViewSet),
 router.register('taches_par_parcelles', views.TacheParcelleViewSet)
 

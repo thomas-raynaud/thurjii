@@ -147,12 +147,26 @@
             send_api("GET", "pliages/" + parcelle.value.pliage.id).then((response) => {
                 parcelle.value.pliage.nom = JSON.parse(response.response).nom
             })
-            send_api("GET", "taches_par_parcelles/" + parcelle.value.id).then((response) => {
-                if (response.status == 404) {
-                    parcelle.value.taches = []
+            send_api("GET", "taches").then((response) => {
+                parcelle.value.taches = JSON.parse(response.response)
+                for (let i = 0; i < parcelle.value.taches.length; i++) {
+                    parcelle.value.taches[i].checked = false
                 }
-                else
-                    parcelle.value.taches = JSON.parse(response.response)
+                send_api("GET", "taches_par_parcelles/" + parcelle.value.id).then((response) => {
+                    if (response.status != 404) {
+                        let taches_parcelle = JSON.parse(response.response)
+                        for (let tache_parcelle of taches_parcelle) {
+                            // Trouver la tâche correspondante dans parcelle.value.taches
+                            for (let i = 0; i < parcelle.value.taches.length; i++) {
+                                if (parcelle.value.taches[i].id == tache_parcelle.id) {
+                                    parcelle.value.taches[i].checked = true
+                                    break
+                                }
+                            }
+                        }
+                    }
+                    console.log(parcelle.value.taches)
+                })
             })
         })
     })

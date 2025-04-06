@@ -34,9 +34,9 @@ class RangViewSet(viewsets.ModelViewSet):
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-class TypeTacheViewSet(viewsets.ModelViewSet):
-    queryset = TypeTache.objects.all()
-    serializer_class = TypeTacheSerializer
+class TacheViewSet(viewsets.ModelViewSet):
+    queryset = Tache.objects.all()
+    serializer_class = TacheSerializer
 
 class LinesOfPlot(generics.ListAPIView):
     serializer_class = RangSerializer
