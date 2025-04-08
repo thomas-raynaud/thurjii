@@ -37,12 +37,14 @@
                     <p>Cépage : {{ parcelle.cepage.nom }}</p>
                     <p>Taille : {{ parcelle.taille.nom }}</p>
                     <p>Pliage : {{ parcelle.pliage.nom }}</p>
-                    <h5>Tâches {{ (parcelle.taches.length == 0 ? "(aucune)" : "") }}</h5>
+                    <h5>Tâches {{ (no_tasks_registered ? "(aucune)" : "") }}</h5>
                     <ul class="list-group mb-3">
-                        <li class="list-group-item d-flex justify-content-between align-items-center" v-for="tache in parcelle.taches">
-                            {{ tache.nom }}
-                            <span class="badge text-bg-primary rounded-pill">0%</span>
-                        </li>
+                        <div v-for="tache in parcelle.taches">
+                            <li class="list-group-item d-flex justify-content-between align-items-center" v-if="tache.checked">
+                                {{ tache.nom }}
+                                <span class="badge text-bg-primary rounded-pill">0%</span>
+                            </li>
+                        </div>
                     </ul>
                 </div>
                 <div v-show="update_display == true">
@@ -61,7 +63,7 @@
 </template>
 
 <script setup>
-    import { ref, useTemplateRef, onMounted, nextTick } from 'vue'
+    import { ref, useTemplateRef, onMounted, nextTick, watch } from 'vue'
     import { useRoute, useRouter } from 'vue-router'
 
     import MapContainer from '../components/map_container.vue'
@@ -88,6 +90,7 @@
     const nb_tiles_y = ref(3)
     const update_display = ref(false)
     const invalid_data = ref(false)
+    const no_tasks_registered = ref(true)
 
     onMounted(() => {
         map_store.state = STATE.DISPLAY_PLOT
@@ -165,7 +168,6 @@
                             }
                         }
                     }
-                    console.log(parcelle.value.taches)
                 })
             })
         })
@@ -188,4 +190,9 @@
             console.error(error)
         })
     }
+
+    watch(() => parcelle.value.taches.length, (nb_elements) => {
+        if (parcelle.value.taches[nb_elements - 1].checked == true)
+            no_tasks_registered.value = false
+    })
 </script>

@@ -20,7 +20,7 @@
         form-check-label="Ajouter un nouveau type de pliage"
         form-new-data-placeholder="Nom du type de pliage"
     />
-    <div class="card">
+    <div class="card mb-3">
         <div class="card-body">
             <h5>Tâches</h5>
             <ul class="list-group mb-2">
@@ -45,6 +45,12 @@
                     </button>
                 </div>
             </div>
+            <div class="invalid-feedback mb-3" :style="{'display': task_name_empty ? 'block' : 'none'}">
+                Veuillez saisir le nom de la tâche.
+            </div>
+            <div class="invalid-feedback mb-3" :style="{'display': task_name_already_exists ? 'block' : 'none'}">
+                Cette tâche existe déjà.
+            </div>
         </div>
     </div>
     
@@ -64,6 +70,8 @@
     const tailles = ref([])
     const pliages = ref([])
     const new_task_name = ref("")
+    const task_name_empty = ref(false)
+    const task_name_already_exists = ref(false)
 
     onMounted(() => {
         // Load cepages
@@ -90,12 +98,24 @@
     })
 
     const add_task = () => {
+        if (new_task_name.value == "") {
+            task_name_empty.value = true
+            return
+        }
+        task_name_empty.value = false
         send_api("POST", "taches", { nom: new_task_name.value })
         .then((response) => {
-            let tache = JSON.parse(response.response)
-            tache.checked = true
-            formData.value.taches.push(tache)
-            console.log(tache)
+            if (response.status == 400) {
+                task_name_already_exists.value = true
+            }
+            else {
+                let tache = JSON.parse(response.response)
+                tache.checked = true
+                props.formData.taches.push(tache)
+                task_name_already_exists.value = false
+                new_task_name.value = ""
+            }
+            
         })
         .catch((error) => { console.error(error) })
     }

@@ -40,7 +40,8 @@
         nom: "",
         cepage: { id: -1, nom: "" },
         taille: { id: -1, nom: "" },
-        pliage: { id: -1, nom: "" }
+        pliage: { id: -1, nom: "" },
+        taches: []
     })
     const invalid_data = ref(false)
 
@@ -48,6 +49,13 @@
         map_store.state = STATE.SELECT_REGION
         map_store.region = []
         map_store.lines = []
+
+        send_api("GET", "taches").then((response) => {
+            plot_data.value.taches = JSON.parse(response.response)
+            for (let i = 0; i < plot_data.value.taches.length; i++) {
+                plot_data.value.taches[i].checked = false
+            }
+        })
     })
 
     const area_region = computed(() => {
