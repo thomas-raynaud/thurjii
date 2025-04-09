@@ -6,7 +6,7 @@
             <map-container nb-tiles-x="3" nb-tiles-y="2" />
         </div>
         <div class="col">
-            <parcelle-form :form-data="plot_data" :invalid-data="invalid_data" />
+            <parcelle-form :form-data="plot_data" :invalid-data="invalid_data" ref="parcelle_form" />
             <div>
                 <p v-show="map_store.state == STATE.PLACE_LINES">{{ "Nombre de rangs : " + map_store.lines.length }}</p>
                 <p v-show="map_store.state == STATE.PLACE_LINES">{{ "Superficie : " + area_region + " ha"}}</p>
@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-    import { computed, ref, onMounted, toRaw } from 'vue'
+    import { computed, ref, onMounted, toRaw, useTemplateRef } from 'vue'
     import { useRouter } from 'vue-router'
 
     import MapContainer from '../components/map_container.vue'
@@ -44,6 +44,7 @@
         taches: []
     })
     const invalid_data = ref(false)
+    const parcelle_form = useTemplateRef("parcelle_form")
 
     onMounted(() => {
         map_store.state = STATE.SELECT_REGION
@@ -87,39 +88,11 @@
                 pliage: plot_data.value.pliage.id
             }
         }
-        let post_promises = []
-        if (plot_data.value.cepage.id == -1) {
-            post_promises.push(new Promise((resolve, reject) => {
-                send_api("POST", "cepages", { nom: plot_data.value.cepage.nom })
-                .then((response) => {
-                    plot_data_req.properties.cepage = JSON.parse(response.response).id
-                    resolve()
-                })
-                .catch((error) => { reject(error) })
-            }))
-        }
-        if (plot_data.value.taille.id == -1) {
-            post_promises.push(new Promise((resolve, reject) => {
-                send_api("POST", "tailles", { nom: plot_data.value.taille.nom })
-                .then((response) => {
-                    plot_data_req.properties.taille = JSON.parse(response.response).id
-                    resolve()
-                })
-                .catch((error) => { reject(error) })
-            }))
-        }
-        if (plot_data.value.pliage.id == -1) {
-            post_promises.push(new Promise((resolve, reject) => {
-                send_api("POST", "pliages", { nom: plot_data.value.pliage.nom })
-                .then((response) => {
-                    plot_data_req.properties.pliage = JSON.parse(response.response).id
-                    resolve()
-                })
-                .catch((error) => { reject(error) })
-            }))
-        }
-        Promise.all(post_promises).then(() => {
-            map_store.lines
+        let post_promises = parcelle_form.value.create_cepage_taille_pliage()
+        Promise.all(post_promises).then((post_responses) => {
+            plot_data_req.properties.cepage = post_responses[0]
+            plot_data_req.properties.taille = post_responses[1]
+            plot_data_req.properties.pliage = post_responses[2]
             send_api("POST", "parcelles", plot_data_req)
             .then((response) => {
                 let parcelle = JSON.parse(response.response)

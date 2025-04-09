@@ -91,6 +91,7 @@
     const update_display = ref(false)
     const invalid_data = ref(false)
     const no_tasks_registered = ref(true)
+    const tasks_have_changed = ref(false)
 
     onMounted(() => {
         map_store.state = STATE.DISPLAY_PLOT
@@ -174,7 +175,9 @@
     })
 
     const update_plot = () => {
-        
+        /*if (tasks_have_changed.value == true) {
+            send_api("POST", "taches_par_parcelles/" + parcelle.value.id, )
+        }*/
     }
 
     const delete_plot = () => {
@@ -191,8 +194,15 @@
         })
     }
 
-    watch(() => parcelle.value.taches.length, (nb_elements) => {
+    watch(() => parcelle.value.taches.length, (nb_elements, old_nb_elements) => {
         if (parcelle.value.taches[nb_elements - 1].checked == true)
             no_tasks_registered.value = false
+    })
+
+    watch(() => parcelle.value.taches, (new_tasks, old_tasks) => {
+        if (old_tasks.length == 0) {
+            return
+        }
+        tasks_have_changed.value = true
     })
 </script>

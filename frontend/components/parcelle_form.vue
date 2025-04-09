@@ -119,4 +119,49 @@
         })
         .catch((error) => { console.error(error) })
     }
+
+    const create_cepage_taille_pliage = () => {
+        let post_promises = []
+        if (props.formData.cepage.id == -1) {
+            post_promises.push(new Promise((resolve, reject) => {
+                send_api("POST", "cepages", { nom: props.formData.cepage.nom })
+                .then((response) => {
+                    resolve(JSON.parse(response.response).id)
+                })
+                .catch((error) => { reject(error) })
+            }))
+        }
+        else {
+            post_promises.push(new Promise((resolve) => { resolve(props.formData.cepage.id) }))
+        }
+        if (props.formData.taille.id == -1) {
+            post_promises.push(new Promise((resolve, reject) => {
+                send_api("POST", "tailles", { nom: props.formData.taille.nom })
+                .then((response) => {
+                    resolve(JSON.parse(response.response).id)
+                })
+                .catch((error) => { reject(error) })
+            }))
+        }
+        else {
+            post_promises.push(new Promise((resolve) => { resolve(props.formData.taille.id) }))
+        }
+        if (props.formData.pliage.id == -1) {
+            post_promises.push(new Promise((resolve, reject) => {
+                send_api("POST", "pliages", { nom: props.formData.pliage.nom })
+                .then((response) => {
+                    resolve(JSON.parse(response.response).id)
+                })
+                .catch((error) => { reject(error) })
+            }))
+        }
+        else {
+            post_promises.push(new Promise((resolve) => { resolve(props.formData.pliage.id) }))
+        }
+        return post_promises
+    }
+
+    defineExpose({
+        create_cepage_taille_pliage
+    })
 </script>

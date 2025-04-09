@@ -42,8 +42,7 @@
     const Z_MIN = 3
     const Z_MAX = 21
     const TILE_TIMEOUT = 100
-    //const MAP_SOURCE = "https://mt0.google.com/vt/lyrs=s&hl=en&"
-    const MAP_SOURCE = "...tmp..."
+    const MAP_SOURCE = "https://mt0.google.com/vt/lyrs=s&hl=en&"
 
     let loading_tile = false
     let prev_x = 0
