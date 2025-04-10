@@ -3,7 +3,7 @@
         <div class="col-auto">
             <p class="fs-3 text-center" v-show="map_store.state == STATE.SELECT_REGION">Sélectionner une région</p>
             <p class="fs-3 text-center" v-show="map_store.state == STATE.PLACE_LINES">Placer les rangs</p>
-            <map-container nb-tiles-x="3" nb-tiles-y="2" />
+            <map-container ref="map_container" nb-tiles-x="3" nb-tiles-y="2" />
         </div>
         <div class="col">
             <parcelle-form :form-data="plot_data" :invalid-data="invalid_data" ref="parcelle_form" />
@@ -29,6 +29,7 @@
     import MapContainer from '../components/map_container.vue'
     import ParcelleForm from '../components/parcelle_form.vue'
     import { map_store } from '../stores/map_store'
+    import { data_store } from '../stores/data_store'
     import { get_area } from '../lib/geometry'
     import { get_map_coords, from_rel_coords_to_mercator } from '../lib/map_navigation'
     import { STATE } from '../lib/enums'
@@ -45,11 +46,16 @@
     })
     const invalid_data = ref(false)
     const parcelle_form = useTemplateRef("parcelle_form")
+    const map_container = useTemplateRef("map_container")
 
     onMounted(() => {
         map_store.state = STATE.SELECT_REGION
         map_store.region = []
         map_store.lines = []
+
+        data_store.compute_parcelles_bb().then(() => {
+            map_container.value.center_map_on_region([ data_store.parcelles_bb.min, data_store.parcelles_bb.max ])
+        })
 
         send_api("GET", "taches").then((response) => {
             plot_data.value.taches = JSON.parse(response.response)

@@ -147,13 +147,13 @@
             map_store.region.push(map_store.region[0])
             map_store.state = STATE.PLACE_LINES
             // Center map display on region
-            center_map_on_region()
+            center_map_on_region(map_store.region)
             canvas.value.compute_lines()
         }
     }
 
-    const center_map_on_region = () => {
-        let center_params = get_region_center_params(map_store.region, [ nb_tiles_x.value, nb_tiles_y.value ])
+    const center_map_on_region = (region) => {
+        let center_params = get_region_center_params(region, [ nb_tiles_x.value, nb_tiles_y.value ])
         if (map_store.state == STATE.PLACE_LINES) {
             canvas.value.set_line_cursor(center_params.pos)
         }

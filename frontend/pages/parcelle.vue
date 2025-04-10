@@ -140,7 +140,7 @@
         Promise.all(get_promises).then(() => {
             map_store.state = STATE.DISPLAY_PLOT
             nextTick(() => {
-                map_container.value.center_map_on_region()
+                map_container.value.center_map_on_region(map_store.region)
             })
             send_api("GET", "cepages/" + parcelle.value.cepage.id).then((response) => {
                 parcelle.value.cepage.nom = JSON.parse(response.response).nom

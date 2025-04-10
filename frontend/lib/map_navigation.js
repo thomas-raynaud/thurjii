@@ -1,4 +1,4 @@
-import { map_store } from "../stores/map_store"
+import { compute_bb } from "./geometry"
 
 const TILE_SIZE = 256
 const EQUATOR = 40075016.68557849
@@ -76,16 +76,9 @@ const get_region_center_params = (region, dims_map) => {
     - zoom: zoom level to enclose the region area
     */
     // Compute bounding box
-    let region_min = { x: region[0].x, y: region[0].y }
-    let region_max = { x: region[0].x, y: region[0].y }
-    for (let i = 1; i < region.length; i++) {
-        region_min.x = Math.min(region_min.x, region[i].x)
-        region_min.y = Math.max(region_min.y, region[i].y)
-        region_max.x = Math.max(region_max.x, region[i].x)
-        region_max.y = Math.min(region_max.y, region[i].y)
-    }
-    let bb_start = from_mercator_to_rel_coords(region_min)
-    let bb_end = from_mercator_to_rel_coords(region_max)
+    let bb_region = compute_bb(region)
+    let bb_start = from_mercator_to_rel_coords(bb_region.min)
+    let bb_end = from_mercator_to_rel_coords(bb_region.max)
     // Get center position of boundary box
     let width_bb = bb_end.x - bb_start.x
     let height_bb = bb_end.y - bb_start.y

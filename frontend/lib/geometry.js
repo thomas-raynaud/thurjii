@@ -116,11 +116,27 @@ const get_area = (region) => {
 	return 0.5 * Math.abs(sum_area)
 }
 
+const compute_bb = (region) => {
+	let region_min = { x: region[0].x, y: region[0].y }
+	let region_max = { x: region[0].x, y: region[0].y }
+	for (let i = 1; i < region.length; i++) {
+		region_min.x = Math.min(region_min.x, region[i].x)
+		region_min.y = Math.max(region_min.y, region[i].y)
+		region_max.x = Math.max(region_max.x, region[i].x)
+		region_max.y = Math.min(region_max.y, region[i].y)
+	}
+	return {
+		min: region_min,
+		max: region_max
+	}
+}
+
 export {
     check_intersection_polygon,
 	get_distance,
 	rotate,
 	translate,
 	get_lines_intersection_point,
-	get_area
+	get_area,
+	compute_bb
 }
