@@ -131,6 +131,19 @@ const compute_bb = (region) => {
 	}
 }
 
+const get_polygon_center = (poly) => {
+	let sum_x = 0
+	let sum_y = 0
+	for (let point of poly) {
+		sum_x += point.x
+		sum_y += point.y
+	}
+	return {
+		x: sum_x / poly.length,
+		y: sum_y / poly.length
+	}
+}
+
 export {
     check_intersection_polygon,
 	get_distance,
@@ -138,5 +151,6 @@ export {
 	translate,
 	get_lines_intersection_point,
 	get_area,
-	compute_bb
+	compute_bb,
+	get_polygon_center
 }

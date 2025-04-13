@@ -27,6 +27,7 @@
     } from '../lib/geometry'
     import { degrees_to_radians } from '../lib/math'
     import { map_store } from '../stores/map_store'
+    import { data_store } from '../stores/data_store'
     import { STATE } from '../lib/enums'
 
     const props = defineProps([ 'nbTilesX', 'nbTilesY' ])
@@ -157,6 +158,16 @@
                 ctx.moveTo(line.start.x, line.start.y)
                 ctx.lineTo(line.end.x, line.end.y)
                 ctx.stroke()
+            }
+        }
+        if (map_store.state == STATE.DISPLAY_VINEYARD) {
+            ctx.fillStyle = "white"
+            ctx.font = "12px"
+            ctx.textBaseline = "middle"
+            for (let i = 0; i < data_store.parcelles_regions.length; i++) {
+                let text_pos = from_mercator_to_canvas_pos(data_store.parcelles_regions_centers[i])
+                let plot_name = data_store.parcelles_regions_names[i]
+                ctx.fillText(plot_name, (text_pos.x - ctx.measureText(plot_name).width / 2), text_pos.y)
             }
         }
     }
