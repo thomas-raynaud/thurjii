@@ -50,7 +50,7 @@
 
     onMounted(() => {
         map_store.state = STATE.SELECT_REGION
-        map_store.region = []
+        map_store.regions = [ [] ]
         map_store.lines = []
 
         data_store.compute_parcelles_bb().then(() => {
@@ -66,7 +66,7 @@
     })
 
     const area_region = computed(() => {
-        let area = get_area(map_store.region)
+        let area = get_area(map_store.regions.at(-1))
         let area_h = area / 10000
         return Math.floor(area_h * 100) / 100
     })
@@ -78,7 +78,7 @@
             || plot_data.value.pliage.nom == ""
         if (invalid_data.value)
             return
-        let region = toRaw(map_store.region)
+        let region = toRaw(map_store.regions.at(-1))
         region = region.map((x) => [ x.x, x.y ])
         // GEOJson format
         const plot_data_req = {

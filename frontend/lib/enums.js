@@ -1,7 +1,8 @@
 const STATE = {
     SELECT_REGION: 0,
     PLACE_LINES: 1,
-    DISPLAY_PLOT: 2
+    DISPLAY_PLOT: 2,
+    DISPLAY_VINEYARD: 3
 }
 
 const MOUSE_BUTTONS = {

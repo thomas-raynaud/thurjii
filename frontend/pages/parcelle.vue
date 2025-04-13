@@ -95,7 +95,7 @@
 
     onMounted(() => {
         map_store.state = STATE.DISPLAY_PLOT
-        map_store.region = []
+        map_store.regions = [ [] ]
         map_store.lines = []
         let get_promises = []
         get_promises.push(new Promise((resolve) => {
@@ -107,7 +107,7 @@
                 parcelle.value.taille.id = parcelle_api.properties.taille
                 parcelle.value.pliage.id = parcelle_api.properties.pliage
                 let region_api = parcelle_api.geometry.coordinates[0]
-                map_store.region = region_api.map((x) => { return { x: x[0], y: x[1] }})
+                map_store.regions[0] = region_api.map((x) => { return { x: x[0], y: x[1] }})
                 plot_loading.value = false
                 plot_found.value = true
                 resolve()
@@ -140,7 +140,7 @@
         Promise.all(get_promises).then(() => {
             map_store.state = STATE.DISPLAY_PLOT
             nextTick(() => {
-                map_container.value.center_map_on_region(map_store.region)
+                map_container.value.center_map_on_region(map_store.regions[0])
             })
             send_api("GET", "cepages/" + parcelle.value.cepage.id).then((response) => {
                 parcelle.value.cepage.nom = JSON.parse(response.response).nom

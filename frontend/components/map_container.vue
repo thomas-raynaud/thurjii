@@ -98,6 +98,12 @@
                 canvas.value.spread_lines(e)
             }
         }
+        else if (map_store.state == STATE.DISPLAY_VINEYARD) {
+            if (e.button == MOUSE_BUTTONS.LEFT_CLICK || e.button == MOUSE_BUTTONS.MIDDLE_CLICK) {
+                display.value.start_panning(e)
+                map_panning.value = true
+            }
+        }
         canvas.value.draw()
     }
 
@@ -117,7 +123,7 @@
 
     const mousewheel = (e) => {
         e.preventDefault()
-        if (map_store.state == STATE.SELECT_REGION) {
+        if (map_store.state == STATE.SELECT_REGION || map_store.state == STATE.DISPLAY_VINEYARD) {
             let display_nav_coords = display.value.zoom(e)
             map_store.coords = display_nav_coords.coords
             map_store.offset_display = display_nav_coords.offset_display
@@ -127,27 +133,27 @@
 
     const add_point_to_region = () => {
         let new_point = from_rel_coords_to_mercator(map_store.cursor_rel_coords.x, map_store.cursor_rel_coords.y)
-        if (check_intersection_polygon(map_store.region, new_point)) {
-            map_store.region = []
+        if (check_intersection_polygon(map_store.regions.at(-1), new_point)) {
+            map_store.regions = [ [] ]
         }
         else {
-            map_store.region.push(new_point)
+            map_store.regions.at(-1).push(new_point)
         }
     }
 
     const finish_region = () => {
-        if (check_intersection_polygon(map_store.region.slice(1), map_store.region[0])) {
+        if (check_intersection_polygon(map_store.regions.at(-1).slice(1), map_store.regions.at(-1)[0])) {
             console.log("Region polygon is self-intersecting")
-            map_store.region = []
+            map_store.regions = [ [] ]
         }
-        else if (map_store.region.length <= 2) {
-            map_store.region = []
+        else if (map_store.regions.at(-1).length <= 2) {
+            map_store.regions = [ [] ]
         }
         else {
-            map_store.region.push(map_store.region[0])
+            map_store.regions.at(-1).push(map_store.regions.at(-1)[0])
             map_store.state = STATE.PLACE_LINES
             // Center map display on region
-            center_map_on_region(map_store.region)
+            center_map_on_region(map_store.regions.at(-1))
             canvas.value.compute_lines()
         }
     }

@@ -75,43 +75,60 @@
 
     const draw = () => {
         ctx.clearRect(0, 0, canvas.value.width, canvas.value.height)
-        if (map_store.region.length == 0)
+        let nb_regions = map_store.regions.length
+        if (nb_regions == 0)
             return
-        let region_on_canvas = []
-        for (let i = 0; i < map_store.region.length; i++) {
-            region_on_canvas[i] = from_mercator_to_canvas_pos(map_store.region[i])
+        let regions_on_canvas = []
+        // Convert region points from mercator coordinates to canvas coordinates
+        for (let i = 0; i < nb_regions; i++) {
+            let region_on_canvas = []
+            for (let j = 0; j < map_store.regions[i].length; j++) {
+                region_on_canvas.push(from_mercator_to_canvas_pos(map_store.regions[i][j]))
+            }
+            regions_on_canvas.push(region_on_canvas)
         }
-        
+        // Draw the polygons associated to each region
         ctx.strokeStyle = 'red'
         ctx.lineWidth = '1'
-        ctx.beginPath()
-        let poly = new Path2D()
-        ctx.moveTo(region_on_canvas[0].x, region_on_canvas[0].y)
-        poly.moveTo(region_on_canvas[0].x, region_on_canvas[0].y)
-        for (let i = 1; i < map_store.region.length; i++) {
-            ctx.lineTo(region_on_canvas[i].x, region_on_canvas[i].y)
-            poly.lineTo(region_on_canvas[i].x, region_on_canvas[i].y)
+        ctx.fillStyle = "rgba(255, 0, 0, 0.25)"
+        for (let i = 0; i < nb_regions; i++) {
+            if (regions_on_canvas[i].length == 0)
+                continue
+            ctx.beginPath()
+            let poly = new Path2D()
+            ctx.moveTo(regions_on_canvas[i][0].x, regions_on_canvas[i][0].y)
+            poly.moveTo(regions_on_canvas[i][0].x, regions_on_canvas[i][0].y)
+            for (let j = 1; j < map_store.regions[i].length; j++) {
+                ctx.lineTo(regions_on_canvas[i][j].x, regions_on_canvas[i][j].y)
+                poly.lineTo(regions_on_canvas[i][j].x, regions_on_canvas[i][j].y)
+            }
+            poly.closePath()
+            ctx.setLineDash([])
+            ctx.stroke()
+            ctx.fill(poly, "evenodd")
         }
-        poly.closePath()
-        ctx.setLineDash([])
-        ctx.stroke()
-        let cursor_coords = from_rel_coords_to_canvas_pos(map_store.cursor_rel_coords)
+        
+        let last_region_on_canvas = regions_on_canvas.at(-1)
+        if (last_region_on_canvas.length == 0)
+            return
+
         if (map_store.state == STATE.SELECT_REGION) {
+            // Draw line from last region point to the mouse cursor
+            let cursor_coords = from_rel_coords_to_canvas_pos(map_store.cursor_rel_coords)
             ctx.beginPath()
             ctx.setLineDash([1, 2])
-            ctx.moveTo(region_on_canvas.at(-1).x, region_on_canvas.at(-1).y)
+            ctx.moveTo(last_region_on_canvas.at(-1).x, last_region_on_canvas.at(-1).y)
             ctx.lineTo(cursor_coords.x, cursor_coords.y)
             ctx.stroke()
-        }
-        ctx.fillStyle = "rgba(255, 0, 0, 0.25)"
-        ctx.fill(poly, "evenodd")
-        if (map_store.state == STATE.SELECT_REGION && map_store.region.length >= 2) {
-            let triangle_cursor = new Path2D()
-            triangle_cursor.moveTo(region_on_canvas.at(-1).x, region_on_canvas.at(-1).y)
-            triangle_cursor.lineTo(cursor_coords.x, cursor_coords.y)
-            triangle_cursor.lineTo(region_on_canvas[0].x, region_on_canvas[0].y)
-            triangle_cursor.closePath()
-            ctx.fill(triangle_cursor, "evenodd")
+            if (last_region_on_canvas.length >= 2) {
+                // Display the filled triangle with points : [ last region point, mouse cursor, first region point ]
+                let triangle_cursor = new Path2D()
+                triangle_cursor.moveTo(last_region_on_canvas.at(-1).x, last_region_on_canvas.at(-1).y)
+                triangle_cursor.lineTo(cursor_coords.x, cursor_coords.y)
+                triangle_cursor.lineTo(last_region_on_canvas[0].x, last_region_on_canvas[0].y)
+                triangle_cursor.closePath()
+                ctx.fill(triangle_cursor, "evenodd")
+            }
         }
         if (map_store.state == STATE.PLACE_LINES) {
             // Show line cursor
@@ -165,9 +182,10 @@
             p2t = rotate(p2t, theta_rad)
             p0t = translate(p0t, line_cursor_canvas)
             p2t = translate(p2t, line_cursor_canvas)
-            for (let i = 0; i < map_store.region.length; i++) {
-                let c = from_mercator_to_canvas_pos(map_store.region[i])
-                let d = from_mercator_to_canvas_pos(map_store.region[(i + 1) % map_store.region.length])
+            let last_region = map_store.regions.at(-1)
+            for (let i = 0; i < last_region.length; i++) {
+                let c = from_mercator_to_canvas_pos(last_region[i])
+                let d = from_mercator_to_canvas_pos(last_region[(i + 1) % last_region.length])
                 let intersection = get_lines_intersection_point(p0t, p2t, c, d)
                 if (
                     intersection.x != Number.MAX_VALUE
