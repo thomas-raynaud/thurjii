@@ -169,8 +169,11 @@
         canvas.value.draw()
     }
 
+    const redraw = () => { canvas.value.draw() }
+
     defineExpose({
-        center_map_on_region
+        center_map_on_region,
+        redraw
     })
 
 </script>

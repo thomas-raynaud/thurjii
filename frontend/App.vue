@@ -7,7 +7,7 @@
                     <p>Home</p>
                 </div>
             </router-link>
-            <router-link to="/map-sandbox">
+            <router-link to="/map">
                 <div>
                     <p>Carte</p>
                 </div>

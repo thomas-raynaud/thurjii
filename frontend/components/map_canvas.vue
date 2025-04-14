@@ -160,7 +160,7 @@
                 ctx.stroke()
             }
         }
-        if (map_store.state == STATE.DISPLAY_VINEYARD) {
+        if (map_store.state == STATE.DISPLAY_VINEYARD && map_store.show_plot_names == true) {
             ctx.fillStyle = "white"
             ctx.font = "12px"
             ctx.textBaseline = "middle"

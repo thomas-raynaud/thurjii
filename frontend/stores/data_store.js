@@ -8,6 +8,7 @@ export const data_store = reactive({
     parcelles_regions: [],
     parcelles_regions_names: [],
     parcelles_regions_centers: [],
+    parcelles_regions_ids: [],
     compute_parcelles_bb() {
         return new Promise((resolve) => {
             if (this.parcelles_regions == 0) {
@@ -19,6 +20,7 @@ export const data_store = reactive({
                         this.parcelles_regions.push(region)
                         this.parcelles_regions_names.push(parcelle_api.properties.nom)
                         this.parcelles_regions_centers.push(get_polygon_center(region))
+                        this.parcelles_regions_ids.push(parcelle_api.id)
                     })
                     let points = [].concat(...this.parcelles_regions)
                     this.parcelles_bb = compute_bb(points)

@@ -25,5 +25,6 @@ export const map_store = reactive({
     lines: [],
     line_panning: false,
     line_rotating: false,
-    line_spreading: false
+    line_spreading: false,
+    show_plot_names: true
 })
