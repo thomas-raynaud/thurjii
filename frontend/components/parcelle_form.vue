@@ -25,7 +25,7 @@
             <h5>Tâches</h5>
             <ul class="list-group mb-2">
                 <li class="list-group-item" v-for="tache in formData.taches">
-                    <input class="form-check-input me-1" type="checkbox" :value="tache.checked">
+                    <input class="form-check-input me-1" type="checkbox" v-model="tache.checked">
                     <label class="form-check-label">{{ tache.nom }}</label>
                 </li>
             </ul>

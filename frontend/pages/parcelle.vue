@@ -18,7 +18,7 @@
                                 <div class="col">
                                     <button
                                         type="button" class="btn btn-outline-primary"
-                                        @click="update_display = true"
+                                        @click="start_update()"
                                     >
                                         Modifier
                                     </button>
@@ -49,12 +49,24 @@
                 </div>
                 <div v-show="update_display == true">
                     <parcelle-form :form-data="parcelle" :invalid-data="invalid_data" />
-                    <button
-                        class="btn btn-primary"
-                        @click="update_plot()"
-                    >
-                        Modifier
-                    </button>
+                    <div class="row row-cols-auto">
+                        <div class="col">
+                            <button
+                                class="btn btn-primary"
+                                @click="update_plot()"
+                            >
+                                Modifier
+                            </button>
+                        </div>
+                        <div class="col">
+                            <button
+                                type="button" class="btn btn-light"
+                                @click="quit_update()"
+                            >
+                                Annuler
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -63,7 +75,7 @@
 </template>
 
 <script setup>
-    import { ref, useTemplateRef, onMounted, nextTick, watch } from 'vue'
+    import { ref, useTemplateRef, onMounted, nextTick } from 'vue'
     import { useRoute, useRouter } from 'vue-router'
 
     import MapContainer from '../components/map_container.vue'
@@ -84,6 +96,7 @@
         pliage: { id: -1, nom: " "},
         taches: []
     })
+    let parcelle_backup = {}
     const plot_found = ref(false)
     const plot_loading = ref(true)
     const nb_tiles_x = ref(4)
@@ -91,7 +104,6 @@
     const update_display = ref(false)
     const invalid_data = ref(false)
     const no_tasks_registered = ref(true)
-    const tasks_have_changed = ref(false)
 
     onMounted(() => {
         map_store.state = STATE.DISPLAY_PLOT
@@ -156,14 +168,15 @@
                 for (let i = 0; i < parcelle.value.taches.length; i++) {
                     parcelle.value.taches[i].checked = false
                 }
-                send_api("GET", "taches_par_parcelles/" + parcelle.value.id).then((response) => {
+                send_api("GET", "taches_par_parcelle/" + parcelle.value.id).then((response) => {
                     if (response.status != 404) {
                         let taches_parcelle = JSON.parse(response.response)
                         for (let tache_parcelle of taches_parcelle) {
                             // Trouver la tâche correspondante dans parcelle.value.taches
                             for (let i = 0; i < parcelle.value.taches.length; i++) {
-                                if (parcelle.value.taches[i].id == tache_parcelle.id) {
+                                if (parcelle.value.taches[i].id == tache_parcelle.type_tache) {
                                     parcelle.value.taches[i].checked = true
+                                    no_tasks_registered.value = false
                                     break
                                 }
                             }
@@ -175,9 +188,14 @@
     })
 
     const update_plot = () => {
-        /*if (tasks_have_changed.value == true) {
-            send_api("POST", "taches_par_parcelles/" + parcelle.value.id, )
-        }*/
+        let tache_ids = []
+        for (let tache of parcelle.value.taches) {
+            if (tache.checked) {
+                tache_ids.push(tache.id)
+            }
+        }
+        console.log(tache_ids)
+        send_api("POST", "taches_par_parcelle/" + parcelle.value.id, tache_ids)
     }
 
     const delete_plot = () => {
@@ -194,15 +212,26 @@
         })
     }
 
-    watch(() => parcelle.value.taches.length, (nb_elements, old_nb_elements) => {
-        if (parcelle.value.taches[nb_elements - 1].checked == true)
-            no_tasks_registered.value = false
-    })
+    const start_update = () => {
+        update_display.value = true
+        parcelle_backup = clone_parcelle(parcelle.value)
+    }
 
-    watch(() => parcelle.value.taches, (new_tasks, old_tasks) => {
-        if (old_tasks.length == 0) {
-            return
+    const quit_update = () => {
+        update_display.value = false
+        parcelle.value = clone_parcelle(parcelle_backup)
+    }
+
+    const clone_parcelle = (in_parcelle) => {
+        let out_parcelle = Object.assign({}, in_parcelle)
+        out_parcelle.cepage = Object.assign({}, in_parcelle.cepage)
+        out_parcelle.taille = Object.assign({}, in_parcelle.taille)
+        out_parcelle.pliage = Object.assign({}, in_parcelle.pliage)
+        out_parcelle.taches = []
+        for (let tache of in_parcelle.taches) {
+            out_parcelle.taches.push(Object.assign({}, tache))
         }
-        tasks_have_changed.value = true
-    })
+        console.log(out_parcelle)
+        return out_parcelle
+    }
 </script>
