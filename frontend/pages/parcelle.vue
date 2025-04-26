@@ -49,6 +49,9 @@
                 </div>
                 <div v-show="update_display == true">
                     <parcelle-form :form-data="parcelle" :invalid-data="invalid_data" />
+                    <div class="invalid-feedback mb-3" :style="{'display': no_changes_detected ? 'block' : 'none'}">
+                        Aucune modification n'a été faite.
+                    </div>
                     <div class="row row-cols-auto">
                         <div class="col">
                             <button
@@ -104,6 +107,7 @@
     const update_display = ref(false)
     const invalid_data = ref(false)
     const no_tasks_registered = ref(true)
+    const no_changes_detected = ref(false)
 
     onMounted(() => {
         map_store.state = STATE.DISPLAY_PLOT
@@ -167,6 +171,7 @@
                 parcelle.value.taches = JSON.parse(response.response)
                 for (let i = 0; i < parcelle.value.taches.length; i++) {
                     parcelle.value.taches[i].checked = false
+                    parcelle.value.taches[i].checked_db = false
                 }
                 send_api("GET", "taches_par_parcelle/" + parcelle.value.id).then((response) => {
                     if (response.status != 404) {
@@ -176,6 +181,7 @@
                             for (let i = 0; i < parcelle.value.taches.length; i++) {
                                 if (parcelle.value.taches[i].id == tache_parcelle.type_tache) {
                                     parcelle.value.taches[i].checked = true
+                                    parcelle.value.taches[i].checked_db = true
                                     no_tasks_registered.value = false
                                     break
                                 }
@@ -189,13 +195,50 @@
 
     const update_plot = () => {
         let tache_ids = []
+        let are_db_tasks_different = false
         for (let tache of parcelle.value.taches) {
             if (tache.checked) {
                 tache_ids.push(tache.id)
             }
+            if (tache.checked != tache.checked_db) {
+                are_db_tasks_different = true
+            }
         }
-        console.log(tache_ids)
-        send_api("POST", "taches_par_parcelle/" + parcelle.value.id, tache_ids)
+        let has_plot_changed = has_plot_been_modified()
+        if (!has_plot_changed && !are_db_tasks_different) {
+            no_changes_detected.value = true
+            return
+        }
+        no_changes_detected.value = false
+        let request_promises = []
+        if (are_db_tasks_different) {
+            request_promises.push(send_api("POST", "taches_par_parcelle/" + parcelle.value.id, tache_ids))
+        }
+        if (has_plot_changed) {
+            let parcelle_data = {
+                id: parcelle.value.id,
+                type: "Feature",
+                geometry: {
+                    type: "Polygon",
+                    coordinates: [
+                    map_store.regions[0].map((x) => [ x.x, x.y ])
+                    ]
+                },
+                properties: {
+                    nom: parcelle.value.nom,
+                    cepage: parcelle.value.cepage.id,
+                    taille: parcelle.value.taille.id,
+                    pliage: parcelle.value.pliage.id
+                }
+            }
+            request_promises.push(send_api("PUT", "parcelles/" + parcelle.value.id, parcelle_data))
+        }
+        Promise.all(request_promises).then(() => {
+            for (let i = 0; i < parcelle.value.taches.length; i++) {
+                parcelle.value.taches[i].checked_db = parcelle.value.taches[i].checked
+            }
+            update_display.value = false
+        })
     }
 
     const delete_plot = () => {
@@ -231,7 +274,14 @@
         for (let tache of in_parcelle.taches) {
             out_parcelle.taches.push(Object.assign({}, tache))
         }
-        console.log(out_parcelle)
         return out_parcelle
+    }
+
+    const has_plot_been_modified = () => {
+        return !(parcelle.value.nom == parcelle_backup.nom &&
+            parcelle.value.cepage.id == parcelle_backup.cepage.id &&
+            parcelle.value.taille.id == parcelle_backup.taille.id &&
+            parcelle.value.pliage.id == parcelle_backup.pliage.id
+        )
     }
 </script>

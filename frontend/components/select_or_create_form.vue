@@ -49,4 +49,15 @@
         if (new_data.value)
             props.formData.nom = new_val
     })
+
+    watch(() => props.formData.id, (new_id) => {
+        if (new_id != -1) {
+            for (let form_option of props.formList) {
+                if (form_option.id == new_id) {
+                    props.formData.nom = form_option.nom
+                    break
+                }
+            }
+        }
+    })
 </script>
