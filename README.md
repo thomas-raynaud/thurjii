@@ -90,11 +90,11 @@ Pour démarrer le site : `npm run start-frontend`
 - [Site administration des données](http://localhost:8081/admin)
 
 # TODO
-- Calcul de la superficie des parcelles correct, + affichage
 - EtatRang en BDD : à l'ajout d'une tâche pour une parcelle, créer les EtatRangs de la parcelle. Les supprimer si la tâche est retirée de la parcelle ou la parcelle est supprimée. Message de confirmation lors de la suppression d'une tâche pour une parcelle.
 - Logs : les afficher dans la page home, en dessous des rappels. Filtrer les logs sur une parcelle quand une parcelle à gauche est sélectionnée. Créer une nouvelle page de création de log.
 - Page de stats : %age de chaque tâche fait.
 - Rappels : ajout, affichage, cocher comme étant fait
+- améliorer la création de parcelles : plusieurs polygones pour une parcelle, éditer les rangs un par un, ...
 - Réparations
 - Planning
 - Statistiques sur bouteilles vendues, et outil pour générer des fichiers DTI+ pour la douane

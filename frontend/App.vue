@@ -12,6 +12,11 @@
                     <p>Carte</p>
                 </div>
             </router-link>
+            <router-link to="/statistics">
+                <div>
+                    <p>Statistiques</p>
+                </div>
+            </router-link>
             <router-link to="/about">
                 <div>
                     <p>A propos</p>

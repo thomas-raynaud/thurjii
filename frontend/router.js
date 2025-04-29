@@ -1,9 +1,10 @@
 import { createWebHashHistory, createRouter } from 'vue-router'  
 import home             from './pages/home.vue'
+import map_page         from './pages/map.vue'
+import statistics       from './pages/statistics.vue'
+import about            from './pages/about.vue'
 import plot_creation    from './pages/plot_creation.vue'
 import parcelle         from './pages/parcelle.vue'
-import map_page         from './pages/map.vue'
-import about            from './pages/about.vue'
 
 const router = createRouter({
     history: createWebHashHistory(),
@@ -19,14 +20,19 @@ const router = createRouter({
             component: map_page
         },
         {
-            path: '/creation-parcelle',
-            name: 'creation_parcelle',
-            component: plot_creation
+            path: '/statistics',
+            name: 'statistics',
+            component: statistics
         },
         {
             path: '/about',
             name: 'about',
             component: about
+        },
+        {
+            path: '/creation-parcelle',
+            name: 'creation_parcelle',
+            component: plot_creation
         },
         {
             path: '/parcelles/:id',
