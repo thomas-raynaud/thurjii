@@ -46,6 +46,7 @@
                             </li>
                         </div>
                     </ul>
+                    <p>Superficie : {{ parcelle.area }} ha</p>
                 </div>
                 <div v-show="update_display == true">
                     <parcelle-form :form-data="parcelle" :invalid-data="invalid_data" />
@@ -97,7 +98,8 @@
         cepage: { id: -1, nom: " "},
         taille: { id: -1, nom: " "},
         pliage: { id: -1, nom: " "},
-        taches: []
+        taches: [],
+        area: 0
     })
     let parcelle_backup = {}
     const plot_found = ref(false)
@@ -122,6 +124,7 @@
                 parcelle.value.cepage.id = parcelle_api.properties.cepage
                 parcelle.value.taille.id = parcelle_api.properties.taille
                 parcelle.value.pliage.id = parcelle_api.properties.pliage
+                parcelle.value.area = Math.floor((parcelle_api.properties.area / 10000) * 100) / 100
                 let region_api = parcelle_api.geometry.coordinates[0]
                 map_store.regions[0] = region_api.map((x) => { return { x: x[0], y: x[1] }})
                 plot_loading.value = false

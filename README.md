@@ -1,11 +1,9 @@
 # Objectifs
 
 - Avoir une vue d'ensemble sur l'avancée du travail dans les vignes
-- Pouvoir comparer l'efficacité de l'équipe sur chaque saison (nombre d'heures passées par parcelle)
-- Pense-bête : noter les choses à penser, à quel endroit il faut réparer le palissage, ...
-- Statistiques sur bouteilles vendues, et outil pour générer des fichiers DTI+ pour la douane
-https://www.douane.gouv.fr/service-en-ligne/echanges-intra-ue-de-biens-en-dti-debweb2-dti-ex-deb
-https://www.youtube.com/watch?v=yDh_lG_Ir3U
+- Voir le stade d'avancement des travaux dans la vigne
+- Comparer l'efficacité de l'équipe sur chaque saison (nombre d'heures passées par parcelle)
+
 
 # Installation
 
@@ -45,7 +43,7 @@ Installer Django :
 python -m pip install Django djangorestframework django-cors-headers django-cors-middleware djangorestframework-gis
 python -m pip install 'gdal==x.y.z' ----> Pour voir la version à installer, voir la version de gdal installée : gdalinfo --version
 python -m pip install pillow
-python -m pip install psycopg2-binary
+python -m pip install psycopg2-binary pyproj shapely
 ```
 
 Lorsque des modifications sont faites sur le modèle des données (`backend/api/models.py`) :
@@ -92,8 +90,14 @@ Pour démarrer le site : `npm run start-frontend`
 - [Site administration des données](http://localhost:8081/admin)
 
 # TODO
-- Rappels
+- Calcul de la superficie des parcelles correct, + affichage
+- EtatRang en BDD : à l'ajout d'une tâche pour une parcelle, créer les EtatRangs de la parcelle. Les supprimer si la tâche est retirée de la parcelle ou la parcelle est supprimée. Message de confirmation lors de la suppression d'une tâche pour une parcelle.
+- Logs : les afficher dans la page home, en dessous des rappels. Filtrer les logs sur une parcelle quand une parcelle à gauche est sélectionnée. Créer une nouvelle page de création de log.
+- Page de stats : %age de chaque tâche fait.
+- Rappels : ajout, affichage, cocher comme étant fait
+- Réparations
 - Planning
-- BDD
+- Statistiques sur bouteilles vendues, et outil pour générer des fichiers DTI+ pour la douane
+https://www.douane.gouv.fr/service-en-ligne/echanges-intra-ue-de-biens-en-dti-debweb2-dti-ex-deb
+https://www.youtube.com/watch?v=yDh_lG_Ir3U
 - Gestion des parcelles
-- Page de stats

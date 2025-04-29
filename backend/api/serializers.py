@@ -1,6 +1,8 @@
 from .models import *
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
+import pyproj
+from shapely.geometry import Polygon
 
 class ParcelleSerializer(GeoFeatureModelSerializer):
     """
@@ -9,10 +11,17 @@ class ParcelleSerializer(GeoFeatureModelSerializer):
     image = serializers.SerializerMethodField()
     def get_image(self, obj):
         return obj.image.name"""
+    area = serializers.SerializerMethodField()
+    def get_area(self, obj):
+        transformer = pyproj.Transformer.from_crs("epsg:3857", "epsg:4326")
+        coords = [ transformer.transform(point[0], point[1]) for point in obj.region[0] ]
+        geod = pyproj.Geod(ellps="WGS84")
+        poly = Polygon(coords)
+        return abs(geod.geometry_area_perimeter(poly)[0])
     class Meta:
         model = Parcelle
         geo_field = "region"
-        fields = [ 'id', 'nom', 'cepage', 'taille', 'pliage' ]
+        fields = [ 'id', 'nom', 'cepage', 'taille', 'pliage', 'area' ]
 
 
 class RangSerializer(GeoFeatureModelSerializer):

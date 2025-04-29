@@ -9,7 +9,6 @@
             <parcelle-form :form-data="plot_data" :invalid-data="invalid_data" ref="parcelle_form" />
             <div>
                 <p v-show="map_store.state == STATE.PLACE_LINES">{{ "Nombre de rangs : " + map_store.lines.length }}</p>
-                <p v-show="map_store.state == STATE.PLACE_LINES">{{ "Superficie : " + area_region + " ha"}}</p>
             </div>
             <button
                 class="btn btn-primary"
@@ -30,7 +29,6 @@
     import ParcelleForm from '../components/parcelle_form.vue'
     import { map_store } from '../stores/map_store'
     import { data_store } from '../stores/data_store'
-    import { get_area } from '../lib/geometry'
     import { get_map_coords, from_rel_coords_to_mercator } from '../lib/map_navigation'
     import { STATE } from '../lib/enums'
     import { send_api } from '../lib/request'
@@ -63,12 +61,6 @@
                 plot_data.value.taches[i].checked = false
             }
         })
-    })
-
-    const area_region = computed(() => {
-        let area = get_area(map_store.regions.at(-1))
-        let area_h = area / 10000
-        return Math.floor(area_h * 100) / 100
     })
 
     const create_plot = () => {

@@ -105,17 +105,6 @@ const get_lines_intersection_point = (a, b, c, d) => {
     }
 }
 
-const get_area = (region) => {
-	// Shoelace formula
-	let sum_area = 0
-	for (let i = 0; i < region.length; i++) {
-		let v0 = region[i]
-		let v1 = region[(i + 1) % region.length]
-		sum_area += v0.x * v1.y - v1.x * v0.y
-	}
-	return 0.5 * Math.abs(sum_area)
-}
-
 const compute_bb = (region) => {
 	let region_min = { x: region[0].x, y: region[0].y }
 	let region_max = { x: region[0].x, y: region[0].y }
@@ -150,7 +139,6 @@ export {
 	rotate,
 	translate,
 	get_lines_intersection_point,
-	get_area,
 	compute_bb,
 	get_polygon_center
 }
