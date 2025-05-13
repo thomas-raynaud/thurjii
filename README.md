@@ -90,7 +90,7 @@ Pour démarrer le site : `npm run start-frontend`
 - [Site administration des données](http://localhost:8081/admin)
 
 # TODO
-- EtatRang en BDD : à l'ajout d'une tâche pour une parcelle, créer les EtatRangs de la parcelle. Les supprimer si la tâche est retirée de la parcelle ou la parcelle est supprimée. Message de confirmation lors de la suppression d'une tâche pour une parcelle.
+- EtatRang en BDD : message de confirmation lors de la suppression d'une tâche pour une parcelle. A l'ajout d'une saison, créer les EtatRang pour cette année en se basant sur la dernière saison. Supprimer les EtatRangs quand la saison est supprimée.
 - Logs : les afficher dans la page home, en dessous des rappels. Filtrer les logs sur une parcelle quand une parcelle à gauche est sélectionnée. Créer une nouvelle page de création de log.
 - Page de stats : %age de chaque tâche fait.
 - Rappels : ajout, affichage, cocher comme étant fait

@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-    import { computed, ref, onMounted, toRaw, useTemplateRef } from 'vue'
+    import { ref, onMounted, toRaw, useTemplateRef } from 'vue'
     import { useRouter } from 'vue-router'
 
     import MapContainer from '../components/map_container.vue'
@@ -111,8 +111,16 @@
                         }
                     })
                 }
-                send_api("POST", "rangs", lines_data_req)
-                .then((response) => {
+                let post_promises_lines_tasks = []
+                post_promises_lines_tasks.push(send_api("POST", "parcelles/" + parcelle.id + "/rangs/" + data_store.season, lines_data_req))
+                let tache_ids = []
+                for (let tache of plot_data.value.taches) {
+                    if (tache.checked) {
+                        tache_ids.push(tache.id)
+                    }
+                }
+                post_promises_lines_tasks.push(send_api("POST", "taches_par_parcelle/" + parcelle.id + "/" + data_store.season, tache_ids))
+                Promise.all(post_promises_lines_tasks).then(() => {
                     router.push('parcelles/' + parcelle.id)
                 })
                 .catch((error) => {

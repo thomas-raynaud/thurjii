@@ -51,14 +51,13 @@ class TypeReparation(models.Model):
 
 class Reparation(models.Model):
     type_reparation = models.ForeignKey(TypeReparation, on_delete=models.RESTRICT)
-    parcelle = models.ForeignKey(Parcelle, on_delete=models.CASCADE)
     rang = models.ForeignKey(Rang, on_delete=models.CASCADE)
     position = models.DecimalField(max_digits=3, decimal_places=3)
     date_accident = models.DateField(default=date.today)
     realisee = models.BooleanField(default=False)
     def __str__(self):
         return  (
-            "Reparation de " + self.rang + " - type : " + self.type_reparation
+            "Reparation de " + str(self.rang) + " - type : " + str(self.type_reparation)
             + (" (réalisée)" if self.realisee else "")
             + " - date : " + self.date_accident
         )
@@ -68,33 +67,33 @@ class Tache(models.Model):
     def __str__(self):
         return self.nom
 
+class TacheParcelle(models.Model):
+    parcelle = models.ForeignKey(Parcelle, on_delete=models.CASCADE)
+    type_tache = models.ForeignKey(Tache, on_delete=models.CASCADE)
+    saison = models.ForeignKey(Saison, on_delete=models.CASCADE)
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[ 'parcelle', 'type_tache', 'saison' ],
+                name='unique_type_tache_parcelle_saison_combinaison'
+            )
+        ]
+    def __str__(self):
+        return str(self.parcelle) + " - " + str(self.type_tache) + " - " + str(self.saison)
+
 class EtatRang(models.Model):
     rang = models.ForeignKey(Rang, on_delete=models.CASCADE)
-    saison = models.ForeignKey(Saison, on_delete=models.CASCADE)
-    type_tache = models.ForeignKey(Tache, on_delete=models.CASCADE)
+    tache_parcelle = models.ForeignKey(TacheParcelle, on_delete=models.CASCADE)
     fait = models.BooleanField(default=False)
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=[ 'rang', 'saison', 'type_tache' ],
-                name='unique_rang_saison_type_tache_combinaison'
+                fields=[ 'rang', 'tache_parcelle' ],
+                name='unique_rang_tache_parcelle_combinaison'
             )
         ]
     def __str__(self):
-        return self.rang + " - " + self.saison + " - " + self.type_tache
-
-class TacheParcelle(models.Model):
-    parcelle = models.ForeignKey(Parcelle, on_delete=models.CASCADE)
-    type_tache = models.ForeignKey(Tache, on_delete=models.CASCADE)
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=[ 'parcelle', 'type_tache' ],
-                name='unique_type_tache_parcelle_combinaison'
-            )
-        ]
-    def __str__(self):
-        return self.parcelle + " - " + self.type_tache
+        return str(self.rang) + " - " + str(self.tache_parcelle) + " - fait : " + str(self.fait)
 
 class Log(models.Model):
     parcelle = models.ForeignKey(Parcelle, on_delete=models.CASCADE)
@@ -105,7 +104,7 @@ class Log(models.Model):
     def __str__(self):
         return (
             "Log parcelle " + self.parcelle.nom + " - "
-            + self.type_tache + " - " + self.date
+            + str(self.type_tache) + " - " + self.date
         )
 
 class Rappel(models.Model):

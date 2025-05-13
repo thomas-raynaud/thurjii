@@ -84,6 +84,7 @@
 
     import MapContainer from '../components/map_container.vue'
     import ParcelleForm from '../components/parcelle_form.vue'
+    import { data_store } from '../stores/data_store'
     import { map_store } from '../stores/map_store'
     import { send_api } from '../lib/request'
     import { STATE } from '../lib/enums'
@@ -215,7 +216,7 @@
         no_changes_detected.value = false
         let request_promises = []
         if (are_db_tasks_different) {
-            request_promises.push(send_api("POST", "taches_par_parcelle/" + parcelle.value.id, tache_ids))
+            request_promises.push(send_api("POST", "taches_par_parcelle/" + parcelle.value.id + "/" + data_store.season, tache_ids))
         }
         if (has_plot_changed) {
             let parcelle_data = {

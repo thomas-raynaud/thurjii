@@ -27,12 +27,36 @@ class RangViewSet(viewsets.ModelViewSet):
     queryset = Rang.objects.all()
     serializer_class = RangSerializer
 
+    def list_lines_of_plot(self, request, *args, **kwargs):
+        parcelle_id = self.kwargs['parcelle_id']
+        queryset = Rang.objects.filter(parcelle=parcelle_id)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     def create(self, request, *args, **kwargs):
-            serializer = self.get_serializer(data=request.data, many=isinstance(request.data,list))
-            serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        parcelle_id = self.kwargs['parcelle_id']
+        serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        # Add EtatRang if the plot has tasks attached to it
+        try:
+            saison = self.kwargs['saison_id']
+        except KeyError:
+            saison = Saison.objects.all().order_by("annee").reverse().first().annee
+        parcelle_db = Parcelle.objects.get(id=parcelle_id)
+        taches_parcelle_db = TacheParcelle.objects.filter(parcelle=parcelle_db)
+        rangs_parcelle_db = Rang.objects.filter(parcelle=parcelle_db)
+        saison_db = Saison.objects.get(annee=saison)
+        for rang_db in rangs_parcelle_db:
+            for tache in taches_parcelle_db:
+                etat_rang = EtatRang(
+                    rang=rang_db,
+                    tache_parcelle=tache,
+                    fait=False
+                )
+                etat_rang.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data['features'], status=status.HTTP_201_CREATED, headers=headers)
 
 class TacheViewSet(viewsets.ModelViewSet):
     queryset = Tache.objects.all()
@@ -61,29 +85,46 @@ class TasksOfPlotViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
-            parcelle_id = self.kwargs['parcelle_id']
-            data = []
-            for tache in request.data:
-                data.append({ 'parcelle': parcelle_id, 'type_tache': tache })
-            # Back up previous tasks for given plot
-            queryset = TacheParcelle.objects.filter(parcelle=parcelle_id)
-            previous_tasks = [ t.type_tache.id for t in queryset ]
-            # Delete tasks of given plot
-            queryset.delete()
-            # Run validation
-            serializer = self.get_serializer(data=data, many=True)
-            try:
-                serializer.is_valid(raise_exception=True)
-            # If validation fails, restore backup tasks
-            except ValidationError as exc:
-                for task_id in previous_tasks:
-                    task_plot = TacheParcelle(parcelle = parcelle_id, type_tache=task_id)
-                    task_plot.save()
-                raise ValidationError(exc)
-            # Else, fill in the new tasks for the given plot
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        parcelle_id = self.kwargs['parcelle_id']
+        try:
+            saison = self.kwargs['saison_id']
+        except KeyError:
+            saison = Saison.objects.all().order_by("annee").reverse().first().annee
+        tasks = request.data
+        taches_parcelle_db = TacheParcelle.objects.filter(parcelle=parcelle_id)
+        previous_tasks = [ t.type_tache.id for t in taches_parcelle_db ]
+        parcelle_db = Parcelle.objects.get(id=parcelle_id)
+        saison_db = Saison.objects.get(annee=saison)
+        rangs_parcelle_db = Rang.objects.filter(parcelle=parcelle_db)
+        for task in tasks:
+            if task not in previous_tasks:
+                # Add the new task for the plot
+                tache_db = Tache.objects.get(id=task)
+                task_plot = TacheParcelle(
+                    parcelle=parcelle_db,
+                    type_tache=tache_db,
+                    saison=saison_db
+                )
+                task_plot.save()
+                # Add EtatRang for each line in the plot
+                for rang in rangs_parcelle_db:
+                    etat_rang = EtatRang(
+                        rang=rang,
+                        tache_parcelle=task_plot,
+                        fait=False
+                    )
+                    etat_rang.save()
+        for prev_task in previous_tasks:
+            tache_db = Tache.objects.get(id=prev_task)
+            if prev_task not in tasks:
+                # Delete the task for the plot
+                task_plot = TacheParcelle.objects.get(
+                    parcelle=parcelle_db,
+                    type_tache=tache_db,
+                    saison=saison_db
+                )
+                task_plot.delete()
+        return Response(None, status=status.HTTP_201_CREATED)
 
 def Media(_, path):
     try:
