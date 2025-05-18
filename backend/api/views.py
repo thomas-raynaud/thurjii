@@ -44,9 +44,9 @@ class RangViewSet(viewsets.ModelViewSet):
         except KeyError:
             saison = Saison.objects.all().order_by("annee").reverse().first().annee
         parcelle_db = Parcelle.objects.get(id=parcelle_id)
-        taches_parcelle_db = TacheParcelle.objects.filter(parcelle=parcelle_db)
-        rangs_parcelle_db = Rang.objects.filter(parcelle=parcelle_db)
         saison_db = Saison.objects.get(annee=saison)
+        taches_parcelle_db = TacheParcelle.objects.filter(parcelle=parcelle_db, saison=saison_db)
+        rangs_parcelle_db = Rang.objects.filter(parcelle=parcelle_db)
         for rang_db in rangs_parcelle_db:
             for tache in taches_parcelle_db:
                 etat_rang = EtatRang(
@@ -71,6 +71,28 @@ class LinesOfPlot(generics.ListAPIView):
 class SaisonViewSet(viewsets.ModelViewSet):
     queryset = Saison.objects.all().order_by("annee").reverse()
     serializer_class = SaisonSerializer
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        new_season_db = serializer.save()
+        # Créer les TacheParcelles et EtatRangs pour cette année en se basant sur la dernière saison
+        last_season_db = self.queryset[0]
+        if self.queryset.count() > 0:
+            parcelles_db = Parcelle.objects.all()
+            for parcelle_db in parcelles_db:
+                taches_parcelle_db = TacheParcelle.objects.filter(parcelle=parcelle_db, saison=last_season_db)
+                for tache_parcelle_db in taches_parcelle_db:
+                    new_tache_parcelle_db = TacheParcelle(parcelle=parcelle_db, saison=new_season_db, type_tache=tache_parcelle_db.type_tache)
+                    new_tache_parcelle_db.save()
+                    rangs_parcelle_db = Rang.objects.filter(parcelle=parcelle_db)
+                    for rang_db in rangs_parcelle_db:
+                        etat_rang = EtatRang(
+                            rang=rang_db,
+                            tache_parcelle=new_tache_parcelle_db,
+                            fait=False
+                        )
+                        etat_rang.save()
+        return Response(None, status=status.HTTP_201_CREATED)
 
 class TacheParcelleViewSet(viewsets.ModelViewSet):
     queryset = TacheParcelle.objects.all()
@@ -91,10 +113,10 @@ class TasksOfPlotViewSet(viewsets.ModelViewSet):
         except KeyError:
             saison = Saison.objects.all().order_by("annee").reverse().first().annee
         tasks = request.data
-        taches_parcelle_db = TacheParcelle.objects.filter(parcelle=parcelle_id)
+        saison_db = Saison.objects.get(annee=saison)
+        taches_parcelle_db = TacheParcelle.objects.filter(parcelle=parcelle_id, saison=saison_db)
         previous_tasks = [ t.type_tache.id for t in taches_parcelle_db ]
         parcelle_db = Parcelle.objects.get(id=parcelle_id)
-        saison_db = Saison.objects.get(annee=saison)
         rangs_parcelle_db = Rang.objects.filter(parcelle=parcelle_db)
         for task in tasks:
             if task not in previous_tasks:
