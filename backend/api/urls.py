@@ -10,6 +10,7 @@ router.register('tailles', views.TailleViewSet)
 router.register('pliages', views.PliageViewSet)
 router.register('taches', views.TacheViewSet)
 router.register('saisons', views.SaisonViewSet),
+router.register('logs', views.LogViewSet),
 #router.register('taches_par_parcelle', views.TacheParcelleViewSet)
 
 urlpatterns = [

@@ -5,6 +5,8 @@ import statistics       from './pages/statistics.vue'
 import about            from './pages/about.vue'
 import plot_creation    from './pages/plot_creation.vue'
 import parcelle         from './pages/parcelle.vue'
+import logs             from './pages/logs.vue'
+import creation_log    from './pages/creation_log.vue'
 
 const router = createRouter({
     history: createWebHashHistory(),
@@ -13,6 +15,11 @@ const router = createRouter({
             path: '/',
             name: 'home',
             component: home
+        },
+        {
+            path: '/logs',
+            name: 'logs',
+            component: logs
         },
         {
             path: '/map',
@@ -33,6 +40,11 @@ const router = createRouter({
             path: '/creation-parcelle',
             name: 'creation_parcelle',
             component: plot_creation
+        },
+        {
+            path: '/creation-log',
+            name: 'creation_log',
+            component: creation_log
         },
         {
             path: '/parcelles/:id',

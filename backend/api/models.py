@@ -96,15 +96,14 @@ class EtatRang(models.Model):
         return str(self.rang) + " - " + str(self.tache_parcelle) + " - fait : " + str(self.fait)
 
 class Log(models.Model):
-    parcelle = models.ForeignKey(Parcelle, on_delete=models.CASCADE)
-    type_tache = models.ForeignKey(Tache, on_delete=models.RESTRICT)
+    tache_parcelle = models.ForeignKey(TacheParcelle, on_delete=models.CASCADE)
     nb_heures = models.DecimalField(max_digits=5, decimal_places=2)
     date = models.DateField(auto_now_add=True)
     commentaire = models.TextField(max_length=300)
     def __str__(self):
         return (
-            "Log parcelle " + self.parcelle.nom + " - "
-            + str(self.type_tache) + " - " + self.date
+            "Log parcelle " + self.tache_parcelle.parcelle.nom + " - "
+            + str(self.tache_parcelle.type_tache) + " - " + self.date
         )
 
 class Rappel(models.Model):

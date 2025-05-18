@@ -16,7 +16,7 @@
 </template>
 
 <script setup>
-    import { ref, defineProps, watch, onMounted } from 'vue'
+    import { ref, watch, onMounted } from 'vue'
 
     const props = defineProps([ 'formData', 'formList', 'formCheckLabel', 'formNewDataPlaceholder' ])
     const new_data = ref(false)

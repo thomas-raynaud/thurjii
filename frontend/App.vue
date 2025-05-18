@@ -7,6 +7,11 @@
                     <p>Home</p>
                 </div>
             </router-link>
+            <router-link to="/logs">
+                <div>
+                    <p>Logs</p>
+                </div>
+            </router-link>
             <router-link to="/map">
                 <div>
                     <p>Carte</p>

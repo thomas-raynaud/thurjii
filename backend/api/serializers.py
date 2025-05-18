@@ -67,3 +67,8 @@ class EtatRangSerializer(serializers.ModelSerializer):
     class Meta:
         model = EtatRang
         fields = [ 'rang', 'saison', 'type_tache', 'fait' ]
+
+class LogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Log
+        fields = [ 'id', 'tache_parcelle', 'nb_heures', 'date', 'commentaire' ]

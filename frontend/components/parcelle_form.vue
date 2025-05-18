@@ -60,7 +60,7 @@
 </template>
 
 <script setup>
-    import { defineProps, onMounted, ref } from 'vue'
+    import { onMounted, ref } from 'vue'
 
     import SelectOrCreateForm from '../components/select_or_create_form.vue'
     import { send_api } from '../lib/request'

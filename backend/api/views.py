@@ -148,6 +148,10 @@ class TasksOfPlotViewSet(viewsets.ModelViewSet):
                 task_plot.delete()
         return Response(None, status=status.HTTP_201_CREATED)
 
+class LogViewSet(viewsets.ModelViewSet):
+    queryset = Log.objects.all()
+    serializer_class = LogSerializer
+
 def Media(_, path):
     try:
         image_data = open(settings.MEDIA_ROOT + "/" + path, "rb").read()
