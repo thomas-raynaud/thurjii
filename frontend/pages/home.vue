@@ -62,9 +62,7 @@
 
     import MapDisplay from '../components/map_display.vue'
     import { send_api, MEDIA_URL } from '../lib/request'
-    import {
-        get_region_center_params
-    } from '../lib/map_navigation'
+    import { get_region_center_params } from '../lib/map_navigation'
 
     const parcelles = ref([])
     const map_displays = ref([])

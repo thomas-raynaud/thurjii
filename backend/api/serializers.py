@@ -61,7 +61,7 @@ class SaisonSerializer(serializers.ModelSerializer):
 class TacheParcelleSerializer(serializers.ModelSerializer):
     class Meta:
         model = TacheParcelle
-        fields = [ 'parcelle', 'type_tache' ]
+        fields = [ 'parcelle', 'type_tache', 'saison' ]
 
 class EtatRangSerializer(serializers.ModelSerializer):
     class Meta:

@@ -177,7 +177,7 @@
                     parcelle.value.taches[i].checked = false
                     parcelle.value.taches[i].checked_db = false
                 }
-                send_api("GET", "taches_par_parcelle/" + parcelle.value.id).then((response) => {
+                send_api("GET", "taches_par_parcelle/" + parcelle.value.id + "/" + data_store.season).then((response) => {
                     if (response.status != 404) {
                         let taches_parcelle = JSON.parse(response.response)
                         for (let tache_parcelle of taches_parcelle) {
