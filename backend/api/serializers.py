@@ -4,13 +4,7 @@ from rest_framework_gis.serializers import GeoFeatureModelSerializer
 import pyproj
 from shapely.geometry import Polygon
 
-class ParcelleSerializer(GeoFeatureModelSerializer):
-    """
-    taille_img_x = serializers.DecimalField(max_digits=6, decimal_places=2, coerce_to_string=False)
-    taille_img_y = serializers.DecimalField(max_digits=6, decimal_places=2, coerce_to_string=False)
-    image = serializers.SerializerMethodField()
-    def get_image(self, obj):
-        return obj.image.name"""
+class PlotSerializer(GeoFeatureModelSerializer):
     area = serializers.SerializerMethodField()
     def get_area(self, obj):
         transformer = pyproj.Transformer.from_crs("epsg:3857", "epsg:4326")
@@ -19,56 +13,74 @@ class ParcelleSerializer(GeoFeatureModelSerializer):
         poly = Polygon(coords)
         return abs(geod.geometry_area_perimeter(poly)[0])
     class Meta:
-        model = Parcelle
+        model = Plot
         geo_field = "region"
-        fields = [ 'id', 'nom', 'cepage', 'taille', 'pliage', 'area' ]
+        fields = [ 'id', 'name', 'variety', 'pruning', 'folding', 'area' ]
 
-
-class RangSerializer(GeoFeatureModelSerializer):
+class VarietySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Rang
+        model = Variety
+        fields = [ 'id', 'name' ]
+
+
+class PruningSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Pruning
+        fields = [ 'id', 'name' ]
+
+
+class FoldingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Folding
+        fields = [ 'id', 'name' ]
+
+class LineSerializer(GeoFeatureModelSerializer):
+    class Meta:
+        model = Line
         geo_field = "location"
-        fields = [ 'id', 'parcelle' ]
+        fields = [ 'id', 'plot' ]
 
-
-class CepageSerializer(serializers.ModelSerializer):
+class TaskSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Cepage
-        fields = [ 'id', 'nom' ]
+        model = Task
+        fields = [ 'id', 'name' ]
 
-
-class TailleSerializer(serializers.ModelSerializer):
+class SeasonSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Taille
-        fields = [ 'id', 'nom' ]
+        model = Season
+        fields = [ 'year', 'start', 'end' ]
 
+class PlotTaskSerializer(serializers.ModelSerializer):
+    task_name = serializers.SerializerMethodField()
+    def get_task_name(self, obj):
+        return Task.objects.get(pk=obj.task.id).name
 
-class PliageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Pliage
-        fields = [ 'id', 'nom' ]
+        model = PlotTask
+        fields = [ 'id', 'plot', 'task', 'task_name', 'season' ]
 
-class TacheSerializer(serializers.ModelSerializer):
+class LineStateSerializer(serializers.ModelSerializer):
+    plot = serializers.SerializerMethodField()
+    task = serializers.SerializerMethodField()
+    season = serializers.SerializerMethodField()
+    def get_plot(self, obj):
+        return obj.plot_task.plot.id
+    def get_task(self, obj):
+        return obj.plot_task.task.id
+    def get_season(self, obj):
+        return obj.plot_task.season.year
+    
     class Meta:
-        model = Tache
-        fields = [ 'id', 'nom' ]
-
-class SaisonSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Saison
-        fields = [ 'annee', 'debut', 'fin' ]
-
-class TacheParcelleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TacheParcelle
-        fields = [ 'parcelle', 'type_tache', 'saison' ]
-
-class EtatRangSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EtatRang
-        fields = [ 'rang', 'saison', 'type_tache', 'fait' ]
+        model = LineState
+        fields = [ 'line', 'plot_task', 'plot', 'task', 'season', 'done' ]
 
 class LogSerializer(serializers.ModelSerializer):
+    plot_name = serializers.SerializerMethodField()
+    task_name = serializers.SerializerMethodField()
+    def get_plot_name(self, obj):
+        return obj.plot_task.plot.name
+    def get_task_name(self, obj):
+        return obj.plot_task.task.name
     class Meta:
         model = Log
-        fields = [ 'id', 'tache_parcelle', 'nb_heures', 'date', 'commentaire' ]
+        fields = [ 'id', 'plot_task', 'plot_name', 'task_name', 'nb_hours', 'date', 'comment' ]

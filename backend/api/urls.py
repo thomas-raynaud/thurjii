@@ -4,21 +4,21 @@ from rest_framework import routers
 from . import views
 
 router = routers.DefaultRouter()
-router.register('parcelles', views.ParcelleViewSet)
-router.register('cepages', views.CepageViewSet)
-router.register('tailles', views.TailleViewSet)
-router.register('pliages', views.PliageViewSet)
-router.register('taches', views.TacheViewSet)
-router.register('saisons', views.SaisonViewSet),
+router.register('plots', views.PlotViewSet)
+router.register('varieties', views.VarietyViewSet)
+router.register('prunings', views.PruningViewSet)
+router.register('foldings', views.FoldingViewSet)
+router.register('tasks', views.TaskViewSet)
+router.register('seasons', views.SeasonViewSet),
 router.register('logs', views.LogViewSet),
-#router.register('taches_par_parcelle', views.TacheParcelleViewSet)
+router.register('plot_tasks', views.PlotTaskViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('media/<path:path>/', views.Media),
-    path('rangs/', views.RangViewSet.as_view({'get': 'list'})),
-    path('parcelles/<int:parcelle_id>/rangs/', views.RangViewSet.as_view({'get': 'list_lines_of_plot', 'post': 'create'})),
-    path('parcelles/<int:parcelle_id>/rangs/<int:saison_id>/', views.RangViewSet.as_view({'post': 'create'})),
-    path('taches_par_parcelle/<int:parcelle_id>/', views.TasksOfPlotViewSet.as_view({'get': 'list', 'post': 'create'})),
-    path('taches_par_parcelle/<int:parcelle_id>/<int:saison_id>/', views.TasksOfPlotViewSet.as_view({'get': 'list', 'post': 'create'}))
+    path('lines/', views.LineViewSet.as_view({ 'get': 'list' })),
+    path('plots/<int:plot_id>/lines/', views.LineViewSet.as_view({ 'get': 'list_plot_lines', 'post': 'create' })),
+    path('plots/<int:plot_id>/lines/<int:year>/', views.LineViewSet.as_view({ 'post': 'create' })),
+    path('plots/<int:plot_id>/lines/<int:year>/state', views.LineStateViewSet.as_view({ 'get': 'list' })),
+    path('plots/<int:plot_id>/plot_tasks/<int:year>/', views.PlotTaskViewSet.as_view({ 'get': 'list_plot_season_plot_tasks', 'post': 'create' })),
+    path('logs/season/<int:year>/', views.LogViewSet.as_view({'get': 'list_season_logs'}))
 ]

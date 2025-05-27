@@ -11,3 +11,5 @@ app.config.productionTip = false
 app.use(router)
 app.use(VueCookies)
 app.mount('#app')
+
+ window.bootstrap = require("bootstrap/dist/js/bootstrap.bundle.js")

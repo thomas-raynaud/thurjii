@@ -32,8 +32,8 @@
     import {
         get_dims_map,
         get_region_center_params,
-        from_rel_coords_to_mercator,
-        get_map_coords
+        get_map_coords,
+        from_rel_coords_to_mercator
     } from '../lib/map_navigation'
     import {
         check_intersection_polygon,
@@ -60,7 +60,11 @@
 
     const mousemove = (e) => {
         e.preventDefault()
-        map_store.cursor_rel_coords = get_map_coords(map_store.coords, map_store.offset_display, [ e.clientX, e.clientY ], container.value)
+        map_store.cursor_rel_coords = get_map_coords(
+            map_store.coords, map_store.offset_display,
+            [ e.clientX, e.clientY ],
+            container.value
+        )
         if (map_panning.value) {
             let display_nav_coords = display.value.pan(e)
             map_store.coords = display_nav_coords.coords
@@ -74,7 +78,7 @@
 
     const mousedown = (e) => {
         e.preventDefault()
-        if (map_store.state == STATE.SELECT_REGION) {
+        if (map_store.state == STATE.DRAW_REGION) {
             if (e.button == MOUSE_BUTTONS.LEFT_CLICK)
                 add_point_to_region()
             else if (e.button == MOUSE_BUTTONS.MIDDLE_CLICK) {
@@ -123,7 +127,7 @@
 
     const mousewheel = (e) => {
         e.preventDefault()
-        if (map_store.state == STATE.SELECT_REGION || map_store.state == STATE.DISPLAY_VINEYARD) {
+        if (map_store.state == STATE.DRAW_REGION || map_store.state == STATE.DISPLAY_VINEYARD) {
             let display_nav_coords = display.value.zoom(e)
             map_store.coords = display_nav_coords.coords
             map_store.offset_display = display_nav_coords.offset_display

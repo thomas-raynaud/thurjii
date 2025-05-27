@@ -105,18 +105,18 @@ const get_lines_intersection_point = (a, b, c, d) => {
     }
 }
 
-const compute_bb = (region) => {
-	let region_min = { x: region[0].x, y: region[0].y }
-	let region_max = { x: region[0].x, y: region[0].y }
-	for (let i = 1; i < region.length; i++) {
-		region_min.x = Math.min(region_min.x, region[i].x)
-		region_min.y = Math.max(region_min.y, region[i].y)
-		region_max.x = Math.max(region_max.x, region[i].x)
-		region_max.y = Math.min(region_max.y, region[i].y)
+const compute_bb = (points) => {
+	let point_min = { x: points[0].x, y: points[0].y }
+	let point_max = { x: points[0].x, y: points[0].y }
+	for (let i = 1; i < points.length; i++) {
+		point_min.x = Math.min(point_min.x, points[i].x)
+		point_min.y = Math.max(point_min.y, points[i].y)
+		point_max.x = Math.max(point_max.x, points[i].x)
+		point_max.y = Math.min(point_max.y, points[i].y)
 	}
 	return {
-		min: region_min,
-		max: region_max
+		min: point_min,
+		max: point_max
 	}
 }
 

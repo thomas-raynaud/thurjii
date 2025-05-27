@@ -1,160 +1,165 @@
 from django.http import HttpResponse
-from rest_framework import viewsets, status, generics
+from rest_framework import viewsets, status
 from django.conf import settings
 from rest_framework.response import Response
-
 
 from .models import *
 from .serializers import *
 
-class ParcelleViewSet(viewsets.ModelViewSet):
-    queryset = Parcelle.objects.all()
-    serializer_class = ParcelleSerializer
+class PlotViewSet(viewsets.ModelViewSet):
+    queryset = Plot.objects.all().order_by('id')
+    serializer_class = PlotSerializer
 
-class CepageViewSet(viewsets.ModelViewSet):
-    queryset = Cepage.objects.all()
-    serializer_class = CepageSerializer
+class VarietyViewSet(viewsets.ModelViewSet):
+    queryset = Variety.objects.all()
+    serializer_class = VarietySerializer
 
-class TailleViewSet(viewsets.ModelViewSet):
-    queryset = Taille.objects.all()
-    serializer_class = TailleSerializer
+class PruningViewSet(viewsets.ModelViewSet):
+    queryset = Pruning.objects.all()
+    serializer_class = PruningSerializer
 
-class PliageViewSet(viewsets.ModelViewSet):
-    queryset = Pliage.objects.all()
-    serializer_class = PliageSerializer
+class FoldingViewSet(viewsets.ModelViewSet):
+    queryset = Folding.objects.all()
+    serializer_class = FoldingSerializer
 
-class RangViewSet(viewsets.ModelViewSet):
-    queryset = Rang.objects.all()
-    serializer_class = RangSerializer
+class TaskViewSet(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
 
-    def list_lines_of_plot(self, request, *args, **kwargs):
-        parcelle_id = self.kwargs['parcelle_id']
-        queryset = Rang.objects.filter(parcelle=parcelle_id)
+class LineViewSet(viewsets.ModelViewSet):
+    queryset = Line.objects.all()
+    serializer_class = LineSerializer
+
+    def list_plot_lines(self, request, *args, **kwargs):
+        plot_id = self.kwargs['plot_id']
+        queryset = Line.objects.filter(plot=plot_id)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
-        parcelle_id = self.kwargs['parcelle_id']
+        plot_id = self.kwargs['plot_id']
         serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        # Add EtatRang if the plot has tasks attached to it
+        # Add LineStates if the plot has tasks attached to it
         try:
-            saison = self.kwargs['saison_id']
+            year = self.kwargs['year']
         except KeyError:
-            saison = Saison.objects.all().order_by("annee").reverse().first().annee
-        parcelle_db = Parcelle.objects.get(id=parcelle_id)
-        saison_db = Saison.objects.get(annee=saison)
-        taches_parcelle_db = TacheParcelle.objects.filter(parcelle=parcelle_db, saison=saison_db)
-        rangs_parcelle_db = Rang.objects.filter(parcelle=parcelle_db)
-        for rang_db in rangs_parcelle_db:
-            for tache in taches_parcelle_db:
-                etat_rang = EtatRang(
-                    rang=rang_db,
-                    tache_parcelle=tache,
-                    fait=False
+            year = Season.objects.all().order_by("year").reverse().first().year
+        plot_tasks = PlotTask.objects.filter(plot=plot_id, season=year)
+        plot_lines = Line.objects.filter(plot=plot_id)
+        for line in plot_lines:
+            for task in plot_tasks:
+                line_state = LineState(
+                    line=line,
+                    plot_task=task,
+                    done=False
                 )
-                etat_rang.save()
+                line_state.save()
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data['features'], status=status.HTTP_201_CREATED, headers=headers)
 
-class TacheViewSet(viewsets.ModelViewSet):
-    queryset = Tache.objects.all()
-    serializer_class = TacheSerializer
+class SeasonViewSet(viewsets.ModelViewSet):
+    queryset = Season.objects.all().order_by("year").reverse()
+    serializer_class = SeasonSerializer
 
-class LinesOfPlot(generics.ListAPIView):
-    serializer_class = RangSerializer
-    def get_queryset(self):
-        parcelle_id = self.kwargs['parcelle_id']
-        return Rang.objects.filter(parcelle=parcelle_id)
-
-class SaisonViewSet(viewsets.ModelViewSet):
-    queryset = Saison.objects.all().order_by("annee").reverse()
-    serializer_class = SaisonSerializer
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        new_season_db = serializer.save()
-        # Créer les TacheParcelles et EtatRangs pour cette année en se basant sur la dernière saison
-        last_season_db = self.queryset[0]
+        new_season = serializer.save()
+        # Create the PlotTasks and LineStates for this new season, based on the previous season's PlotTasks
         if self.queryset.count() > 0:
-            parcelles_db = Parcelle.objects.all()
-            for parcelle_db in parcelles_db:
-                taches_parcelle_db = TacheParcelle.objects.filter(parcelle=parcelle_db, saison=last_season_db)
-                for tache_parcelle_db in taches_parcelle_db:
-                    new_tache_parcelle_db = TacheParcelle(parcelle=parcelle_db, saison=new_season_db, type_tache=tache_parcelle_db.type_tache)
-                    new_tache_parcelle_db.save()
-                    rangs_parcelle_db = Rang.objects.filter(parcelle=parcelle_db)
-                    for rang_db in rangs_parcelle_db:
-                        etat_rang = EtatRang(
-                            rang=rang_db,
-                            tache_parcelle=new_tache_parcelle_db,
-                            fait=False
+            previous_season = self.queryset[0]
+            plots = Plot.objects.all()
+            for plot in plots:
+                plot_tasks_previous_season = PlotTask.objects.filter(plot=plot, season=previous_season)
+                for plot_task_previous_season in plot_tasks_previous_season:
+                    # Create PlotTasks for the new season
+                    new_plot_task = PlotTask(plot=plot, season=new_season, task=plot_task_previous_season.task)
+                    new_plot_task.save()
+                    # Create LineStates for the new season
+                    plot_lines = Line.objects.filter(plot=plot)
+                    for line in plot_lines:
+                        line_state = LineState(
+                            line=line,
+                            plot_task=new_plot_task,
+                            done=False
                         )
-                        etat_rang.save()
+                        line_state.save()
         return Response(None, status=status.HTTP_201_CREATED)
-
-class TacheParcelleViewSet(viewsets.ModelViewSet):
-    queryset = TacheParcelle.objects.all()
-    serializer_class = TacheParcelleSerializer
     
-class TasksOfPlotViewSet(viewsets.ModelViewSet):
-    serializer_class = TacheParcelleSerializer
-    def list(self, request, *args, **kwargs):
-        parcelle_id = self.kwargs['parcelle_id']
-        queryset = TacheParcelle.objects.filter(parcelle=parcelle_id)
+class PlotTaskViewSet(viewsets.ModelViewSet):
+    queryset = PlotTask.objects.all()
+    serializer_class = PlotTaskSerializer
+
+    def list_plot_season_plot_tasks(self, request, *args, **kwargs):
+        plot_id = self.kwargs['plot_id']
+        year = self.kwargs['year']
+        queryset = PlotTask.objects.filter(plot=plot_id, season=year)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
-        parcelle_id = self.kwargs['parcelle_id']
+        plot_id = self.kwargs['plot_id']
         try:
-            saison = self.kwargs['saison_id']
+            year = self.kwargs['year']
         except KeyError:
-            saison = Saison.objects.all().order_by("annee").reverse().first().annee
-        tasks = request.data
-        saison_db = Saison.objects.get(annee=saison)
-        taches_parcelle_db = TacheParcelle.objects.filter(parcelle=parcelle_id, saison=saison_db)
-        previous_tasks = [ t.type_tache.id for t in taches_parcelle_db ]
-        parcelle_db = Parcelle.objects.get(id=parcelle_id)
-        rangs_parcelle_db = Rang.objects.filter(parcelle=parcelle_db)
-        for task in tasks:
-            if task not in previous_tasks:
-                # Add the new task for the plot
-                tache_db = Tache.objects.get(id=task)
-                task_plot = TacheParcelle(
-                    parcelle=parcelle_db,
-                    type_tache=tache_db,
-                    saison=saison_db
+            year = Season.objects.all().order_by("year").reverse().first().year
+        tasks_request = request.data
+        plot_tasks = PlotTask.objects.filter(plot=plot_id, season=year)
+        previous_tasks = [ t.task.id for t in plot_tasks ]
+        plot_lines = Line.objects.filter(plot=plot_id)
+        plot = Plot.objects.get(pk = plot_id)
+        season = Season.objects.get(pk = year)
+        # If some tasks are not already registered to the plot, add the new PlotTasks and the new LineStates
+        for task_request in tasks_request:
+            if task_request not in previous_tasks:
+                # Register the new task to the plot
+                task = Task.objects.get(pk = task_request)
+                plot_task = PlotTask(
+                    plot=plot,
+                    task=task,
+                    season=season
                 )
-                task_plot.save()
-                # Add EtatRang for each line in the plot
-                for rang in rangs_parcelle_db:
-                    etat_rang = EtatRang(
-                        rang=rang,
-                        tache_parcelle=task_plot,
-                        fait=False
+                plot_task.save()
+                # Add Line for each line in the plot
+                for line in plot_lines:
+                    line_state = LineState(
+                        line=line,
+                        plot_task=plot_task,
+                        done=False
                     )
-                    etat_rang.save()
-        for prev_task in previous_tasks:
-            tache_db = Tache.objects.get(id=prev_task)
-            if prev_task not in tasks:
-                # Delete the task for the plot
-                task_plot = TacheParcelle.objects.get(
-                    parcelle=parcelle_db,
-                    type_tache=tache_db,
-                    saison=saison_db
+                    line_state.save()
+        # If some previous tasks are not in the new list of task, delete them
+        for previous_task in previous_tasks:
+            if previous_task not in tasks_request:
+                # Delete the plot task
+                task = Task.objects.get(pk = previous_task)
+                plot_task = PlotTask.objects.get(
+                    plot=plot,
+                    task=previous_task,
+                    season=season
                 )
-                task_plot.delete()
+                plot_task.delete()
         return Response(None, status=status.HTTP_201_CREATED)
 
 class LogViewSet(viewsets.ModelViewSet):
-    queryset = Log.objects.all()
+    queryset = Log.objects.all().order_by("date", "id").reverse()
     serializer_class = LogSerializer
 
-def Media(_, path):
-    try:
-        image_data = open(settings.MEDIA_ROOT + "/" + path, "rb").read()
-        return HttpResponse(image_data, content_type="image/jpeg")
-    except FileNotFoundError:
-        return HttpResponse("Error: file not found...")
+    def list_season_logs(self, request, *args, **kwargs):
+        year = self.kwargs['year']
+        plot_tasks_season = PlotTask.objects.filter(season=year)
+        serializer = self.get_serializer(self.queryset.filter(plot_task__in=plot_tasks_season), many=True)
+        return Response(serializer.data)
+
+class LineStateViewSet(viewsets.ModelViewSet):
+    serializer_class = LineStateSerializer
+
+    def list(self, request, *args, **kwargs):
+        plot_id = self.kwargs['plot_id']
+        year = self.kwargs['year']
+        plot_tasks_season = PlotTask.objects.filter(plot=plot_id, season=year)
+        queryset = LineState.objects.all().filter(plot_task__in=plot_tasks_season)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

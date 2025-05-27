@@ -27,7 +27,6 @@
     } from '../lib/geometry'
     import { degrees_to_radians } from '../lib/math'
     import { map_store } from '../stores/map_store'
-    import { data_store } from '../stores/data_store'
     import { STATE } from '../lib/enums'
 
     const props = defineProps([ 'nbTilesX', 'nbTilesY' ])
@@ -51,7 +50,7 @@
         canvas.value.width = dims.width
         canvas.value.height = dims.height
         ctx = canvas.value.getContext("2d")
-        map_store.state = STATE.SELECT_REGION
+        map_store.state = STATE.DRAW_REGION
         line_theta = 0
         line_step = 10
         draw()
@@ -76,57 +75,56 @@
 
     const draw = () => {
         ctx.clearRect(0, 0, canvas.value.width, canvas.value.height)
+       
         let nb_regions = map_store.regions.length
-        if (nb_regions == 0)
+        if (nb_regions == 0 || (nb_regions == 1 &&map_store.regions[0].length == 0))
             return
-        let regions_on_canvas = []
-        // Convert region points from mercator coordinates to canvas coordinates
-        for (let i = 0; i < nb_regions; i++) {
-            let region_on_canvas = []
+
+        // Convert regions' points from mercator coordinates to canvas coordinates
+        let canvas_regions = []
+        for (let i = 0; i < map_store.regions.length; i++) {
+            let canvas_region = []
             for (let j = 0; j < map_store.regions[i].length; j++) {
-                region_on_canvas.push(from_mercator_to_canvas_pos(map_store.regions[i][j]))
+                canvas_region.push(from_mercator_to_canvas_pos(map_store.regions[i][j]))
             }
-            regions_on_canvas.push(region_on_canvas)
+            canvas_regions.push(canvas_region)
         }
-        // Draw the polygons associated to each region
+
+        // Draw the polygons stored in map_store.regions
         ctx.strokeStyle = 'red'
         ctx.lineWidth = '1'
         ctx.fillStyle = "rgba(255, 0, 0, 0.25)"
         for (let i = 0; i < nb_regions; i++) {
-            if (regions_on_canvas[i].length == 0)
-                continue
             ctx.beginPath()
             let poly = new Path2D()
-            ctx.moveTo(regions_on_canvas[i][0].x, regions_on_canvas[i][0].y)
-            poly.moveTo(regions_on_canvas[i][0].x, regions_on_canvas[i][0].y)
-            for (let j = 1; j < map_store.regions[i].length; j++) {
-                ctx.lineTo(regions_on_canvas[i][j].x, regions_on_canvas[i][j].y)
-                poly.lineTo(regions_on_canvas[i][j].x, regions_on_canvas[i][j].y)
+            ctx.moveTo(canvas_regions[i][0].x, canvas_regions[i][0].y)
+            poly.moveTo(canvas_regions[i][0].x, canvas_regions[i][0].y)
+            for (let j = 1; j < canvas_regions[i].length; j++) {
+                ctx.lineTo(canvas_regions[i][j].x, canvas_regions[i][j].y)
+                poly.lineTo(canvas_regions[i][j].x, canvas_regions[i][j].y)
             }
             poly.closePath()
             ctx.setLineDash([])
             ctx.stroke()
             ctx.fill(poly, "evenodd")
         }
-        
-        let last_region_on_canvas = regions_on_canvas.at(-1)
-        if (last_region_on_canvas.length == 0)
-            return
 
-        if (map_store.state == STATE.SELECT_REGION) {
-            // Draw line from last region point to the mouse cursor
+        if (map_store.state == STATE.DRAW_REGION && canvas_regions.at(-1).length > 0) {
+            // Draw a dash line from the last region point to the mouse cursor
+            let last_canvas_region = canvas_regions.at(-1)
+            let last_region_point = last_canvas_region.at(-1)
             let cursor_coords = from_rel_coords_to_canvas_pos(map_store.cursor_rel_coords)
             ctx.beginPath()
             ctx.setLineDash([1, 2])
-            ctx.moveTo(last_region_on_canvas.at(-1).x, last_region_on_canvas.at(-1).y)
+            ctx.moveTo(last_region_point.x, last_region_point.y)
             ctx.lineTo(cursor_coords.x, cursor_coords.y)
             ctx.stroke()
-            if (last_region_on_canvas.length >= 2) {
+            if (last_canvas_region.length >= 2) {
                 // Display the filled triangle with points : [ last region point, mouse cursor, first region point ]
                 let triangle_cursor = new Path2D()
-                triangle_cursor.moveTo(last_region_on_canvas.at(-1).x, last_region_on_canvas.at(-1).y)
+                triangle_cursor.moveTo(last_region_point.x, last_region_point.y)
                 triangle_cursor.lineTo(cursor_coords.x, cursor_coords.y)
-                triangle_cursor.lineTo(last_region_on_canvas[0].x, last_region_on_canvas[0].y)
+                triangle_cursor.lineTo(last_canvas_region[0].x, last_canvas_region[0].y)
                 triangle_cursor.closePath()
                 ctx.fill(triangle_cursor, "evenodd")
             }
@@ -161,18 +159,23 @@
             }
         }
         if (map_store.state == STATE.DISPLAY_VINEYARD && map_store.show_plot_names == true) {
+            // Display the plot names
             ctx.fillStyle = "white"
             ctx.font = "12px"
             ctx.textBaseline = "middle"
-            for (let i = 0; i < data_store.parcelles_regions.length; i++) {
-                let text_pos = from_mercator_to_canvas_pos(data_store.parcelles_regions_centers[i])
-                let plot_name = data_store.parcelles_regions_names[i]
+            for (let i = 0; i < map_store.region_centers.length; i++) {
+                let text_pos = from_mercator_to_canvas_pos(map_store.region_centers[i])
+                let plot_name = map_store.plot_names[i]
                 ctx.fillText(plot_name, (text_pos.x - ctx.measureText(plot_name).width / 2), text_pos.y)
             }
         }
     }
 
     const get_lines_in_direction = (start_pos, dir_step) => {
+        // Fill map_store.lines with segments that intersect the plot's region
+        // We start at position start_pos, get the 2 points that intersect the region from that point,
+        // then we move in the line_theta direction by a dir_step step, compute the 2 intersecting points from there,
+        // and so on until we do not longer intersect the region.
         let line_cursor_canvas = from_rel_coords_to_canvas_pos(line_cursor)
         let theta_rad = degrees_to_radians(line_theta)
         let intersections

@@ -4,9 +4,9 @@ import map_page         from './pages/map.vue'
 import statistics       from './pages/statistics.vue'
 import about            from './pages/about.vue'
 import plot_creation    from './pages/plot_creation.vue'
-import parcelle         from './pages/parcelle.vue'
+import plot             from './pages/plot.vue'
 import logs             from './pages/logs.vue'
-import creation_log    from './pages/creation_log.vue'
+import log_creation     from './pages/log_creation.vue'
 
 const router = createRouter({
     history: createWebHashHistory(),
@@ -37,19 +37,19 @@ const router = createRouter({
             component: about
         },
         {
-            path: '/creation-parcelle',
-            name: 'creation_parcelle',
+            path: '/plot-creation',
+            name: 'plot_creation',
             component: plot_creation
         },
         {
-            path: '/creation-log',
-            name: 'creation_log',
-            component: creation_log
+            path: '/log-creation',
+            name: 'log_creation',
+            component: log_creation
         },
         {
-            path: '/parcelles/:id',
-            name: 'parcelle',
-            component: parcelle
+            path: '/plots/:id',
+            name: 'plot',
+            component: plot
         }
     ]
 })

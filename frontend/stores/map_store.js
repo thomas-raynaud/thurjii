@@ -16,15 +16,18 @@ export const map_store = reactive({
         x: 0,
         y: 0
     },
-    state: STATE.SELECT_REGION,
+    state: STATE.DISPLAY_VINEYARD,
     line_cursor_coords: {
         x: 0,
         y: 0
     },
-    regions: [ [] ],
     lines: [],
     line_panning: false,
     line_rotating: false,
     line_spreading: false,
-    show_plot_names: true
+    show_plot_names: true,
+    // Plot related arrays, all with the same index
+    regions: [ [] ],
+    region_centers: [],
+    plot_names: [],
 })

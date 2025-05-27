@@ -10,14 +10,13 @@
 <script setup>
     import { ref, onMounted } from 'vue'
 
-    import { send_api } from '../lib/request'
+    import { retrieve_plots } from '../lib/api_retrieval'
 
     const total_area = ref(0)
 
     onMounted(() => {
-        send_api("GET", "parcelles").then((response) => {
-            let parcelles = JSON.parse(response.response).features
-            let area = parcelles.reduce((accumulator, parcelle) => accumulator + parcelle.properties.area, 0)
+        retrieve_plots().then((plots) => {
+            let area = plots.reduce((accumulator, plot) => accumulator + plot.area, 0)
             total_area.value = Math.floor((area / 10000) * 100) / 100
         })
     })

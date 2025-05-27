@@ -2,7 +2,7 @@
     <div class="row mb-3 align-items-center">
         <div class="col">
             <select class="form-control" v-model="props.formData.id" :disabled="new_data">
-                <option v-for="form_option in props.formList" :value="form_option.id">{{ form_option.nom }}</option>
+                <option v-for="form_option in props.formList" :value="form_option.id">{{ form_option.name }}</option>
             </select>
         </div>
         <div class="col form-check">
@@ -27,7 +27,7 @@
             new_data.value = true
         else {
             props.formData.id = props.formList[0].id
-            props.formData.nom = props.formList[0].nom
+            props.formData.name = props.formList[0].name
         }
     })
 
@@ -35,26 +35,29 @@
         if (new_val) {
             props.formData.id = -1
         }
+        else {
+            props.formData.id = props.formList[0].id
+        }
     })
 
     watch(() => props.formList.length, (nb_elements) => {
         if (nb_elements > 0) {
             new_data.value = false
             props.formData.id = props.formList[0].id
-            props.formData.nom = props.formList[0].nom
+            props.formData.name = props.formList[0].name
         }
     })
 
     watch(new_name, (new_val) => {
         if (new_data.value)
-            props.formData.nom = new_val
+            props.formData.name = new_val
     })
 
     watch(() => props.formData.id, (new_id) => {
         if (new_id != -1) {
             for (let form_option of props.formList) {
                 if (form_option.id == new_id) {
-                    props.formData.nom = form_option.nom
+                    props.formData.name = form_option.name
                     break
                 }
             }

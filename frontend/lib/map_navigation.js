@@ -93,6 +93,14 @@ const get_region_center_params = (region, dims_map) => {
     }
 }
 
+const compute_vineyard_bb = (plot_array) => {
+    let points = []
+    for (let plot of plot_array) {
+        points = points.concat(...plot.region)
+    }
+    return compute_bb(points)
+}
+
 export {
     TILE_SIZE,
     get_tile_size_from_zoom,
@@ -102,4 +110,5 @@ export {
     get_dims_map,
     get_region_center_params,
     from_rel_coords_to_mercator, from_mercator_to_rel_coords,
+    compute_vineyard_bb
 }

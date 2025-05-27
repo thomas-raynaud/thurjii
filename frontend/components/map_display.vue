@@ -287,6 +287,9 @@
     }
 
     defineExpose({
-        pan, start_panning, zoom, position_map
+        start_panning,
+        pan,
+        zoom,
+        position_map
     })
 </script>

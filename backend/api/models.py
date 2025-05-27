@@ -2,115 +2,110 @@ from django.db import models
 from datetime import date
 from django.contrib.gis.db import models as modelsPG
 
-class Cepage(models.Model):
-    nom = models.CharField(max_length=50, unique=True)
+class Variety(models.Model):
+    name = models.CharField(max_length=50, unique=True)
     def __str__(self):
-        return self.nom
+        return self.name
 
-class Taille(models.Model):
-    nom = models.CharField(max_length=50, unique=True)
+class Pruning(models.Model):
+    name = models.CharField(max_length=50, unique=True)
     def __str__(self):
-        return self.nom
+        return self.name
 
-class Pliage(models.Model):
-    nom = models.CharField(max_length=50, unique=True)
+class Folding(models.Model):
+    name = models.CharField(max_length=50, unique=True)
     def __str__(self):
-        return self.nom
+        return self.name
 
-class Parcelle(models.Model):
-    nom = models.CharField(max_length=50, unique=True)
-    cepage = models.ForeignKey(Cepage, on_delete=models.RESTRICT)
-    taille = models.ForeignKey(Taille, on_delete=models.RESTRICT)
-    pliage = models.ForeignKey(Pliage, on_delete=models.RESTRICT)
+class Plot(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    variety = models.ForeignKey(Variety, on_delete=models.RESTRICT)
+    pruning = models.ForeignKey(Pruning, on_delete=models.RESTRICT)
+    folding = models.ForeignKey(Folding, on_delete=models.RESTRICT)
     region = modelsPG.PolygonField()
-    """
-    image = models.ImageField(upload_to="parcelles/")
-    taille_img_x = models.DecimalField(max_digits=6, decimal_places=2)
-    taille_img_y = models.DecimalField(max_digits=6, decimal_places=2)
-    """
     def __str__(self):
-        return self.nom
+        return self.name
 
-class Rang(models.Model):
-    parcelle = models.ForeignKey(Parcelle, on_delete=models.CASCADE)
+class Line(models.Model):
+    plot = models.ForeignKey(Plot, on_delete=models.CASCADE)
     location = modelsPG.LineStringField()
     def __str__(self):
-        return "Rang " + str(self.id) + " de la parcelle " + self.parcelle.nom
+        return "Line " + str(self.id) + " of plot " + self.plot.name
 
-class Saison(models.Model):
-    annee = models.IntegerField(unique=True, primary_key=True)
-    debut = models.DateField()
-    fin = models.DateField(blank=True, null=True)
+class Season(models.Model):
+    year = models.IntegerField(unique=True, primary_key=True)
+    start = models.DateField()
+    end = models.DateField(blank=True, null=True)
     def __str__(self):
-        return "Saison " + str(self.annee)
+        return "Season " + str(self.year)
 
-class TypeReparation(models.Model):
-    nom = models.CharField(max_length=50)
+class ReparationType(models.Model):
+    name = models.CharField(max_length=50)
     def __str__(self):
-        return self.nom
+        return self.name
 
 class Reparation(models.Model):
-    type_reparation = models.ForeignKey(TypeReparation, on_delete=models.RESTRICT)
-    rang = models.ForeignKey(Rang, on_delete=models.CASCADE)
+    reparation_type = models.ForeignKey(ReparationType, on_delete=models.RESTRICT)
+    line = models.ForeignKey(Line, on_delete=models.CASCADE)
     position = models.DecimalField(max_digits=3, decimal_places=3)
-    date_accident = models.DateField(default=date.today)
-    realisee = models.BooleanField(default=False)
+    accident_date = models.DateField(default=date.today)
+    repaired = models.BooleanField(default=False)
     def __str__(self):
         return  (
-            "Reparation de " + str(self.rang) + " - type : " + str(self.type_reparation)
-            + (" (réalisée)" if self.realisee else "")
-            + " - date : " + self.date_accident
+            "Reparation of " + str(self.line) + " - type : " + str(self.reparation_type)
+            + (" (repaired)" if self.realisee else "")
+            + " - date : " + self.accident_date
         )
 
-class Tache(models.Model):
-    nom = models.CharField(max_length=50, unique=True)
+class Task(models.Model):
+    name = models.CharField(max_length=50, unique=True)
     def __str__(self):
-        return self.nom
+        return self.name
 
-class TacheParcelle(models.Model):
-    parcelle = models.ForeignKey(Parcelle, on_delete=models.CASCADE)
-    type_tache = models.ForeignKey(Tache, on_delete=models.CASCADE)
-    saison = models.ForeignKey(Saison, on_delete=models.CASCADE)
+class PlotTask(models.Model):
+    plot = models.ForeignKey(Plot, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    season = models.ForeignKey(Season, on_delete=models.CASCADE)
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=[ 'parcelle', 'type_tache', 'saison' ],
-                name='unique_type_tache_parcelle_saison_combinaison'
+                fields=[ 'plot', 'task', 'season' ],
+                name='unique_plot_task_season_combination'
             )
         ]
     def __str__(self):
-        return str(self.parcelle) + " - " + str(self.type_tache) + " - " + str(self.saison)
+        return str(self.plot) + " - " + str(self.task) + " - " + str(self.season)
 
-class EtatRang(models.Model):
-    rang = models.ForeignKey(Rang, on_delete=models.CASCADE)
-    tache_parcelle = models.ForeignKey(TacheParcelle, on_delete=models.CASCADE)
-    fait = models.BooleanField(default=False)
+class LineState(models.Model):
+    line = models.ForeignKey(Line, on_delete=models.CASCADE)
+    plot_task = models.ForeignKey(PlotTask, on_delete=models.CASCADE)
+    done = models.BooleanField(default=False)
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=[ 'rang', 'tache_parcelle' ],
-                name='unique_rang_tache_parcelle_combinaison'
+                fields=[ 'line', 'plot_task' ],
+                name='unique_line_plot_task_combination'
             )
         ]
     def __str__(self):
-        return str(self.rang) + " - " + str(self.tache_parcelle) + " - fait : " + str(self.fait)
+        return str(self.line) + " - " + str(self.plot_task) + (" (done)" if self.realisee else "")
 
 class Log(models.Model):
-    tache_parcelle = models.ForeignKey(TacheParcelle, on_delete=models.CASCADE)
-    nb_heures = models.DecimalField(max_digits=5, decimal_places=2)
-    date = models.DateField(auto_now_add=True)
-    commentaire = models.TextField(max_length=300)
+    plot_task = models.ForeignKey(PlotTask, on_delete=models.CASCADE)
+    nb_hours = models.DecimalField(max_digits=5, decimal_places=2)
+    date = models.DateField()
+    comment = models.TextField(max_length=300, blank=True)
     def __str__(self):
         return (
-            "Log parcelle " + self.tache_parcelle.parcelle.nom + " - "
-            + str(self.tache_parcelle.type_tache) + " - " + self.date
+            "Log of plot " + self.plot_task.plot.name + " - "
+            + str(self.plot_task.task) + " - " + self.date
         )
 
-class Rappel(models.Model):
-    nom = models.CharField(max_length=100)
+class Reminder(models.Model):
+    name = models.CharField(max_length=100)
     date = models.DateField(auto_now_add=True)
-    fait = models.BooleanField(default=0)
+    done = models.BooleanField(default=0)
     def __str__(self):
         return (
-            self.nom + " - " + self.date + (" (fait)" if self.fait else "")
+            self.name + " - " + self.date + (" (done)" if self.done else "")
         )

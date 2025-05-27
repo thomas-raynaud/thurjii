@@ -91,6 +91,7 @@ Pour démarrer le site : `npm run start-frontend`
 
 # TODO
 - Logs : les afficher dans la page home, en dessous des rappels. Filtrer les logs sur une parcelle quand une parcelle à gauche est sélectionnée. Créer une nouvelle page de création de log.
+- Log: when creating new log, check the date is ok with current season
 - Message de confirmation lors de la suppression d'une tâche pour une parcelle.
 - Page de stats : %age de chaque tâche fait.
 - Rappels : ajout, affichage, cocher comme étant fait
