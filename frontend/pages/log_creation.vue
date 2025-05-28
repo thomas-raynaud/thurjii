@@ -80,6 +80,7 @@
             plots.value = in_plots
             vineyard_bb = compute_vineyard_bb(in_plots)
             configure_map()
+            update_map_lines()
         })
         retrieve_tasks().then((in_tasks) => {
             tasks.value = in_tasks
@@ -117,27 +118,59 @@
         }
     }
 
-    const load_plot_tasks = () => {
-        plot_tasks.value = []
-        log_data.value.plot_task_id = -1
-        if (log_data.value.plot_id != -1) {
-            retrieve_plot_season_plot_tasks(log_data.value.plot_id, settings_store.current_season).then((in_plot_tasks) => {
-                for (let in_plot_task of in_plot_tasks) {
-                    plot_tasks.value.push({
-                        id: in_plot_task.id,
-                        name: in_plot_task.task_name
+    const update_map_lines = () => {
+        map_store.lines_highlighted = []
+        if (log_data.value.plot_task_id == -1) {
+            map_container.value.redraw()
+            return
+        }
+        send_api("GET", "plots/" + log_data.value.plot_id + "/lines/" + settings_store.current_season + "/state").then((response) => {
+            let line_states = JSON.parse(response.response)
+            for (let line_state of line_states) {
+                if (line_state.done) {
+                    map_store.lines_highlighted.push({
+                        start: { x: line_state.line_location.start[0], y: line_state.line_location.start[1] },
+                        end: { x: line_state.line_location.end[0], y: line_state.line_location.end[1] }
                     })
                 }
-            })
-            .catch((error) => {
-                console.error(error)
-            })
-        }
+            }
+            map_container.value.redraw()
+        })
+    }
+
+    const load_plot_tasks = () => {
+        return new Promise((resolve, reject) => {
+            plot_tasks.value = []
+            log_data.value.plot_task_id = -1
+            if (log_data.value.plot_id != -1) {
+                retrieve_plot_season_plot_tasks(log_data.value.plot_id, settings_store.current_season).then((in_plot_tasks) => {
+                    for (let in_plot_task of in_plot_tasks) {
+                        plot_tasks.value.push({
+                            id: in_plot_task.id,
+                            name: in_plot_task.task_name
+                        })
+                    }
+                    resolve()
+                })
+                .catch((error) => {
+                    console.error(error)
+                    reject(error)
+                })
+            }
+        })
+        
     }
 
     watch(() => log_data.value.plot_id, () => {
         configure_map()
-        load_plot_tasks()
+        load_plot_tasks().then(() => {
+            update_map_lines()
+        })
+        
+    })
+
+    watch(() => log_data.value.plot_task_id, () => {
+        update_map_lines()
     })
 
     const create_log = () => {

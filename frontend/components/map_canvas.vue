@@ -142,21 +142,8 @@
             ctx.fill()
         }
         if (map_store.state == STATE.PLACE_LINES || map_store.state == STATE.DISPLAY_PLOT) {
-            // Draw lines
-            for (let i = 0; i < map_store.lines.length; i++) {
-                let line = {}
-                Object.assign(line, map_store.lines[i])
-                if (map_store.state == STATE.DISPLAY_PLOT) {
-                    line.start = from_mercator_to_canvas_pos(line.start) 
-                    line.end = from_mercator_to_canvas_pos(line.end) 
-                }
-                ctx.beginPath()
-                ctx.strokeStyle = 'green'
-                ctx.lineWidth = '1'
-                ctx.moveTo(line.start.x, line.start.y)
-                ctx.lineTo(line.end.x, line.end.y)
-                ctx.stroke()
-            }
+            draw_lines(map_store.lines, 'green', '2')
+            draw_lines(map_store.lines_highlighted, 'white', '2')
         }
         if (map_store.state == STATE.DISPLAY_VINEYARD && map_store.show_plot_names == true) {
             // Display the plot names
@@ -168,6 +155,23 @@
                 let plot_name = map_store.plot_names[i]
                 ctx.fillText(plot_name, (text_pos.x - ctx.measureText(plot_name).width / 2), text_pos.y)
             }
+        }
+    }
+
+    const draw_lines = (line_array, color, line_width) => {
+        for (let i = 0; i < line_array.length; i++) {
+            let line = {}
+            Object.assign(line, line_array[i])
+            if (map_store.state == STATE.DISPLAY_PLOT) {
+                line.start = from_mercator_to_canvas_pos(line.start) 
+                line.end = from_mercator_to_canvas_pos(line.end) 
+            }
+            ctx.beginPath()
+            ctx.strokeStyle = color
+            ctx.lineWidth = line_width
+            ctx.moveTo(line.start.x, line.start.y)
+            ctx.lineTo(line.end.x, line.end.y)
+            ctx.stroke()
         }
     }
 

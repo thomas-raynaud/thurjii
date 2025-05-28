@@ -88,7 +88,7 @@ class LineState(models.Model):
             )
         ]
     def __str__(self):
-        return str(self.line) + " - " + str(self.plot_task) + (" (done)" if self.realisee else "")
+        return str(self.line) + " - " + str(self.plot_task) + (" (done)" if self.done else "")
 
 class Log(models.Model):
     plot_task = models.ForeignKey(PlotTask, on_delete=models.CASCADE)
@@ -98,7 +98,7 @@ class Log(models.Model):
     def __str__(self):
         return (
             "Log of plot " + self.plot_task.plot.name + " - "
-            + str(self.plot_task.task) + " - " + self.date
+            + str(self.plot_task.task) + " - " + str(self.date)
         )
 
 class Reminder(models.Model):
