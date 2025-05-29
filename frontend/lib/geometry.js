@@ -133,6 +133,21 @@ const get_polygon_center = (poly) => {
 	}
 }
 
+const does_segment_intersect_rectangle = (rect, segment) => {
+	let segment_intersects = (
+		do_intersect(rect[0], rect[1], segment[0], segment[1]) ||
+		do_intersect(rect[1], rect[2], segment[0], segment[1]) ||
+		do_intersect(rect[2], rect[3], segment[0], segment[1]) ||
+		do_intersect(rect[3], rect[0], segment[0], segment[1])
+	)
+	// Check if the segment is inside the rectangle
+	let is_segment_inside_triangle = (
+		rect[0].x < segment[0].x && segment[0].x < rect[2].x &&
+		rect[0].y < segment[0].y && segment[0].y < rect[2].y
+	)
+	return segment_intersects || is_segment_inside_triangle
+}
+
 export {
     check_intersection_polygon,
 	get_distance,
@@ -140,5 +155,6 @@ export {
 	translate,
 	get_lines_intersection_point,
 	compute_bb,
-	get_polygon_center
+	get_polygon_center,
+	does_segment_intersect_rectangle
 }

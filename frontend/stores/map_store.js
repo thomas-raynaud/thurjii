@@ -22,13 +22,23 @@ export const map_store = reactive({
         y: 0
     },
     lines: [],
+    lines_done: [],
     lines_highlighted: [],
-    line_panning: false,
-    line_rotating: false,
-    line_spreading: false,
     show_plot_names: true,
     // Plot related arrays, all with the same index
     regions: [ [] ],
     region_centers: [],
     plot_names: [],
+
+    zone_selection: {
+        start: {
+            x: 0,
+            y: 0
+        },
+        end: {
+            x: 0,
+            y: 0
+        }
+    },
+    selecting_zone: false
 })

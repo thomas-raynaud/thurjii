@@ -33,10 +33,12 @@
         get_dims_map,
         get_region_center_params,
         get_map_coords,
-        from_rel_coords_to_mercator
+        from_rel_coords_to_mercator,
+        get_mouse_pos
     } from '../lib/map_navigation'
     import {
         check_intersection_polygon,
+        does_segment_intersect_rectangle,
     } from '../lib/geometry'
     import { map_store } from '../stores/map_store'
     import { STATE, MOUSE_BUTTONS } from '../lib/enums'
@@ -50,11 +52,15 @@
     const canvas = useTemplateRef("canvas")
 
     const map_panning = ref(false)
+    const line_panning = ref(false)
+    const line_spreading = ref(false)
+    const line_rotating = ref(false)
 
     onMounted(() => {
         let dims = get_dims_map(nb_tiles_x.value, nb_tiles_y.value)
         container.value.style["width"] = dims.width + "px"
         container.value.style["height"] = dims.height + "px"
+        map_store.selecting_zone = false
         canvas.value.draw()
     })
 
@@ -70,10 +76,17 @@
             map_store.coords = display_nav_coords.coords
             map_store.offset_display = display_nav_coords.offset_display
         }
-        else if (map_store.line_panning)    canvas.value.pan_lines(e)
-        else if (map_store.line_rotating)   canvas.value.rotate_lines(e)
-        else if (map_store.line_spreading)  canvas.value.spread_lines(e)
-        canvas.value.draw()
+        else if (line_panning.value)    canvas.value.pan_lines(e)
+        else if (line_rotating.value)   canvas.value.rotate_lines(e)
+        else if (line_spreading.value)  canvas.value.spread_lines(e)
+        if (map_store.selecting_zone) {
+            update_line_selection(e)
+            canvas.value.draw()
+        }
+        if (map_store.state == STATE.DRAW_REGION || map_store.state == STATE.PLACE_LINES)
+            canvas.value.draw()
+        if ((map_store.state == STATE.DISPLAY_PLOT || map_store.state == STATE.DISPLAY_VINEYARD) && map_panning.value)
+            canvas.value.draw()
     }
 
     const mousedown = (e) => {
@@ -90,22 +103,29 @@
         }
         else if (map_store.state == STATE.PLACE_LINES) {
             if (e.button == MOUSE_BUTTONS.LEFT_CLICK && (e.shiftKey || e.ctrlKey)) {
-                canvas.value.start_line_rotating()
+                line_rotating.value = true
                 canvas.value.rotate_lines(e)
             }
             else if (e.button == MOUSE_BUTTONS.LEFT_CLICK) {
-                canvas.value.start_line_panning()
+                line_panning.value = true
                 canvas.value.pan_lines(e)
             }
             else if (e.button == MOUSE_BUTTONS.RIGHT_CLICK) {
-                canvas.value.start_line_spreading()
+                line_spreading.value = true
                 canvas.value.spread_lines(e)
             }
         }
         else if (map_store.state == STATE.DISPLAY_VINEYARD) {
             if (e.button == MOUSE_BUTTONS.LEFT_CLICK || e.button == MOUSE_BUTTONS.MIDDLE_CLICK) {
-                display.value.start_panning(e)
                 map_panning.value = true
+                display.value.start_panning(e)
+            }
+        }
+        else if (map_store.state == STATE.SELECT_LINES) {
+            if (e.button == MOUSE_BUTTONS.LEFT_CLICK) {
+                map_store.selecting_zone = true
+                map_store.zone_selection.start = get_mouse_pos([ e.clientX, e.clientY ], container.value)
+                map_store.zone_selection.end = map_store.zone_selection.start
             }
         }
         canvas.value.draw()
@@ -113,16 +133,24 @@
 
     const mouseup = () => {
         map_panning.value = false
-        canvas.value.stop_line_panning()
-        canvas.value.stop_line_rotating()
-        canvas.value.stop_line_spreading()
+        line_panning.value = false
+        line_spreading.value = false
+        line_rotating.value = false
+        if (map_store.selecting_zone) {
+            map_store.selecting_zone = false
+            canvas.value.draw()
+        }
     }
 
     const mouseleave = () => {
         map_panning.value = false
-        canvas.value.stop_line_panning()
-        canvas.value.stop_line_rotating()
-        canvas.value.stop_line_spreading()
+        line_panning.value = false
+        line_spreading.value = false
+        line_rotating.value = false
+        if (map_store.selecting_zone) {
+            map_store.selecting_zone = false
+            canvas.value.draw()
+        }
     }
 
     const mousewheel = (e) => {
@@ -171,6 +199,32 @@
         map_store.coords = display_nav_coords.coords
         map_store.offset_display = display_nav_coords.offset_display
         canvas.value.draw()
+    }
+
+    const update_line_selection = (event) => {
+        map_store.zone_selection.end = get_mouse_pos([ event.clientX, event.clientY ], container.value)
+        map_store.lines_highlighted = []
+        let rect = [
+            { x: map_store.zone_selection.start.x, y: map_store.zone_selection.start.y },
+            { x: map_store.zone_selection.start.x, y: map_store.zone_selection.end.y },
+            { x: map_store.zone_selection.end.x, y: map_store.zone_selection.end.y },
+            { x: map_store.zone_selection.end.x, y: map_store.zone_selection.start.y },
+        ]
+        for (let line of map_store.lines) {
+            let line_already_done = false
+            for (let line_done of map_store.lines_done) {
+                if (line.id == line_done.id) {
+                    line_already_done = true
+                    break
+                }
+            }
+            if (line_already_done)
+                continue
+            let line_start = canvas.value.from_mercator_to_canvas_pos(line.start)
+            let line_end = canvas.value.from_mercator_to_canvas_pos(line.end)
+            if (does_segment_intersect_rectangle(rect, [ line_start, line_end ]))
+                map_store.lines_highlighted.push(line)
+        }
     }
 
     const redraw = () => { canvas.value.draw() }

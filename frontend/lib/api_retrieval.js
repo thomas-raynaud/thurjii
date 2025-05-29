@@ -115,7 +115,8 @@ const retrieve_plot_lines = (plot_id) => {
                     end: {
                         x: lines_api[i].geometry.coordinates[1][0],
                         y: lines_api[i].geometry.coordinates[1][1],
-                    }
+                    },
+                    id: lines_api[i].id
                 })
             }
             resolve(lines)

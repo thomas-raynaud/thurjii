@@ -129,21 +129,22 @@
                 ctx.fill(triangle_cursor, "evenodd")
             }
         }
+        if (map_store.state == STATE.PLACE_LINES || map_store.state == STATE.DISPLAY_PLOT || map_store.state == STATE.SELECT_LINES) {
+            draw_lines(map_store.lines, 'green', '2')
+            draw_lines(map_store.lines_highlighted, 'white', '2')
+            draw_lines(map_store.lines_done, 'blue', '2')
+        }
         if (map_store.state == STATE.PLACE_LINES) {
             // Show line cursor
             let line_cursor_canvas = from_rel_coords_to_canvas_pos(line_cursor)
             ctx.beginPath()
-            ctx.arc(line_cursor_canvas.x, line_cursor_canvas.y, 2, 0, 2 * Math.PI)
+            ctx.arc(line_cursor_canvas.x, line_cursor_canvas.y, 3, 0, 2 * Math.PI)
             ctx.fillStyle = "black"
             ctx.fill()
             ctx.beginPath()
-            ctx.arc(line_cursor_canvas.x, line_cursor_canvas.y, 1, 0, 2 * Math.PI)
+            ctx.arc(line_cursor_canvas.x, line_cursor_canvas.y, 2, 0, 2 * Math.PI)
             ctx.fillStyle = "white"
             ctx.fill()
-        }
-        if (map_store.state == STATE.PLACE_LINES || map_store.state == STATE.DISPLAY_PLOT) {
-            draw_lines(map_store.lines, 'green', '2')
-            draw_lines(map_store.lines_highlighted, 'white', '2')
         }
         if (map_store.state == STATE.DISPLAY_VINEYARD && map_store.show_plot_names == true) {
             // Display the plot names
@@ -156,13 +157,28 @@
                 ctx.fillText(plot_name, (text_pos.x - ctx.measureText(plot_name).width / 2), text_pos.y)
             }
         }
+        if (map_store.state == STATE.SELECT_LINES) {
+            if (map_store.selecting_zone) {
+                ctx.strokeStyle = "#0c07a3"
+                ctx.fillStyle = "rgba(33, 96, 196, 0.25)"
+                ctx.beginPath()
+                let width = map_store.zone_selection.end.x - map_store.zone_selection.start.x
+                let height = map_store.zone_selection.end.y - map_store.zone_selection.start.y
+                ctx.rect(
+                    map_store.zone_selection.start.x, map_store.zone_selection.start.y,
+                    width, height
+                )
+                ctx.stroke()
+                ctx.fill()
+            }
+        }
     }
 
     const draw_lines = (line_array, color, line_width) => {
         for (let i = 0; i < line_array.length; i++) {
             let line = {}
             Object.assign(line, line_array[i])
-            if (map_store.state == STATE.DISPLAY_PLOT) {
+            if (map_store.state != STATE.PLACE_LINES) {
                 line.start = from_mercator_to_canvas_pos(line.start) 
                 line.end = from_mercator_to_canvas_pos(line.end) 
             }
@@ -230,13 +246,6 @@
         get_lines_in_direction(-line_step, -line_step)
     }
 
-    const start_line_panning = () => { map_store.line_panning = true }
-    const stop_line_panning = () => { map_store.line_panning = false }
-    const start_line_rotating = () => { map_store.line_rotating = true }
-    const stop_line_rotating = () => { map_store.line_rotating = false }
-    const start_line_spreading = () => { map_store.line_spreading = true }
-    const stop_line_spreading = () => { map_store.line_spreading = false }
-
     const pan_lines = (e) => {
         line_cursor = get_map_coords(map_store.coords, map_store.offset_display, [ e.clientX, e.clientY ], canvas.value.parentElement)
         compute_lines()
@@ -262,11 +271,9 @@
 
     defineExpose({
         draw,
-        start_line_panning, stop_line_panning,
-        start_line_rotating, stop_line_rotating,
-        start_line_spreading, stop_line_spreading,
         pan_lines, rotate_lines, spread_lines,
         compute_lines,
-        set_line_cursor
+        set_line_cursor,
+        from_mercator_to_canvas_pos
     })
 </script>

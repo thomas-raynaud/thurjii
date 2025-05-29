@@ -2,7 +2,8 @@ const STATE = {
     DRAW_REGION: 0,
     PLACE_LINES: 1,
     DISPLAY_PLOT: 2,
-    DISPLAY_VINEYARD: 3
+    DISPLAY_VINEYARD: 3,
+    SELECT_LINES: 4
 }
 
 const MOUSE_BUTTONS = {

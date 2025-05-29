@@ -97,6 +97,7 @@
         if (log_data.value.plot_id == -1) {
             map_store.state = STATE.DISPLAY_VINEYARD
             map_store.regions = []
+            map_store.lines_highlighted = []
             for (let plot of plots.value) {
                 map_store.regions.push(toRaw(plot.region))
             }
@@ -114,12 +115,14 @@
             map_container.value.center_map_on_region(map_store.regions[0])
             retrieve_plot_lines(log_data.value.plot_id).then((lines) => {
                 map_store.lines = lines
+                map_container.value.redraw()
             }).catch(() => {})
         }
     }
 
     const update_map_lines = () => {
         map_store.lines_highlighted = []
+        map_store.lines_done = []
         if (log_data.value.plot_task_id == -1) {
             map_container.value.redraw()
             return
@@ -128,9 +131,10 @@
             let line_states = JSON.parse(response.response)
             for (let line_state of line_states) {
                 if (line_state.done) {
-                    map_store.lines_highlighted.push({
+                    map_store.lines_done.push({
                         start: { x: line_state.line_location.start[0], y: line_state.line_location.start[1] },
-                        end: { x: line_state.line_location.end[0], y: line_state.line_location.end[1] }
+                        end: { x: line_state.line_location.end[0], y: line_state.line_location.end[1] },
+                        id: line_state.line
                     })
                 }
             }
@@ -170,6 +174,10 @@
     })
 
     watch(() => log_data.value.plot_task_id, () => {
+        if (log_data.value.plot_task_id == -1)
+            map_store.state = STATE.DISPLAY_PLOT
+        else
+            map_store.state = STATE.SELECT_LINES
         update_map_lines()
     })
 
