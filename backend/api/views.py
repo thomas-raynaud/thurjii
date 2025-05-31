@@ -163,3 +163,12 @@ class LineStateViewSet(viewsets.ModelViewSet):
         queryset = LineState.objects.all().filter(plot_task__in=plot_tasks_season)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    def update_line_states(self, request, *args, **kwargs):
+        new_line_states = request.data
+        print(new_line_states)
+        for new_line_state in new_line_states:
+            line_state = LineState.objects.filter(line=new_line_state['line'], plot_task=new_line_state['plot_task'])[0]
+            line_state.done = new_line_state['done']
+            line_state.save()
+        return Response(None, status=status.HTTP_200_OK)

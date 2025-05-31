@@ -31,13 +31,23 @@
             <div class="invalid-feedback mb-3" :style="{'display': invalid_data ? 'block' : 'none'}">
                 Veuillez compléter tous les champs. Assurez-vous que les champs saisis soient valides.
             </div>
-            <button
-                class="btn btn-primary"
-                @click="create_log()"
-                :disabled="log_data.plot_id==-1"
-            >
-                Créer le log
-            </button>
+            <p v-show="map_store.lines_highlighted.length > 0"> {{ map_store.lines_highlighted.length }} rangs sélectionnés</p>
+            <div>   
+                <button
+                    class="btn btn-primary"
+                    @click="create_log()"
+                    :disabled="log_data.plot_id==-1"
+                >
+                    Créer le log
+                </button>
+                <button
+                    class="btn btn-light"
+                    @click="reset_lines()"
+                    :disabled="map_store.lines_done.length == 0"
+                >
+                    Réinitialiser tous les rangs
+                </button>
+            </div>
         </div>
     </div>
     <toast ref="toast_component" />
@@ -195,10 +205,20 @@
                 comment: log_data.value.comment,
                 date: log_data.value.date
             }
-            send_api("POST", "logs", log_post_data)
-            .then((response) => {
-                if (response.status == 400) {
-                    console.error(JSON.parse(response.response))
+            let line_states_put_data = []
+            for (let line_selected of map_store.lines_highlighted) {
+                line_states_put_data.push({
+                    line: line_selected.id,
+                    plot_task: log_data.value.plot_task_id,
+                    done: true
+                })
+            }
+            let post_promises = []
+            post_promises.push(send_api("POST", "logs", log_post_data))
+            post_promises.push(send_api("PUT", "line_states", line_states_put_data))
+            Promise.all(post_promises).then((responses) => {
+                if (responses[0].status == 400) {
+                    console.error(JSON.parse(responses[0].response))
                     toast_component.value.display_toast("Erreur : le log n'a pas pu être créé")
                     return
                 }
@@ -207,11 +227,28 @@
                 log_data.value.nb_hours =  undefined
                 log_data.value.comment = ""
             })
-            .catch((error) => {
-                console.error(error)
+            .catch((errors) => {
+                console.error(errors)
                 toast_component.value.display_toast("Erreur : le log n'a pas pu être créé")
             })
             
+            
         }
+    }
+
+    const reset_lines = () => {
+        let line_states_put_data = []
+        for (let line_done of map_store.lines_done) {
+            line_states_put_data.push({
+                line: line_done.id,
+                plot_task: log_data.value.plot_task_id,
+                done: false
+            })
+        }
+        send_api("PUT", "line_states", line_states_put_data)
+        .then(() => {
+            map_store.lines_done = []
+            map_container.value.redraw()
+        })
     }
 </script>
