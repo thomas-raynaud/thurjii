@@ -141,7 +141,10 @@ class PlotTaskViewSet(viewsets.ModelViewSet):
                     season=season
                 )
                 plot_task.delete()
-        return Response(None, status=status.HTTP_201_CREATED)
+        new_plot_tasks = PlotTask.objects.filter(plot=plot_id, season=year)
+        print(new_plot_tasks)
+        serializer = self.get_serializer(new_plot_tasks, many=True)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class LogViewSet(viewsets.ModelViewSet):
     queryset = Log.objects.all().order_by("date", "id").reverse()

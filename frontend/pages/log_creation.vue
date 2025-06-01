@@ -65,7 +65,8 @@
         retrieve_plot_season_plot_tasks,
         retrieve_plots,
         retrieve_tasks,
-        retrieve_plot_lines
+        retrieve_plot_lines,
+        retrieve_plot_line_states
     } from '../lib/api_retrieval'
     import { STATE } from '../lib/enums'
     import { compute_vineyard_bb } from '../lib/map_navigation'
@@ -137,8 +138,7 @@
             map_container.value.redraw()
             return
         }
-        send_api("GET", "plots/" + log_data.value.plot_id + "/lines/" + settings_store.current_season + "/state").then((response) => {
-            let line_states = JSON.parse(response.response)
+        retrieve_plot_line_states(log_data.value.plot_id, settings_store.current_season).then((line_states) => {
             for (let line_state of line_states) {
                 if (line_state.done) {
                     map_store.lines_done.push({

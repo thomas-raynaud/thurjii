@@ -111,7 +111,14 @@
             else {
                 let task = JSON.parse(response.response)
                 task.checked = true
-                props.formData.tasks.push(task)
+                props.formData.tasks.push({
+                    id: task.id,
+                    name: task.name,
+                    checked: false,
+                    checked_db: false,
+                    plot_task_id: -1,
+                    line_states: []
+                })
                 task_name_already_exists.value = false
                 new_task_name.value = ""
             }

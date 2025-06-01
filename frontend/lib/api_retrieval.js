@@ -128,6 +128,14 @@ const retrieve_plot_lines = (plot_id) => {
     })
 }
 
+const retrieve_plot_line_states = (plot_id, year) => {
+    return new Promise((resolve) => {
+        send_api("GET", "plots/" + plot_id + "/lines/" + year + "/state").then((response) => {
+            resolve(JSON.parse(response.response))
+        })
+    })
+}
+
 const get_current_season = () => {
     return new Promise((resolve) => {
         send_api("GET", "seasons").then((response) => {
@@ -162,5 +170,6 @@ export {
     retrieve_plot_season_plot_tasks,
     retrieve_logs,
     retrieve_plot_lines,
+    retrieve_plot_line_states,
     get_current_season,
 }

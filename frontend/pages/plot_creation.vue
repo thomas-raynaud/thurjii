@@ -66,7 +66,6 @@
     })
 
     const create_plot = () => {
-        console.log(plot_data.value)
         invalid_data.value = plot_data.value.name == ""
             || plot_data.value.variety.name == ""
             || plot_data.value.pruning.name == ""
