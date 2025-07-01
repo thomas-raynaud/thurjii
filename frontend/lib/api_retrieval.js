@@ -3,12 +3,18 @@ import { send_api } from './request'
 const format_plot = (plot_api) => {
     return {
         id: plot_api.id,
-        name: plot_api.properties.name,
-        variety: plot_api.properties.variety,
-        pruning: plot_api.properties.pruning,
-        folding: plot_api.properties.folding,
-        area: plot_api.properties.area,
-        region: plot_api.geometry.coordinates[0].map((x) => { return { x: x[0], y: x[1] }}),
+        name: plot_api.name,
+        variety: plot_api.variety,
+        pruning: plot_api.pruning,
+        folding: plot_api.folding,
+        plot_sections: plot_api.plot_sections.features.map((plot_section) => {
+            return {
+                id: plot_section.properties.id,
+                name: plot_section.properties.name,
+                area: plot_section.properties.area,
+                region: plot_section.geometry.coordinates[0].map((x) => { return { x: x[0], y: x[1] }})
+            }
+        })
     }
 }
 
@@ -20,7 +26,7 @@ const retrieve_plots = () => {
                 reject(JSON.parse(response.response))
             }
             else {
-                let plots_api = JSON.parse(response.response).features
+                let plots_api = JSON.parse(response.response)
                 let plots = []
                 for (let plot_api of plots_api) {
                     plots.push(format_plot(plot_api))

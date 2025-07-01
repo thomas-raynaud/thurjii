@@ -25,10 +25,19 @@ export const map_store = reactive({
     lines_done: [],
     lines_highlighted: [],
     show_plot_names: true,
-    // Plot related arrays, all with the same index
+    // Plot section related arrays, all with the same index
     regions: [ [] ],
     region_centers: [],
+    plot_section_names: [],
+    regions_color: [],
+
+    map_plot_section_plot: [],
+    plot_inds: [],
     plot_names: [],
+    plot_centers: [],
+
+    current_region_ind: -1,
+    current_line_ind: -1,
 
     zone_selection: {
         start: {

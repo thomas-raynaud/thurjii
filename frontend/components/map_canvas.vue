@@ -10,14 +10,10 @@
 </style>
 
 <script setup>
-    import { useTemplateRef, onMounted } from 'vue'
-
     import {
         get_dims_map,
         get_mouse_pos,
-        get_map_coords,
-        from_mercator_to_rel_coords,
-        get_tile_size_from_zoom,
+        get_map_coords
     } from '../lib/map_navigation'
     import {
         get_distance,
@@ -25,6 +21,14 @@
         rotate,
         get_lines_intersection_point
     } from '../lib/geometry'
+    import {
+        from_rel_coords_to_canvas_pos,
+        from_mercator_to_canvas_pos,
+        get_regions_canvas_coordinates,
+        from_rgb_hex_color_to_rgba,
+        draw_cursor_point,
+        draw_lines
+    } from '../lib/map_canvas_utils'
     import { degrees_to_radians } from '../lib/math'
     import { map_store } from '../stores/map_store'
     import { STATE } from '../lib/enums'
@@ -50,52 +54,27 @@
         canvas.value.width = dims.width
         canvas.value.height = dims.height
         ctx = canvas.value.getContext("2d")
-        map_store.state = STATE.DRAW_REGION
+        map_store.current_region_ind = 0
         line_theta = 0
         line_step = 10
         draw()
     })
 
-    const from_rel_coords_to_canvas_pos = (rc) => {
-    let tile_size = get_tile_size_from_zoom(map_store.coords.z)
-    let tcx = rc.x * Math.pow(2, Math.ceil(map_store.coords.z))
-    let tcy = rc.y * Math.pow(2, Math.ceil(map_store.coords.z))
-    let pos_left = map_store.coords.x + (map_store.offset_display.x / tile_size)
-    let pos_top = map_store.coords.y + (map_store.offset_display.y / tile_size)
-    return {
-        x: (tcx - pos_left) * tile_size,
-        y: (tcy - pos_top) * tile_size
-    }
-}
-
-    const from_mercator_to_canvas_pos = (mc) => {
-        let rc = from_mercator_to_rel_coords(mc)
-        return from_rel_coords_to_canvas_pos(rc)
-    }
-
     const draw = () => {
         ctx.clearRect(0, 0, canvas.value.width, canvas.value.height)
        
         let nb_regions = map_store.regions.length
-        if (nb_regions == 0 || (nb_regions == 1 &&map_store.regions[0].length == 0))
+        if (nb_regions == 0 || (nb_regions == 1 && map_store.regions[0].length == 0))
             return
 
-        // Convert regions' points from mercator coordinates to canvas coordinates
-        let canvas_regions = []
-        for (let i = 0; i < map_store.regions.length; i++) {
-            let canvas_region = []
-            for (let j = 0; j < map_store.regions[i].length; j++) {
-                canvas_region.push(from_mercator_to_canvas_pos(map_store.regions[i][j]))
-            }
-            canvas_regions.push(canvas_region)
-        }
+        let canvas_regions = get_regions_canvas_coordinates()
 
-        // Draw the polygons stored in map_store.regions
-        ctx.strokeStyle = 'red'
+        // Draw the regions
         ctx.lineWidth = '1'
-        ctx.fillStyle = "rgba(255, 0, 0, 0.25)"
         for (let i = 0; i < nb_regions; i++) {
             ctx.beginPath()
+            ctx.strokeStyle = map_store.regions_color[i]
+            ctx.fillStyle = from_rgb_hex_color_to_rgba(map_store.regions_color[i])
             let poly = new Path2D()
             ctx.moveTo(canvas_regions[i][0].x, canvas_regions[i][0].y)
             poly.moveTo(canvas_regions[i][0].x, canvas_regions[i][0].y)
@@ -108,51 +87,69 @@
             ctx.stroke()
             ctx.fill(poly, "evenodd")
         }
-
-        if (map_store.state == STATE.DRAW_REGION && canvas_regions.at(-1).length > 0) {
+        if (map_store.state == STATE.ADD_PLOT_SECTION && canvas_regions[current_region_ind].length > 0) {
             // Draw a dash line from the last region point to the mouse cursor
-            let last_canvas_region = canvas_regions.at(-1)
-            let last_region_point = last_canvas_region.at(-1)
+            let current_canvas_region = canvas_regions[current_region_ind]
+            let first_point = current_canvas_region[0]
+            let last_point = current_canvas_region.at(-1)
             let cursor_coords = from_rel_coords_to_canvas_pos(map_store.cursor_rel_coords)
             ctx.beginPath()
             ctx.setLineDash([1, 2])
-            ctx.moveTo(last_region_point.x, last_region_point.y)
+            ctx.moveTo(last_point.x, last_point.y)
             ctx.lineTo(cursor_coords.x, cursor_coords.y)
             ctx.stroke()
-            if (last_canvas_region.length >= 2) {
+            if (current_canvas_region.length >= 2) {
                 // Display the filled triangle with points : [ last region point, mouse cursor, first region point ]
                 let triangle_cursor = new Path2D()
-                triangle_cursor.moveTo(last_region_point.x, last_region_point.y)
+                triangle_cursor.moveTo(last_point.x, last_point.y)
                 triangle_cursor.lineTo(cursor_coords.x, cursor_coords.y)
-                triangle_cursor.lineTo(last_canvas_region[0].x, last_canvas_region[0].y)
+                triangle_cursor.lineTo(first_point.x, first_point.y)
                 triangle_cursor.closePath()
                 ctx.fill(triangle_cursor, "evenodd")
             }
         }
-        if (map_store.state == STATE.PLACE_LINES || map_store.state == STATE.DISPLAY_PLOT || map_store.state == STATE.SELECT_LINES) {
-            draw_lines(map_store.lines, 'green', '2')
-            draw_lines(map_store.lines_highlighted, 'white', '2')
-            draw_lines(map_store.lines_done, 'blue', '2')
+        if (map_store.state == STATE.EDIT_PLOT_SECTION) {
+            let current_canvas_region = canvas_regions[current_region_ind]
+            for (let point of current_canvas_region) {
+                draw_cursor_point(ctx, point)
+            }
         }
-        if (map_store.state == STATE.PLACE_LINES) {
-            // Show line cursor
-            let line_cursor_canvas = from_rel_coords_to_canvas_pos(line_cursor)
-            ctx.beginPath()
-            ctx.arc(line_cursor_canvas.x, line_cursor_canvas.y, 3, 0, 2 * Math.PI)
-            ctx.fillStyle = "black"
-            ctx.fill()
-            ctx.beginPath()
-            ctx.arc(line_cursor_canvas.x, line_cursor_canvas.y, 2, 0, 2 * Math.PI)
-            ctx.fillStyle = "white"
-            ctx.fill()
+
+        // Draw the lines
+        if (map_store.state == STATE.DISPLAY_PLOT ||
+            map_store.state == STATE.EDIT_LINES_GLOBAL_PLACEMENT ||
+            map_store.state == STATE.EDIT_LINES ||
+            map_store.state == STATE.ADD_LINE ||
+            map_store.state == STATE.REMOVE_LINE ||
+            map_store.state == STATE.SELECT_LINES
+        ) {
+            draw_lines(ctx, map_store.lines, 'green', '2')
+        }
+        if (map_store.state == STATE.DISPLAY_PLOT || map_store.state == STATE.SELECT_LINES) {
+            draw_lines(ctx, map_store.lines_highlighted, 'white', '2')
+            draw_lines(ctx, map_store.lines_done, 'blue', '2')
+        }
+        if (map_store.state == STATE.EDIT_LINES) {
+            draw_lines(ctx, [ map_store.lines[map_store.current_line_ind] ], 'white', '2')
+        }
+        if (map_store.state == STATE.EDIT_LINES_GLOBAL_PLACEMENT) {
+            // Show global line cursor
+            draw_cursor_point(ctx, line_cursor)
+        }
+        if (map_store.state == STATE.EDIT_LINES || map_store.state == STATE.REMOVE_LINE) {
+            for (let line of map_store.lines) {
+                for (let point of line) {
+                    draw_cursor_point(ctx, point)
+                }
+            }
         }
         if (map_store.state == STATE.DISPLAY_VINEYARD && map_store.show_plot_names == true) {
             // Display the plot names
             ctx.fillStyle = "white"
             ctx.font = "12px"
             ctx.textBaseline = "middle"
-            for (let i = 0; i < map_store.region_centers.length; i++) {
-                let text_pos = from_mercator_to_canvas_pos(map_store.region_centers[i])
+            for (let i = 0; i < map_store.plot_centers.length; i++) {
+                let text_pos = from_mercator_to_canvas_pos(map_store.plot_centers[i])
                 let plot_name = map_store.plot_names[i]
                 ctx.fillText(plot_name, (text_pos.x - ctx.measureText(plot_name).width / 2), text_pos.y)
             }
@@ -174,24 +171,7 @@
         }
     }
 
-    const draw_lines = (line_array, color, line_width) => {
-        for (let i = 0; i < line_array.length; i++) {
-            let line = {}
-            Object.assign(line, line_array[i])
-            if (map_store.state != STATE.PLACE_LINES) {
-                line.start = from_mercator_to_canvas_pos(line.start) 
-                line.end = from_mercator_to_canvas_pos(line.end) 
-            }
-            ctx.beginPath()
-            ctx.strokeStyle = color
-            ctx.lineWidth = line_width
-            ctx.moveTo(line.start.x, line.start.y)
-            ctx.lineTo(line.end.x, line.end.y)
-            ctx.stroke()
-        }
-    }
-
-    const get_lines_in_direction = (start_pos, dir_step) => {
+    const compute_lines_in_direction = (start_pos, dir_step) => {
         // Fill map_store.lines with segments that intersect the plot's region
         // We start at position start_pos, get the 2 points that intersect the region from that point,
         // then we move in the line_theta direction by a dir_step step, compute the 2 intersecting points from there,
@@ -232,9 +212,9 @@
             }
             if (intersections.length >= 2) {
                 if (dir_step < 0)
-                    map_store.lines.unshift({ start: intersections[0], end: intersections[1] })
+                    map_store.lines.unshift([ intersections[0], intersections[1] ])
                 else
-                    map_store.lines.push({ start: intersections[0], end: intersections[1] })
+                    map_store.lines.push([ intersections[0], intersections[1] ])
             }
             line_pos += dir_step
         } while (intersections.length > 0)
@@ -242,8 +222,8 @@
 
     const compute_lines = () => {
         map_store.lines = []
-        get_lines_in_direction(0, line_step)
-        get_lines_in_direction(-line_step, -line_step)
+        compute_lines_in_direction(0, line_step)
+        compute_lines_in_direction(-line_step, -line_step)
     }
 
     const pan_lines = (e) => {

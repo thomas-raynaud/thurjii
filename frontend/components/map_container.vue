@@ -55,6 +55,8 @@
     const line_panning = ref(false)
     const line_spreading = ref(false)
     const line_rotating = ref(false)
+    const region_point_dragged = ref(-1)
+    const line_point_dragged = ref(-1)
 
     onMounted(() => {
         let dims = get_dims_map(nb_tiles_x.value, nb_tiles_y.value)
@@ -75,6 +77,7 @@
             let display_nav_coords = display.value.pan(e)
             map_store.coords = display_nav_coords.coords
             map_store.offset_display = display_nav_coords.offset_display
+            canvas.value.draw()
         }
         else if (line_panning.value)    canvas.value.pan_lines(e)
         else if (line_rotating.value)   canvas.value.rotate_lines(e)
@@ -83,10 +86,53 @@
             update_line_selection(e)
             canvas.value.draw()
         }
-        if (map_store.state == STATE.DRAW_REGION || map_store.state == STATE.PLACE_LINES)
+        if (map_store.state == STATE.ADD_PLOT_SECTION) {
+            if (map_store.current_region_ind != -1 && map_store.regions[map_store.current_region_ind].length > 0)
+                canvas.value.draw()
+        }
+        if (region_point_dragged.value != -1) {
+            // Change region point position
+            let current_region = map_store.regions[map_store.current_region_ind][region_point_dragged.value]
+            let edited_point = from_rel_coords_to_mercator(map_store.cursor_rel_coords.x, map_store.cursor_rel_coords.y)
+            let updated_region = [ ...current_region ]
+            updated_region[map_store.current_region_ind] = edited_point
+            if (!check_intersection_polygon(updated_region, edited_point)) {
+                map_store.regions[map_store.current_region_ind] = updated_region
+                let region_change = [
+                    updated_region[(map_store.current_region_ind - 1) < 0 ? (updated_region.length - 1) : (map_store.current_region_ind - 1)],
+                    updated_region[map_store.current_region_ind],
+                    updated_region[(map_store.current_region_ind + 1) % updated_region.length],
+                ]
+                for (let i = 0; i < map_store.lines.length; i++) {
+                    let line = map_store.lines[i]
+                    for (let j = 0; j < line.length - 1; j++) {
+                        let l1 = line[j]
+                        let l2 = line[j + 1]
+                        
+                        for (let k = 0; k < region_change.length - 1; i++) {
+                            let c = from_mercator_to_canvas_pos(last_region[i])
+                            let d = from_mercator_to_canvas_pos(last_region[(i + 1)])
+                            let intersection = get_lines_intersection_point(p0t, p2t, c, d)
+                        }
+                        if (
+                            intersection.x != Number.MAX_VALUE
+                            && intersection.x >= Math.min(c.x, d.x)
+                            && intersection.x <= Math.max(c.x, d.x)
+                            && intersection.y >= Math.min(c.y, d.y)
+                            && intersection.y <= Math.max(c.y, d.y)
+                        ) {
+                            // TODO
+                        }
+                    }
+                    map_store.regions[map_store.current_region_ind][region_point_dragged.value] = edited_point
+                }
+            }
             canvas.value.draw()
-        if ((map_store.state == STATE.DISPLAY_PLOT || map_store.state == STATE.DISPLAY_VINEYARD) && map_panning.value)
+        }
+        if (line_point_dragged.value != -1) {
+            //TODO: change line point position
             canvas.value.draw()
+        }
     }
 
     const mousedown = (e) => {

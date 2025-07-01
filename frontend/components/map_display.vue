@@ -280,6 +280,8 @@
         // Z
         coords.value.z = zoom
         load_map()
+        console.log(coords.value)
+        console.log(nb_tiles_on_axis)
         return {
             coords: coords.value,
             offset_display: offset_display.value

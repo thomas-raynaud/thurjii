@@ -4,7 +4,12 @@ from rest_framework_gis.serializers import GeoFeatureModelSerializer
 import pyproj
 from shapely.geometry import Polygon
 
-class PlotSerializer(GeoFeatureModelSerializer):
+class PlotSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Plot
+        fields = [ 'id', 'name', 'variety', 'pruning', 'folding' ]
+
+class PlotSectionSerializer(GeoFeatureModelSerializer):
     area = serializers.SerializerMethodField()
     def get_area(self, obj):
         transformer = pyproj.Transformer.from_crs("epsg:3857", "epsg:4326")
@@ -13,9 +18,9 @@ class PlotSerializer(GeoFeatureModelSerializer):
         poly = Polygon(coords)
         return abs(geod.geometry_area_perimeter(poly)[0])
     class Meta:
-        model = Plot
+        model = PlotSection
         geo_field = "region"
-        fields = [ 'id', 'name', 'variety', 'pruning', 'folding', 'area' ]
+        fields = [ 'id', 'name', 'area' ]
 
 class VarietySerializer(serializers.ModelSerializer):
     class Meta:

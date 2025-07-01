@@ -1,4 +1,3 @@
-from django.http import HttpResponse
 from rest_framework import viewsets, status
 from django.conf import settings
 from rest_framework.response import Response
@@ -9,6 +8,18 @@ from .serializers import *
 class PlotViewSet(viewsets.ModelViewSet):
     queryset = Plot.objects.all().order_by('id')
     serializer_class = PlotSerializer
+    def list(self, request, *args, **kwargs):
+        plot_data = self.get_serializer(self.queryset, many=True).data
+        for i in range(0, len(plot_data)):
+            plot_sections = PlotSection.objects.filter(plot=plot_data[i]['id'])
+            plot_data[i]['plot_sections'] = PlotSectionSerializer(plot_sections, many=True).data
+        return Response(plot_data)
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        plot_data = self.get_serializer(instance).data
+        plot_sections = PlotSection.objects.filter(plot=plot_data['id'])
+        plot_data['plot_sections'] = PlotSectionSerializer(plot_sections, many=True).data
+        return Response(plot_data)
 
 class VarietyViewSet(viewsets.ModelViewSet):
     queryset = Variety.objects.all()

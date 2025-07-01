@@ -4,6 +4,7 @@ from django.contrib.gis.db import models as modelsPG
 
 class Variety(models.Model):
     name = models.CharField(max_length=50, unique=True)
+    color = models.CharField(max_length=6)
     def __str__(self):
         return self.name
 
@@ -22,9 +23,16 @@ class Plot(models.Model):
     variety = models.ForeignKey(Variety, on_delete=models.RESTRICT)
     pruning = models.ForeignKey(Pruning, on_delete=models.RESTRICT)
     folding = models.ForeignKey(Folding, on_delete=models.RESTRICT)
-    region = modelsPG.PolygonField()
+    
     def __str__(self):
         return self.name
+
+class PlotSection(models.Model):
+    name = models.CharField(max_length=50)
+    plot = models.ForeignKey(Plot, on_delete=models.CASCADE)
+    region = modelsPG.PolygonField()
+    def __str__(self):
+        return self.name + "(" + self.plot.name + ")"
 
 class Line(models.Model):
     plot = models.ForeignKey(Plot, on_delete=models.CASCADE)
