@@ -8,7 +8,7 @@
         <div class="col">
             <plot-form :form-data="plot_data" :invalid-data="invalid_data" :invalid-data-message="invalid_data_message" ref="plot_form" />
             <div>
-                <p v-show="map_store.state == STATE.PLACE_LINES">{{ "Nombre de rangs : " + map_store.lines.length }}</p>
+                <p v-show="map_store.state == STATE.PLACE_LINES">{{ "Nombre de rangs total : " + map_store.lines.length }}</p>
             </div>
             <button
                 class="btn btn-primary"
@@ -41,7 +41,8 @@
         variety: { id: -1, name: "" },
         pruning: { id: -1, name: "" },
         folding: { id: -1, name: "" },
-        tasks: []
+        tasks: [],
+        plot_sections: []
     })
     const invalid_data = ref(false)
     const invalid_data_message = ref("")
@@ -49,13 +50,15 @@
     const map_container = useTemplateRef("map_container")
 
     onMounted(() => {
-        map_store.state = STATE.DRAW_REGION
+        map_store.state = STATE.DISPLAY_PLOT
         map_store.regions = [ [] ]
         map_store.lines = []
 
         retrieve_plots().then((plots_api) => {
             let vineyard_bb = compute_vineyard_bb(plots_api)
-            map_container.value.center_map_on_region([ vineyard_bb.min, vineyard_bb.max ])
+            if (vineyard_bb != null) {
+                map_container.value.center_map_on_region([ vineyard_bb.min, vineyard_bb.max ])
+            }
         })
         retrieve_tasks().then((tasks_api) => {
             plot_data.value.tasks = tasks_api

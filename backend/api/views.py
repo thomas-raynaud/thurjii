@@ -153,7 +153,6 @@ class PlotTaskViewSet(viewsets.ModelViewSet):
                 )
                 plot_task.delete()
         new_plot_tasks = PlotTask.objects.filter(plot=plot_id, season=year)
-        print(new_plot_tasks)
         serializer = self.get_serializer(new_plot_tasks, many=True)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -180,7 +179,6 @@ class LineStateViewSet(viewsets.ModelViewSet):
 
     def update_line_states(self, request, *args, **kwargs):
         new_line_states = request.data
-        print(new_line_states)
         for new_line_state in new_line_states:
             line_state = LineState.objects.filter(line=new_line_state['line'], plot_task=new_line_state['plot_task'])[0]
             line_state.done = new_line_state['done']

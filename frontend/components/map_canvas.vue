@@ -10,6 +10,8 @@
 </style>
 
 <script setup>
+    import { useTemplateRef, onMounted } from 'vue'
+
     import {
         get_dims_map,
         get_mouse_pos,
@@ -73,8 +75,9 @@
         ctx.lineWidth = '1'
         for (let i = 0; i < nb_regions; i++) {
             ctx.beginPath()
-            ctx.strokeStyle = map_store.regions_color[i]
-            ctx.fillStyle = from_rgb_hex_color_to_rgba(map_store.regions_color[i])
+            let hex_color = "#" + map_store.regions_color[i]
+            ctx.strokeStyle = hex_color
+            ctx.fillStyle = from_rgb_hex_color_to_rgba(hex_color, 0.5)
             let poly = new Path2D()
             ctx.moveTo(canvas_regions[i][0].x, canvas_regions[i][0].y)
             poly.moveTo(canvas_regions[i][0].x, canvas_regions[i][0].y)

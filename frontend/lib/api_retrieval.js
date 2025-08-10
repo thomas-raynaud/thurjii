@@ -9,7 +9,7 @@ const format_plot = (plot_api) => {
         folding: plot_api.folding,
         plot_sections: plot_api.plot_sections.features.map((plot_section) => {
             return {
-                id: plot_section.properties.id,
+                id: plot_section.id,
                 name: plot_section.properties.name,
                 area: plot_section.properties.area,
                 region: plot_section.geometry.coordinates[0].map((x) => { return { x: x[0], y: x[1] }})

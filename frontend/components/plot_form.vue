@@ -53,6 +53,28 @@
             </div>
         </div>
     </div>
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row align-items-center mb-3">
+                <div class="col-md-auto">
+                    <h5 class="mt-2">Sections : {{ formData.plot_sections.length }}</h5>
+                </div>
+                <div class="col">
+                    <button
+                        type="button" class="btn btn-light"
+                        @click="add_section()"
+                    >
+                        Ajouter
+                    </button>
+                </div>
+            </div>
+            <div v-for="plot_section in formData.plot_sections" class="card mb-3" @click="toggle_section_selected(plot_section.idx)">
+                <div class="card-body" :class="{ 'text-bg-primary': plot_section_selected == plot_section.idx }">
+                    <input class="form-control" v-model="plot_section.name" placeholder="Nom de la section">
+                </div>
+            </div>
+        </div>
+    </div>
     
     <div class="invalid-feedback mb-3" :style="{'display': invalidData ? 'block' : 'none'}">
         {{ invalidDataMessage }}
@@ -64,6 +86,8 @@
 
     import SelectOrCreateForm from '../components/select_or_create_form.vue'
     import { send_api } from '../lib/request'
+    import { map_store } from '../stores/map_store'
+    import { STATE } from '../lib/enums'
 
     const props = defineProps([ 'formData', 'invalidData', 'invalidDataMessage' ])
     const varieties = ref([])
@@ -72,6 +96,7 @@
     const new_task_name = ref("")
     const task_name_empty = ref(false)
     const task_name_already_exists = ref(false)
+    const plot_section_selected = ref(-1)
 
     onMounted(() => {
         // Load varieties
@@ -122,9 +147,28 @@
                 task_name_already_exists.value = false
                 new_task_name.value = ""
             }
-            
         })
         .catch((error) => { console.error(error) })
+    }
+
+    const add_section = () => {
+        props.formData.plot_sections.push({
+            name: "",
+            region: [],
+            idx: props.formData.plot_sections.length
+        })
+        plot_section_selected.value = props.formData.plot_sections.length - 1
+        map_store.state = STATE.ADD_PLOT_SECTION
+    }
+
+    const toggle_section_selected = (section_idx) => {
+        if (section_idx == plot_section_selected.value)
+            plot_section_selected.value = -1
+        else
+            plot_section_selected.value = section_idx
+        if (plot_section_selected.value != -1) {
+            
+        }
     }
 
     const create_variety_pruning_folding = () => {

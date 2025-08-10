@@ -25,7 +25,7 @@ class PlotSectionSerializer(GeoFeatureModelSerializer):
 class VarietySerializer(serializers.ModelSerializer):
     class Meta:
         model = Variety
-        fields = [ 'id', 'name' ]
+        fields = [ 'id', 'name', 'color' ]
 
 
 class PruningSerializer(serializers.ModelSerializer):
@@ -40,10 +40,13 @@ class FoldingSerializer(serializers.ModelSerializer):
         fields = [ 'id', 'name' ]
 
 class LineSerializer(GeoFeatureModelSerializer):
+    plot = serializers.SerializerMethodField()
     class Meta:
         model = Line
         geo_field = "location"
-        fields = [ 'id', 'plot' ]
+        fields = [ 'id', 'plot', 'plot_section' ]
+    def get_plot(self, obj):
+        return obj.plot_section.plot
 
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
@@ -58,7 +61,7 @@ class SeasonSerializer(serializers.ModelSerializer):
 class PlotTaskSerializer(serializers.ModelSerializer):
     task_name = serializers.SerializerMethodField()
     def get_task_name(self, obj):
-        return Task.objects.get(pk=obj.task.id).name
+        return obj.task.name
 
     class Meta:
         model = PlotTask
@@ -75,15 +78,12 @@ class LineStateSerializer(serializers.ModelSerializer):
         return obj.plot_task.task.id
     def get_season(self, obj):
         return obj.plot_task.season.year
-    def get_line_location(self, obj):
-        return {
-            'start': [ obj.line.location[0][0], obj.line.location[0][1] ],
-            'end': [ obj.line.location[1][0], obj.line.location[1][1] ]
-        }
+    def get_line_position(self, obj):
+        return [ { 'x': p[0], 'y': p[1] } for p in obj.line.location ]
     
     class Meta:
         model = LineState
-        fields = [ 'line', 'plot_task', 'plot', 'task', 'season', 'done', 'line_location' ]
+        fields = [ 'line', 'plot_task', 'plot', 'task', 'season', 'done', 'get_line_position' ]
 
 class LogSerializer(serializers.ModelSerializer):
     plot_name = serializers.SerializerMethodField()

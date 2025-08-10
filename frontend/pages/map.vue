@@ -32,12 +32,17 @@
 
         retrieve_plots().then((plots) => {
             for (let plot of plots) {
-                map_store.regions.push(plot.region)
-                map_store.region_centers.push(get_polygon_center(plot.region))
+                let plot_regions = plot.plot_sections.reduce((accumulator, plot_section) => {
+                    return accumulator.concat([ plot_section.region ])
+                }, [])
+                map_store.regions.push(plot_regions)
+                map_store.region_centers.push(get_polygon_center([].concat(...plot_regions)))
                 map_store.plot_names.push(plot.name)
             }
             let vineyard_bb = compute_vineyard_bb(plots)
-            map_container.value.center_map_on_region([ vineyard_bb.min, vineyard_bb.max ])
+            if (vineyard_bb != null) {
+                map_container.value.center_map_on_region([ vineyard_bb.min, vineyard_bb.max ])
+            }
         })
     })
 

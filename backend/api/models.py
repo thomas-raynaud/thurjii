@@ -35,10 +35,10 @@ class PlotSection(models.Model):
         return self.name + "(" + self.plot.name + ")"
 
 class Line(models.Model):
-    plot = models.ForeignKey(Plot, on_delete=models.CASCADE)
+    plot_section = models.ForeignKey(PlotSection, on_delete=models.CASCADE)
     location = modelsPG.LineStringField()
     def __str__(self):
-        return "Line " + str(self.id) + " of plot " + self.plot.name
+        return "Line " + str(self.id) + " of plot " + self.plot_section.plot.name + " (" + self.plot_section.name + ")"
 
 class Season(models.Model):
     year = models.IntegerField(unique=True, primary_key=True)

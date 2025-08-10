@@ -73,15 +73,12 @@
     const load_plots = () => {
         retrieve_plots().then((in_plots) => {
             plots.value = in_plots
-            console.log(in_plots)
             nextTick(() => {
                 for (let i = 0; i < plots.value.length; i++) {
                     let plot_points = plots.value[i].plot_sections.reduce((accumulator, plot_section) => {
                         return accumulator.concat(plot_section.region)
                     }, [])
-                    console.log(plot_points)
                     let center_params = get_region_center_params(plot_points, [ 1, 1 ])
-                    console.log(center_params)
                     map_displays.value[i].position_map(center_params.pos, center_params.zoom, { x: 0.5, y: 0.5 })
                 }
             })

@@ -94,10 +94,15 @@ const get_region_center_params = (region, dims_map) => {
 }
 
 const compute_vineyard_bb = (plot_array) => {
-    let points = []
-    for (let plot of plot_array) {
-        points = points.concat(...plot.region)
-    }
+    let points = plot_array.reduce((accumulator, plot) => {
+        return accumulator.concat(
+            ...plot.reduce((acc2, plot_section) => {
+                return acc2.concat(...plot_section.region)
+            })
+        )
+    }, [])
+    if (points.length < 2)
+        return null
     return compute_bb(points)
 }
 

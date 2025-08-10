@@ -140,8 +140,14 @@
                 plot.value.variety.id = plot_api.variety
                 plot.value.pruning.id = plot_api.pruning
                 plot.value.folding.id = plot_api.folding
-                plot.value.area = Math.floor((plot_api.area / 10000) * 100) / 100
-                map_store.regions = [ plot_api.region ]
+                plot.value.plot_sections = plot_api.plot_sections
+                map_store.regions = plot.value.plot_sections.reduce((accumulator, plot_section) => {
+                    return accumulator.concat([ plot_section.region ])
+                }, [])
+                let area = plot.value.plot_sections.reduce((accumulator, plot_section) => {
+                    return accumulator + plot_section.area
+                }, 0)
+                plot.value.area = Math.floor((area / 10000) * 100) / 100
                 plot_loading.value = false
                 plot_found.value = true
                 resolve()
@@ -172,14 +178,27 @@
                 resolve()
             })
         }))
+        get_promises.push(new Promise((resolve) => {
+            send_api("GET", "varieties").then((response) => {
+                resolve(JSON.parse(response.response))
+            })
+        }))
         Promise.all(get_promises).then((results) => {
             map_store.state = STATE.DISPLAY_PLOT
+            let varieties = results[4]
+            for (let variety of varieties) {
+                if (variety.id == plot.value.variety.id) {
+                    plot.value.variety.name = variety.name
+                    for (let i = 0; i < map_store.regions.length; i++) {
+                        map_store.regions_color.push(variety.color)
+                    }
+                    break
+                }
+            }
             nextTick(() => {
-                map_container.value.center_map_on_region(map_store.regions[0])
+                map_container.value.center_map_on_region([].concat(...map_store.regions))
             })
-            send_api("GET", "varieties/" + plot.value.variety.id).then((response) => {
-                plot.value.variety.name = JSON.parse(response.response).name
-            })
+            
             send_api("GET", "prunings/" + plot.value.pruning.id).then((response) => {
                 plot.value.pruning.name = JSON.parse(response.response).name
             })
