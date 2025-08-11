@@ -69,7 +69,7 @@
                 </div>
             </div>
             <div v-for="plot_section in formData.plot_sections" class="card mb-3" @click="toggle_section_selected(plot_section.idx)">
-                <div class="card-body" :class="{ 'text-bg-primary': plot_section_selected == plot_section.idx }">
+                <div class="card-body" :class="{ 'text-bg-primary': formData.plot_section_selected == plot_section.idx }">
                     <input class="form-control" v-model="plot_section.name" placeholder="Nom de la section">
                 </div>
             </div>
@@ -96,7 +96,6 @@
     const new_task_name = ref("")
     const task_name_empty = ref(false)
     const task_name_already_exists = ref(false)
-    const plot_section_selected = ref(-1)
 
     onMounted(() => {
         // Load varieties
@@ -157,17 +156,23 @@
             region: [],
             idx: props.formData.plot_sections.length
         })
-        plot_section_selected.value = props.formData.plot_sections.length - 1
-        map_store.state = STATE.ADD_PLOT_SECTION
+        map_store.regions.push([])
+        map_store.regions_color.push(get_variety_color(props.formData.variety.id))
+        props.formData.plot_section_selected = props.formData.plot_sections.length - 1
+        map_store.current_region_ind = props.formData.plot_section_selected
     }
 
     const toggle_section_selected = (section_idx) => {
-        if (section_idx == plot_section_selected.value)
-            plot_section_selected.value = -1
+        if (section_idx == props.formData.plot_section_selected)
+            props.formData.plot_section_selected = -1
         else
-            plot_section_selected.value = section_idx
-        if (plot_section_selected.value != -1) {
-            
+            props.formData.plot_section_selected = section_idx
+    }
+
+    const get_variety_color = (variety_id) => {
+        for (let variety of varieties.value) {
+            if (variety_id == variety.id)
+                return variety.color
         }
     }
 

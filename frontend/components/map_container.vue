@@ -137,7 +137,7 @@
 
     const mousedown = (e) => {
         e.preventDefault()
-        if (map_store.state == STATE.DRAW_REGION) {
+        if (map_store.state == STATE.ADD_PLOT_SECTION) {
             if (e.button == MOUSE_BUTTONS.LEFT_CLICK)
                 add_point_to_region()
             else if (e.button == MOUSE_BUTTONS.MIDDLE_CLICK) {
@@ -147,7 +147,7 @@
             else if (e.button == MOUSE_BUTTONS.RIGHT_CLICK)
                 finish_region()
         }
-        else if (map_store.state == STATE.PLACE_LINES) {
+        else if (map_store.state == STATE.EDIT_LINES_GLOBAL_PLACEMENT) {
             if (e.button == MOUSE_BUTTONS.LEFT_CLICK && (e.shiftKey || e.ctrlKey)) {
                 line_rotating.value = true
                 canvas.value.rotate_lines(e)
@@ -201,7 +201,7 @@
 
     const mousewheel = (e) => {
         e.preventDefault()
-        if (map_store.state == STATE.DRAW_REGION || map_store.state == STATE.DISPLAY_VINEYARD) {
+        if (map_store.state == STATE.ADD_PLOT_SECTION || map_store.state == STATE.DISPLAY_VINEYARD) {
             let display_nav_coords = display.value.zoom(e)
             map_store.coords = display_nav_coords.coords
             map_store.offset_display = display_nav_coords.offset_display
@@ -211,34 +211,34 @@
 
     const add_point_to_region = () => {
         let new_point = from_rel_coords_to_mercator(map_store.cursor_rel_coords.x, map_store.cursor_rel_coords.y)
-        if (check_intersection_polygon(map_store.regions.at(-1), new_point)) {
+        if (check_intersection_polygon(map_store.regions[map_store.current_region_ind], new_point)) {
             map_store.regions = [ [] ]
         }
         else {
-            map_store.regions.at(-1).push(new_point)
+            map_store.regions[map_store.current_region_ind].push(new_point)
         }
     }
 
     const finish_region = () => {
-        if (check_intersection_polygon(map_store.regions.at(-1).slice(1), map_store.regions.at(-1)[0])) {
+        if (check_intersection_polygon(map_store.regions[map_store.current_region_ind].slice(1), map_store.regions[map_store.current_region_ind][0])) {
             console.log("Region polygon is self-intersecting")
             map_store.regions = [ [] ]
         }
-        else if (map_store.regions.at(-1).length <= 2) {
+        else if (map_store.regions[map_store.current_region_ind].length <= 2) {
             map_store.regions = [ [] ]
         }
         else {
-            map_store.regions.at(-1).push(map_store.regions.at(-1)[0])
-            map_store.state = STATE.PLACE_LINES
+            map_store.regions[map_store.current_region_ind].push(map_store.regions[map_store.current_region_ind][0])
+            map_store.state = STATE.EDIT_LINES_GLOBAL_PLACEMENT
             // Center map display on region
-            center_map_on_region(map_store.regions.at(-1))
+            center_map_on_region(map_store.regions[map_store.current_region_ind])
             canvas.value.compute_lines()
         }
     }
 
     const center_map_on_region = (region) => {
         let center_params = get_region_center_params(region, [ nb_tiles_x.value, nb_tiles_y.value ])
-        if (map_store.state == STATE.PLACE_LINES) {
+        if (map_store.state == STATE.EDIT_LINES_GLOBAL_PLACEMENT) {
             canvas.value.set_line_cursor(center_params.pos)
         }
         let display_nav_coords = display.value.position_map(center_params.pos, center_params.zoom, { x: 0.5, y: 0.5 })

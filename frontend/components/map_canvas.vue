@@ -74,6 +74,8 @@
         // Draw the regions
         ctx.lineWidth = '1'
         for (let i = 0; i < nb_regions; i++) {
+            if (canvas_regions[i].length == 0)
+                continue
             ctx.beginPath()
             let hex_color = "#" + map_store.regions_color[i]
             ctx.strokeStyle = hex_color
@@ -90,9 +92,9 @@
             ctx.stroke()
             ctx.fill(poly, "evenodd")
         }
-        if (map_store.state == STATE.ADD_PLOT_SECTION && canvas_regions[current_region_ind].length > 0) {
+        if (map_store.state == STATE.ADD_PLOT_SECTION && canvas_regions[map_store.current_region_ind].length > 0) {
             // Draw a dash line from the last region point to the mouse cursor
-            let current_canvas_region = canvas_regions[current_region_ind]
+            let current_canvas_region = canvas_regions[map_store.current_region_ind]
             let first_point = current_canvas_region[0]
             let last_point = current_canvas_region.at(-1)
             let cursor_coords = from_rel_coords_to_canvas_pos(map_store.cursor_rel_coords)
@@ -112,7 +114,7 @@
             }
         }
         if (map_store.state == STATE.EDIT_PLOT_SECTION) {
-            let current_canvas_region = canvas_regions[current_region_ind]
+            let current_canvas_region = canvas_regions[map_store.current_region_ind]
             for (let point of current_canvas_region) {
                 draw_cursor_point(ctx, point)
             }

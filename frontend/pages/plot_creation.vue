@@ -6,7 +6,11 @@
             <map-container ref="map_container" nb-tiles-x="3" nb-tiles-y="2" />
         </div>
         <div class="col">
-            <plot-form :form-data="plot_data" :invalid-data="invalid_data" :invalid-data-message="invalid_data_message" ref="plot_form" />
+            <plot-form ref="plot_form"
+                :form-data="plot_data"
+                :invalid-data="invalid_data"
+                :invalid-data-message="invalid_data_message"
+            />
             <div>
                 <p v-show="map_store.state == STATE.PLACE_LINES">{{ "Nombre de rangs total : " + map_store.lines.length }}</p>
             </div>
@@ -22,7 +26,7 @@
 </template>
 
 <script setup>
-    import { ref, onMounted, toRaw, useTemplateRef } from 'vue'
+    import { ref, onMounted, toRaw, useTemplateRef, watch } from 'vue'
     import { useRouter } from 'vue-router'
 
     import MapContainer from '../components/map_container.vue'
@@ -42,12 +46,14 @@
         pruning: { id: -1, name: "" },
         folding: { id: -1, name: "" },
         tasks: [],
-        plot_sections: []
+        plot_sections: [],
+        plot_section_selected: -1
     })
     const invalid_data = ref(false)
     const invalid_data_message = ref("")
     const plot_form = useTemplateRef("plot_form")
     const map_container = useTemplateRef("map_container")
+    let vineyard_bb = []
 
     onMounted(() => {
         map_store.state = STATE.DISPLAY_PLOT
@@ -55,7 +61,7 @@
         map_store.lines = []
 
         retrieve_plots().then((plots_api) => {
-            let vineyard_bb = compute_vineyard_bb(plots_api)
+            vineyard_bb = compute_vineyard_bb(plots_api)
             if (vineyard_bb != null) {
                 map_container.value.center_map_on_region([ vineyard_bb.min, vineyard_bb.max ])
             }
@@ -151,4 +157,30 @@
             console.error(errors)
         })
     }
+
+    watch(() => plot_data.value.plot_section_selected, (plot_section_selected, old_point_selected) => {
+        if (map_store.state == STATE.ADD_PLOT_SECTION && old_point_selected != -1) {
+            console.log("test")
+            map_store.regions[old_point_selected] = []
+        }
+        map_store.state = STATE.DISPLAY_PLOT
+        if (plot_section_selected != -1 && map_store.regions[plot_section_selected].length == 0) {
+            map_store.state = STATE.ADD_PLOT_SECTION
+        }
+        // Recenter map
+        let plot_points = map_store.regions.reduce((accumulator, region) => {
+            return accumulator.concat(region)
+        }, [])
+        if (plot_section_selected == -1 && plot_points.length > 0) {
+            map_container.value.center_map_on_region(plot_points)
+        }
+        else if (plot_section_selected != -1) {
+            if (map_store.regions[plot_section_selected].length > 0) {
+                map_container.value.center_map_on_region(map_store.regions[plot_section_selected])
+            }
+            else if (plot_points.length > 0) {
+                map_container.value.center_map_on_region(plot_points)
+            }
+        }
+    })
 </script>
