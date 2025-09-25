@@ -128,14 +128,16 @@
             map_store.state == STATE.REMOVE_LINE ||
             map_store.state == STATE.SELECT_LINES
         ) {
-            draw_lines(ctx, map_store.lines, 'green', '2')
+            for (let region_ind = 0; region_ind < map_store.regions.length; region_ind++) {
+                draw_lines(ctx, map_store.lines[region_ind], 'green', '2')
+            }
         }
         if (map_store.state == STATE.DISPLAY_PLOT || map_store.state == STATE.SELECT_LINES) {
-            draw_lines(ctx, map_store.lines_highlighted, 'white', '2')
-            draw_lines(ctx, map_store.lines_done, 'blue', '2')
+            draw_lines(ctx, map_store.lines_highlighted[map_store.current_region_ind], 'white', '2')
+            draw_lines(ctx, map_store.lines_done[map_store.current_region_ind], 'blue', '2')
         }
         if (map_store.state == STATE.EDIT_LINES) {
-            draw_lines(ctx, [ map_store.lines[map_store.current_line_ind] ], 'white', '2')
+            // TODO. map_store.current_line_ind
         }
         if (map_store.state == STATE.EDIT_LINES_GLOBAL_PLACEMENT) {
             // Show global line cursor
@@ -181,7 +183,6 @@
         // We start at position start_pos, get the 2 points that intersect the region from that point,
         // then we move in the line_theta direction by a dir_step step, compute the 2 intersecting points from there,
         // and so on until we do not longer intersect the region.
-        let line_cursor_canvas = from_rel_coords_to_canvas_pos(line_cursor)
         let theta_rad = degrees_to_radians(line_theta)
         let intersections
         let line_pos = start_pos
@@ -189,6 +190,7 @@
         let p0 = { x: 20, y: 0 }
         let p2 = { x: -20, y: 0 }
         let p0t, p2t // p0 and p2 transformed in other spaces
+        let line_cursor_canvas = from_rel_coords_to_canvas_pos(line_cursor)
         do {
             intersections = []
             // cursor space
@@ -201,10 +203,10 @@
             p2t = rotate(p2t, theta_rad)
             p0t = translate(p0t, line_cursor_canvas)
             p2t = translate(p2t, line_cursor_canvas)
-            let last_region = map_store.regions.at(-1)
-            for (let i = 0; i < last_region.length; i++) {
-                let c = from_mercator_to_canvas_pos(last_region[i])
-                let d = from_mercator_to_canvas_pos(last_region[(i + 1) % last_region.length])
+            let current_region = map_store.regions[map_store.current_region_ind]
+            for (let i = 0; i < current_region.length; i++) {
+                let c = from_mercator_to_canvas_pos(current_region[i])
+                let d = from_mercator_to_canvas_pos(current_region[(i + 1) % current_region.length])
                 let intersection = get_lines_intersection_point(p0t, p2t, c, d)
                 if (
                     intersection.x != Number.MAX_VALUE
@@ -212,32 +214,34 @@
                     && intersection.x <= Math.max(c.x, d.x)
                     && intersection.y >= Math.min(c.y, d.y)
                     && intersection.y <= Math.max(c.y, d.y)
-                )
-                    intersections.push(intersection)
+                ) {
+                    let intersection_rel_coords = get_map_coords(map_store.coords, map_store.offset_display, intersection)
+                    intersections.push(intersection_rel_coords)
+                }
             }
             if (intersections.length >= 2) {
                 if (dir_step < 0)
-                    map_store.lines.unshift([ intersections[0], intersections[1] ])
+                    map_store.lines[map_store.current_region_ind].unshift([ intersections[0], intersections[1] ])
                 else
-                    map_store.lines.push([ intersections[0], intersections[1] ])
+                    map_store.lines[map_store.current_region_ind].push([ intersections[0], intersections[1] ])
             }
             line_pos += dir_step
         } while (intersections.length > 0)
     }
 
     const compute_lines = () => {
-        map_store.lines = []
+        map_store.lines[map_store.current_region_ind] = []
         compute_lines_in_direction(0, line_step)
         compute_lines_in_direction(-line_step, -line_step)
     }
 
     const pan_lines = (e) => {
-        line_cursor = get_map_coords(map_store.coords, map_store.offset_display, [ e.clientX, e.clientY ], canvas.value.parentElement)
+        line_cursor = get_map_coords(map_store.coords, map_store.offset_display, { x: e.clientX, y: e.clientY }, canvas.value.parentElement)
         compute_lines()
     }
 
     const rotate_lines = (e) => {
-        let pos = get_mouse_pos([ e.clientX, e.clientY ], canvas.value.parentElement)
+        let pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, canvas.value.parentElement)
         let dims_map = get_dims_map(nb_tiles_x, nb_tiles_y)
         line_theta = ((pos.x / dims_map.width) - 0.5) * 360
         compute_lines()
@@ -245,7 +249,7 @@
 
     const spread_lines = (e) => {
         let line_cursor_canvas = from_rel_coords_to_canvas_pos(line_cursor)
-        let pos = get_mouse_pos([ e.clientX, e.clientY ], canvas.value.parentElement)
+        let pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, canvas.value.parentElement)
         line_step = Math.max(get_distance(line_cursor_canvas, pos), 2)
         compute_lines()
     }

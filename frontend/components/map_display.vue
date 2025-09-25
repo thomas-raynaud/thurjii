@@ -249,7 +249,7 @@
         if (z < Z_MIN || z > Z_MAX)
             return { coords: coords.value, offset_display: offset_display.value }
         coords.value.z = z
-        let vp_coords = get_viewport_coords([ e.clientX, e.clientY ], display.value.parentElement)
+        let vp_coords = get_viewport_coords({ x: e.clientX, y: e.clientY }, display.value.parentElement)
         return position_map(map_store.cursor_rel_coords, z, vp_coords)
     }
 

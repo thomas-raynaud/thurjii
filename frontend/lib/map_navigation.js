@@ -18,7 +18,7 @@ const get_map_height = (map_element) => {
 }
 
 const get_map_coords = (coords, offset, pos, map_element=null) => {
-    let mouse_pos = { x: pos[0], y: pos[1] }
+    let mouse_pos = Object.assign({}, pos)
     if (map_element != null)
         mouse_pos = get_mouse_pos(pos, map_element)
     let tile_size = get_tile_size_from_zoom(coords.z)
@@ -31,8 +31,8 @@ const get_map_coords = (coords, offset, pos, map_element=null) => {
 
 const get_mouse_pos = (pos, element) => {
     return {
-        x: pos[0] + document.documentElement.scrollLeft - element.offsetLeft,
-        y: pos[1] + document.documentElement.scrollTop - element.offsetTop
+        x: pos.x + document.documentElement.scrollLeft - element.offsetLeft,
+        y: pos.y + document.documentElement.scrollTop - element.offsetTop
     }
 }
 

@@ -87,7 +87,6 @@
     import SelectOrCreateForm from '../components/select_or_create_form.vue'
     import { send_api } from '../lib/request'
     import { map_store } from '../stores/map_store'
-    import { STATE } from '../lib/enums'
 
     const props = defineProps([ 'formData', 'invalidData', 'invalidDataMessage' ])
     const varieties = ref([])
@@ -158,6 +157,9 @@
         })
         map_store.regions.push([])
         map_store.regions_color.push(get_variety_color(props.formData.variety.id))
+        map_store.lines.push([])
+        map_store.lines_done.push([])
+        map_store.lines_highlighted.push([])
         props.formData.plot_section_selected = props.formData.plot_sections.length - 1
         map_store.current_region_ind = props.formData.plot_section_selected
     }

@@ -58,13 +58,14 @@ const draw_cursor_point = (ctx, cursor_pos) => {
 
 const draw_lines = (ctx, line_array, color, line_width) => {
     for (let i = 0; i < line_array.length; i++) {
-        let line = {}
-        Object.assign(line, line_array[i])
+        let line = line_array[i].slice()
         ctx.beginPath()
         ctx.strokeStyle = color
         ctx.lineWidth = line_width
-        ctx.moveTo(line[0].x, line[0].y)
+        let p = from_rel_coords_to_canvas_pos(line[0])
+        ctx.moveTo(p.x, p.y)
         for (let point of line.slice(1)) {
+            point = from_rel_coords_to_canvas_pos(point)
             ctx.lineTo(point.x, point.y)
         }
         ctx.stroke()

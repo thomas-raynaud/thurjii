@@ -70,7 +70,7 @@
         e.preventDefault()
         map_store.cursor_rel_coords = get_map_coords(
             map_store.coords, map_store.offset_display,
-            [ e.clientX, e.clientY ],
+            { x: e.clientX, y: e.clientY },
             container.value
         )
         if (map_panning.value) {
@@ -79,9 +79,9 @@
             map_store.offset_display = display_nav_coords.offset_display
             canvas.value.draw()
         }
-        else if (line_panning.value)    canvas.value.pan_lines(e)
-        else if (line_rotating.value)   canvas.value.rotate_lines(e)
-        else if (line_spreading.value)  canvas.value.spread_lines(e)
+        else if (line_panning.value)   { canvas.value.pan_lines(e);     canvas.value.draw() }
+        else if (line_rotating.value)  { canvas.value.rotate_lines(e);  canvas.value.draw() }
+        else if (line_spreading.value) { canvas.value.spread_lines(e);  canvas.value.draw() }
         if (map_store.selecting_zone) {
             update_line_selection(e)
             canvas.value.draw()
@@ -170,7 +170,7 @@
         else if (map_store.state == STATE.SELECT_LINES) {
             if (e.button == MOUSE_BUTTONS.LEFT_CLICK) {
                 map_store.selecting_zone = true
-                map_store.zone_selection.start = get_mouse_pos([ e.clientX, e.clientY ], container.value)
+                map_store.zone_selection.start = get_mouse_pos({ x: e.clientX, y: e.clientY }, container.value)
                 map_store.zone_selection.end = map_store.zone_selection.start
             }
         }
@@ -230,6 +230,7 @@
         else {
             map_store.regions[map_store.current_region_ind].push(map_store.regions[map_store.current_region_ind][0])
             map_store.state = STATE.EDIT_LINES_GLOBAL_PLACEMENT
+            map_store.lines[map_store.current_region_ind] = []
             // Center map display on region
             center_map_on_region(map_store.regions[map_store.current_region_ind])
             canvas.value.compute_lines()
@@ -248,7 +249,7 @@
     }
 
     const update_line_selection = (event) => {
-        map_store.zone_selection.end = get_mouse_pos([ event.clientX, event.clientY ], container.value)
+        map_store.zone_selection.end = get_mouse_pos({ x: event.clientX, y: event.clientY }, container.value)
         map_store.lines_highlighted = []
         let rect = [
             { x: map_store.zone_selection.start.x, y: map_store.zone_selection.start.y },

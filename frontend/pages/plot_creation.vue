@@ -57,8 +57,10 @@
 
     onMounted(() => {
         map_store.state = STATE.DISPLAY_PLOT
-        map_store.regions = [ [] ]
+        map_store.regions = []
         map_store.lines = []
+        map_store.lines_done = []
+        map_store.lines_highlighted = []
 
         retrieve_plots().then((plots_api) => {
             vineyard_bb = compute_vineyard_bb(plots_api)
@@ -119,7 +121,7 @@
                     // Convert line coordinates from canvas space to mercator coords
                     let line_mc = []
                     for (let pos of [ "start", "end" ]) {
-                        let p_rel_coords = get_map_coords(map_store.coords, map_store.offset_display, [ map_store.lines[i][pos].x, map_store.lines[i][pos].y ])
+                        let p_rel_coords = get_map_coords(map_store.coords, map_store.offset_display, map_store.lines[i][pos])
                         let p_mc = from_rel_coords_to_mercator(p_rel_coords.x, p_rel_coords.y)
                         line_mc.push([ p_mc.x, p_mc.y ])
                     }
@@ -158,10 +160,9 @@
         })
     }
 
-    watch(() => plot_data.value.plot_section_selected, (plot_section_selected, old_point_selected) => {
-        if (map_store.state == STATE.ADD_PLOT_SECTION && old_point_selected != -1) {
-            console.log("test")
-            map_store.regions[old_point_selected] = []
+    watch(() => plot_data.value.plot_section_selected, (plot_section_selected, old_plot_selected) => {
+        if (map_store.state == STATE.ADD_PLOT_SECTION && old_plot_selected != -1) {
+            map_store.regions[old_plot_selected] = []
         }
         map_store.state = STATE.DISPLAY_PLOT
         if (plot_section_selected != -1 && map_store.regions[plot_section_selected].length == 0) {
