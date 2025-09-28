@@ -1,9 +1,8 @@
 <template>
     <div class="body row justify-content-center">
         <div class="col-auto">
-            <p class="fs-3 text-center" v-show="map_store.state == STATE.DRAW_REGION">Sélectionner une région</p>
-            <p class="fs-3 text-center" v-show="map_store.state == STATE.PLACE_LINES">Placer les rangs</p>
-            <map-container ref="map_container" nb-tiles-x="3" nb-tiles-y="2" />
+            <map-container ref="map_container" nb-tiles-x="3" nb-tiles-y="2" class="mb-3" />
+            <map-state-controller v-show="map_store.current_region_ind != -1" />
         </div>
         <div class="col">
             <plot-form ref="plot_form"
@@ -12,11 +11,11 @@
                 :invalid-data-message="invalid_data_message"
             />
             <div>
-                <p v-show="map_store.state == STATE.PLACE_LINES">{{ "Nombre de rangs total : " + map_store.lines.length }}</p>
+                <p>{{ "Nombre de rangs total : " + nb_lines_total }}</p>
             </div>
             <button
                 class="btn btn-primary"
-                :disabled="map_store.state == STATE.DRAW_REGION"
+                :disabled="map_store.state == STATE.ADD_PLOT_SECTION"
                 @click="create_plot()"
             >
                 Créer la parcelle
@@ -26,10 +25,11 @@
 </template>
 
 <script setup>
-    import { ref, onMounted, toRaw, useTemplateRef, watch } from 'vue'
+    import { ref, onMounted, toRaw, useTemplateRef, watch, computed } from 'vue'
     import { useRouter } from 'vue-router'
 
     import MapContainer from '../components/map_container.vue'
+    import MapStateController from '../components/map_state_controller.vue'
     import PlotForm from '../components/plot_form.vue'
     import { map_store } from '../stores/map_store'
     import { settings_store } from '../stores/settings_store'
@@ -55,12 +55,19 @@
     const map_container = useTemplateRef("map_container")
     let vineyard_bb = []
 
+    const nb_lines_total = computed(() => {
+        return map_store.lines.reduce((accumulator, lines_section) => {
+            return accumulator + lines_section.length
+        }, 0)
+    })
+
     onMounted(() => {
         map_store.state = STATE.DISPLAY_PLOT
         map_store.regions = []
         map_store.lines = []
         map_store.lines_done = []
         map_store.lines_highlighted = []
+        map_store.current_region_ind = -1
 
         retrieve_plots().then((plots_api) => {
             vineyard_bb = compute_vineyard_bb(plots_api)

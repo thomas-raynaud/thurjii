@@ -56,7 +56,6 @@
         canvas.value.width = dims.width
         canvas.value.height = dims.height
         ctx = canvas.value.getContext("2d")
-        map_store.current_region_ind = 0
         line_theta = 0
         line_step = 10
         draw()

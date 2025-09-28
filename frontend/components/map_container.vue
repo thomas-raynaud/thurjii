@@ -25,7 +25,7 @@
 </style>
 
 <script setup>
-    import { useTemplateRef, ref, onMounted } from 'vue'
+    import { useTemplateRef, ref, onMounted, watch } from 'vue'
 
     import MapDisplay from './map_display.vue'
     import MapCanvas from './map_canvas.vue'
@@ -275,6 +275,10 @@
     }
 
     const redraw = () => { canvas.value.draw() }
+
+    watch(() => map_store.state, () => {
+        canvas.value.draw()
+    })
 
     defineExpose({
         center_map_on_region,

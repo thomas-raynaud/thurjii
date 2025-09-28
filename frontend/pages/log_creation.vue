@@ -32,21 +32,27 @@
                 Veuillez compléter tous les champs. Assurez-vous que les champs saisis soient valides.
             </div>
             <p v-show="map_store.lines_highlighted.length > 0"> {{ map_store.lines_highlighted.length }} rangs sélectionnés</p>
-            <div>   
-                <button
-                    class="btn btn-primary"
-                    @click="create_log()"
-                    :disabled="log_data.plot_id==-1"
-                >
-                    Créer le log
-                </button>
-                <button
-                    class="btn btn-light"
-                    @click="reset_lines()"
-                    :disabled="map_store.lines_done.length == 0"
-                >
-                    Réinitialiser tous les rangs
-                </button>
+            <div class="row row-cols-auto">
+                <div class="col">
+                    <button
+                        type="button"
+                        class="btn btn-primary"
+                        @click="create_log()"
+                        :disabled="log_data.plot_id==-1"
+                    >
+                        Créer le log
+                    </button>
+                </div>
+                <div>
+                    <button
+                        type="button"
+                        class="btn btn-light"
+                        @click="reset_lines()"
+                        :disabled="map_store.lines_done.length == 0"
+                    >
+                        Réinitialiser tous les rangs
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -113,7 +119,9 @@
                 map_store.regions.push(toRaw(plot.region))
             }
             map_store.show_plot_names = false
-            map_container.value.center_map_on_region([ vineyard_bb.min, vineyard_bb.max ])
+            if (vineyard_bb != null) {
+                map_container.value.center_map_on_region([ vineyard_bb.min, vineyard_bb.max ])
+            }
         }
         else {
             map_store.state = STATE.DISPLAY_PLOT
