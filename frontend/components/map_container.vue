@@ -39,6 +39,7 @@
     import {
         check_intersection_polygon,
         does_segment_intersect_rectangle,
+        get_distance
     } from '../lib/geometry'
     import { map_store } from '../stores/map_store'
     import { STATE, MOUSE_BUTTONS } from '../lib/enums'
@@ -90,12 +91,49 @@
             if (map_store.current_region_ind != -1 && map_store.regions[map_store.current_region_ind].length > 0)
                 canvas.value.draw()
         }
+        if (map_store.state == STATE.EDIT_LINES) {
+            let cursor_pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, container.value)
+            if (line_point_dragged.value == -1) {
+                // Check if cursor close to a line point. If so, display cursor on the point.
+                // TODO
+                const MIN_DIST_POINT = 3
+                let point_found = false
+                for (let line of map_store.lines[map_store.current_region_ind]) {
+                    for (let line_point of line) {
+                        let line_point_pos = canvas.value.from_rel_coords_to_canvas_pos(line_point)
+                        let dist_cursor_linep = get_distance(line_point_pos, cursor_pos)
+                        if (MIN_DIST_POINT >= dist_cursor_linep) {
+                            point_found = true
+                            canvas.value.set_line_cursor(
+                                get_map_coords(
+                                    map_store.coords, map_store.offset_display,
+                                    line_point_pos
+                                )
+                            )
+                            // Change cursor img TODO
+                            break
+                        }
+                    }
+                    if (point_found) {
+                        break
+                    }
+                }
+                if (!point_found)
+                    canvas.value.set_line_cursor(null)
+                canvas.value.draw()
+            }
+            else {
+                // Move the point dragged, and redraw canvas
+                // TODO
+            }
+        }
+        
         if (region_point_dragged.value != -1) {
             // Change region point position
-            let current_region = map_store.regions[map_store.current_region_ind][region_point_dragged.value]
+            let current_region = map_store.regions[map_store.current_region_ind]
             let edited_point = from_rel_coords_to_mercator(map_store.cursor_rel_coords.x, map_store.cursor_rel_coords.y)
             let updated_region = [ ...current_region ]
-            updated_region[map_store.current_region_ind] = edited_point
+            updated_region[map_store.current_region_ind][region_point_dragged.value] = edited_point
             if (!check_intersection_polygon(updated_region, edited_point)) {
                 map_store.regions[map_store.current_region_ind] = updated_region
                 let region_change = [
@@ -110,8 +148,8 @@
                         let l2 = line[j + 1]
                         
                         for (let k = 0; k < region_change.length - 1; i++) {
-                            let c = from_mercator_to_canvas_pos(last_region[i])
-                            let d = from_mercator_to_canvas_pos(last_region[(i + 1)])
+                            let c = canvas.value.from_mercator_to_canvas_pos(last_region[i])
+                            let d = canvas.value.from_mercator_to_canvas_pos(last_region[(i + 1)])
                             let intersection = get_lines_intersection_point(p0t, p2t, c, d)
                         }
                         if (

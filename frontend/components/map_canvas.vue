@@ -143,11 +143,8 @@
             draw_cursor_point(ctx, line_cursor)
         }
         if (map_store.state == STATE.EDIT_LINES || map_store.state == STATE.REMOVE_LINE) {
-            for (let line of map_store.lines) {
-                for (let point of line) {
-                    draw_cursor_point(ctx, point)
-                }
-            }
+            if (line_cursor != null)
+                draw_cursor_point(ctx, line_cursor)
         }
         if (map_store.state == STATE.DISPLAY_VINEYARD && map_store.show_plot_names == true) {
             // Display the plot names
@@ -262,6 +259,7 @@
         pan_lines, rotate_lines, spread_lines,
         compute_lines,
         set_line_cursor,
+        from_rel_coords_to_canvas_pos,
         from_mercator_to_canvas_pos
     })
 </script>
