@@ -66,6 +66,14 @@ const get_distance = (p1, p2) => {
 	return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2))
 }
 
+const get_distance_from_point_to_line = (p, lp1, lp2) => {
+	return Math.abs((lp2.y - lp1.y) * p.x - (lp2.x - lp1.x) * p.y + lp2.x * lp1.y - lp2.y * lp1.x) / get_distance(lp1, lp2) 
+}
+
+const dot_product = (ab, cd) => {
+	return ab.x * cd.x + ab.y * cd.y
+}
+
 const rotate = (p, theta) => {
 	return {
 		x: p.x * Math.cos(theta) - p.y * Math.sin(theta),
@@ -151,10 +159,12 @@ const does_segment_intersect_rectangle = (rect, segment) => {
 export {
     check_intersection_polygon,
 	get_distance,
+	get_distance_from_point_to_line,
 	rotate,
 	translate,
 	get_lines_intersection_point,
 	compute_bb,
 	get_polygon_center,
-	does_segment_intersect_rectangle
+	does_segment_intersect_rectangle,
+	dot_product
 }

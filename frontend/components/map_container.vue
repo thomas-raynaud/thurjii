@@ -39,7 +39,9 @@
     import {
         check_intersection_polygon,
         does_segment_intersect_rectangle,
-        get_distance
+        get_distance,
+        get_distance_from_point_to_line,
+        dot_product
     } from '../lib/geometry'
     import { map_store } from '../stores/map_store'
     import { STATE, MOUSE_BUTTONS } from '../lib/enums'
@@ -95,31 +97,44 @@
             let cursor_pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, container.value)
             if (line_point_dragged.value == -1) {
                 // Check if cursor close to a line point. If so, display cursor on the point.
-                // TODO
                 const MIN_DIST_POINT = 3
                 let point_found = false
                 for (let line of map_store.lines[map_store.current_region_ind]) {
-                    for (let line_point of line) {
-                        let line_point_pos = canvas.value.from_rel_coords_to_canvas_pos(line_point)
-                        let dist_cursor_linep = get_distance(line_point_pos, cursor_pos)
-                        if (MIN_DIST_POINT >= dist_cursor_linep) {
+                    for (let i = 0; i < line.length - 1; i++) {
+                        let a = canvas.value.from_rel_coords_to_canvas_pos(line[i])
+                        let b = canvas.value.from_rel_coords_to_canvas_pos(line[i + 1])
+                        let c = cursor_pos
+                        let cursor_dist = get_distance_from_point_to_line(c, a, b)
+                        if (cursor_dist <= MIN_DIST_POINT) {
+                            let ab = { x: b.x - a.x, y: b.y - a.y }
+                            let ac = { x: c.x - a.x, y: c.y - a.y }
+                            let ab_dist = get_distance(a, b)
+                            let proj_rel = dot_product(ab, ac) / Math.pow(ab_dist, 2)
+                            if (proj_rel < 0.0 || proj_rel > 1.0)
+                                break
                             point_found = true
+                            let proj_p = {
+                                x: a.x + ab.x * proj_rel,
+                                y: a.y + ab.y * proj_rel
+                            }
                             canvas.value.set_line_cursor(
                                 get_map_coords(
                                     map_store.coords, map_store.offset_display,
-                                    line_point_pos
+                                    proj_p
                                 )
                             )
                             // Change cursor img TODO
                             break
-                        }
+                        }       
                     }
                     if (point_found) {
                         break
                     }
                 }
-                if (!point_found)
+                if (!point_found) {
+                    // Check if cursor close to a line. If so, display cursor on
                     canvas.value.set_line_cursor(null)
+                }
                 canvas.value.draw()
             }
             else {
