@@ -38,6 +38,10 @@ export const map_store = reactive({
 
     current_region_ind: -1,
     current_line_ind: -1,
+    current_line_point_ind: -1,
+
+    line_point_dragged: -1,
+    line_point_placed: -1,
 
     zone_selection: {
         start: {
