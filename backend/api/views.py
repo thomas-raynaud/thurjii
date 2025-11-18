@@ -97,7 +97,7 @@ class SeasonViewSet(viewsets.ModelViewSet):
                             done=False
                         )
                         line_state.save()
-        return Response(None, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     
 class PlotTaskViewSet(viewsets.ModelViewSet):
     queryset = PlotTask.objects.all()

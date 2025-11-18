@@ -4,7 +4,7 @@ from django.contrib.gis.db import models as modelsPG
 
 class Variety(models.Model):
     name = models.CharField(max_length=50, unique=True)
-    color = models.CharField(max_length=6)
+    color = models.CharField(max_length=6, default="")
     def __str__(self):
         return self.name
 
@@ -47,20 +47,20 @@ class Season(models.Model):
     def __str__(self):
         return "Season " + str(self.year)
 
-class ReparationType(models.Model):
+class RepairType(models.Model):
     name = models.CharField(max_length=50)
     def __str__(self):
         return self.name
 
-class Reparation(models.Model):
-    reparation_type = models.ForeignKey(ReparationType, on_delete=models.RESTRICT)
+class Repair(models.Model):
+    repair_type = models.ForeignKey(RepairType, on_delete=models.RESTRICT)
     line = models.ForeignKey(Line, on_delete=models.CASCADE)
     position = models.DecimalField(max_digits=3, decimal_places=3)
     accident_date = models.DateField(default=date.today)
     repaired = models.BooleanField(default=False)
     def __str__(self):
         return  (
-            "Reparation of " + str(self.line) + " - type : " + str(self.reparation_type)
+            "Repair of " + str(self.line) + " - type : " + str(self.repair_type)
             + (" (repaired)" if self.realisee else "")
             + " - date : " + self.accident_date
         )
