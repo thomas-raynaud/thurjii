@@ -101,7 +101,11 @@
             ctx.setLineDash([1, 2])
             ctx.moveTo(last_point.x, last_point.y)
             ctx.lineTo(cursor_coords.x, cursor_coords.y)
+            let color = map_store.regions_color[map_store.current_region_ind]
+            ctx.strokeStyle = color
             ctx.stroke()
+            map_store.regions_color[map_store.current_region_ind]
+            ctx.fillStyle = from_rgb_hex_color_to_rgba(color, 0.5)
             if (current_canvas_region.length >= 2) {
                 // Display the filled triangle with points : [ last region point, mouse cursor, first region point ]
                 let triangle_cursor = new Path2D()

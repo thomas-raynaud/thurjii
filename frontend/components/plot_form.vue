@@ -176,6 +176,7 @@
             if (variety_id == variety.id)
                 return variety.color
         }
+        return "000000"
     }
 
     const create_variety_pruning_folding = () => {
