@@ -58,8 +58,7 @@
     const line_panning = ref(false)
     const line_spreading = ref(false)
     const line_rotating = ref(false)
-    const region_point_dragged = ref(-1)
-    const line_point_dragged = ref(-1)
+    const region_point_ind = ref(-1)
 
     onMounted(() => {
         let dims = get_dims_map(nb_tiles_x.value, nb_tiles_y.value)
@@ -95,7 +94,20 @@
         }
         if (map_store.state == STATE.EDIT_LINES) {
             let cursor_pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, container.value)
-            if (line_point_dragged.value == -1) {
+            if (map_store.line_point_dragged) {
+                // Move the point dragged
+                let cursor_map_pos = get_map_coords(
+                    map_store.coords, map_store.offset_display,
+                    cursor_pos
+                )
+                map_store.lines
+                    [map_store.current_region_ind]
+                    [map_store.current_line_ind]
+                    [map_store.current_line_point_ind]
+                    = cursor_map_pos
+                canvas.value.set_line_cursor(cursor_map_pos)
+            }
+            else {
                 // Check if cursor close to a line. If so, display cursor on the point.
                 const MIN_DIST_POINT = 3
                 map_store.line_point_placed = false
@@ -138,28 +150,14 @@
                     canvas.value.set_line_cursor(null)
                 }
             }
-            else {
-                // Move the point dragged
-                let cursor_map_pos = get_map_coords(
-                    map_store.coords, map_store.offset_display,
-                    cursor_pos
-                )
-                map_store.lines
-                    [map_store.current_region_ind]
-                    [map_store.current_line_ind]
-                    [map_store.current_line_point_ind]
-                    = cursor_map_pos
-                canvas.value.set_line_cursor(cursor_map_pos)
-            }
             canvas.value.draw()
         }
-        
-        if (region_point_dragged.value != -1) {
+        if (region_point_ind.value != -1) {
             // Change region point position
             let current_region = map_store.regions[map_store.current_region_ind]
             let edited_point = from_rel_coords_to_mercator(map_store.cursor_rel_coords.x, map_store.cursor_rel_coords.y)
             let updated_region = [ ...current_region ]
-            updated_region[map_store.current_region_ind][region_point_dragged.value] = edited_point
+            updated_region[map_store.current_region_ind][region_point_ind.value] = edited_point
             if (!check_intersection_polygon(updated_region, edited_point)) {
                 map_store.regions[map_store.current_region_ind] = updated_region
                 let region_change = [
@@ -188,7 +186,7 @@
                             // TODO
                         }
                     }
-                    map_store.regions[map_store.current_region_ind][region_point_dragged.value] = edited_point
+                    map_store.regions[map_store.current_region_ind][region_point_ind.value] = edited_point
                 }
             }
             canvas.value.draw()
@@ -224,21 +222,26 @@
         else if (map_store.state == STATE.EDIT_LINES) {
             if (e.button == MOUSE_BUTTONS.LEFT_CLICK) {
                 if (map_store.line_point_placed) {
-                    // Check if line close to an existing point
-                    // TODO
                     let cursor_pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, container.value)
-                    let MIN_DIST_POINT = 3
-                    let a = map_store.lines
+                    let a = canvas.value.from_rel_coords_to_canvas_pos(
+                        map_store.lines
                         [map_store.current_region_ind]
                         [map_store.current_line_ind]
                         [map_store.current_line_point_ind]
-                    let b = map_store.lines
+                    )
+                    let b = canvas.value.from_rel_coords_to_canvas_pos(
+                        map_store.lines
                         [map_store.current_region_ind]
                         [map_store.current_line_ind]
                         [map_store.current_line_point_ind + 1]
+                    )
+                    map_store.line_point_dragged = true
+                    // Check if line close to an existing point. Set point as current point.
+                    let MIN_DIST_POINT = 3
                     if (get_distance(cursor_pos, b) <= MIN_DIST_POINT) {
                         map_store.current_line_point_ind += 1
                     }
+                    // Check if line close to a line. If so, create a new point and set it as the current point
                     else if (get_distance(cursor_pos, a) > MIN_DIST_POINT) {
                         // Create a new point
                         let point_pos = get_map_coords(
@@ -248,10 +251,9 @@
                         map_store.lines
                             [map_store.current_region_ind]
                             [map_store.current_line_ind]
-                            .splice(map_store.current_line_ind, 0, point_pos)
+                            .splice(map_store.current_line_point_ind + 1, 0, point_pos)
                         map_store.current_line_point_ind += 1
                     }
-                    map_store.line_point_dragged = true
                 }
             }
         }
