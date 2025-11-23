@@ -10,19 +10,28 @@ class Variety(models.Model):
 
 class Pruning(models.Model):
     name = models.CharField(max_length=50, unique=True)
+    color = models.CharField(max_length=6, default="")
     def __str__(self):
         return self.name
 
 class Folding(models.Model):
     name = models.CharField(max_length=50, unique=True)
+    color = models.CharField(max_length=6, default="")
+    def __str__(self):
+        return self.name
+
+class Designation(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    color = models.CharField(max_length=6, default="")
     def __str__(self):
         return self.name
 
 class Plot(models.Model):
     name = models.CharField(max_length=50, unique=True)
-    variety = models.ForeignKey(Variety, on_delete=models.RESTRICT)
-    pruning = models.ForeignKey(Pruning, on_delete=models.RESTRICT)
-    folding = models.ForeignKey(Folding, on_delete=models.RESTRICT)
+    variety = models.ForeignKey(Variety, on_delete=models.CASCADE)
+    pruning = models.ForeignKey(Pruning, on_delete=models.CASCADE)
+    folding = models.ForeignKey(Folding, on_delete=models.CASCADE)
+    designation = models.ForeignKey(Designation, on_delete=models.CASCADE)
     
     def __str__(self):
         return self.name
@@ -33,6 +42,14 @@ class PlotSection(models.Model):
     region = modelsPG.PolygonField()
     def __str__(self):
         return self.name + "(" + self.plot.name + ")"
+
+class Group(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    order = models.IntegerField(unique=True)
+
+class PlotGroup(models.Model):
+    plot = models.ForeignKey(Plot, on_delete=models.PROTECT)
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
 
 class Line(models.Model):
     plot_section = models.ForeignKey(PlotSection, on_delete=models.CASCADE)
@@ -53,7 +70,7 @@ class RepairType(models.Model):
         return self.name
 
 class Repair(models.Model):
-    repair_type = models.ForeignKey(RepairType, on_delete=models.RESTRICT)
+    repair_type = models.ForeignKey(RepairType, on_delete=models.CASCADE)
     line = models.ForeignKey(Line, on_delete=models.CASCADE)
     position = models.DecimalField(max_digits=3, decimal_places=3)
     accident_date = models.DateField(default=date.today)

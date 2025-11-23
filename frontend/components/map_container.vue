@@ -68,6 +68,14 @@
         canvas.value.draw()
     })
 
+    const store_coords_cookie = () => {
+        $cookies.set("coords_x", map_store.coords.x)
+        $cookies.set("coords_y", map_store.coords.y)
+        $cookies.set("coords_z", map_store.coords.z)
+        $cookies.set("offset_display_x", map_store.offset_display.x)
+        $cookies.set("offset_display_y", map_store.offset_display.y)
+    }
+
     const mousemove = (e) => {
         e.preventDefault()
         map_store.cursor_rel_coords = get_map_coords(
@@ -79,6 +87,7 @@
             let display_nav_coords = display.value.pan(e)
             map_store.coords = display_nav_coords.coords
             map_store.offset_display = display_nav_coords.offset_display
+            store_coords_cookie()
             canvas.value.draw()
         }
         else if (line_panning.value)   { canvas.value.pan_lines(e);     canvas.value.draw() }
@@ -303,6 +312,7 @@
             let display_nav_coords = display.value.zoom(e)
             map_store.coords = display_nav_coords.coords
             map_store.offset_display = display_nav_coords.offset_display
+            store_coords_cookie()
             canvas.value.draw()
         }
     }
@@ -343,6 +353,7 @@
         let display_nav_coords = display.value.position_map(center_params.pos, center_params.zoom, { x: 0.5, y: 0.5 })
         map_store.coords = display_nav_coords.coords
         map_store.offset_display = display_nav_coords.offset_display
+        store_coords_cookie()
         canvas.value.draw()
     }
 

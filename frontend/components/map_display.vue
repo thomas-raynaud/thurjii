@@ -85,6 +85,21 @@
     })
 
     onMounted(() => {
+        let x = $cookies.get("coords_x")
+        let y = $cookies.get("coords_y")
+        let z = $cookies.get("coords_z")
+        let offset_x = $cookies.get("offset_display_x")
+        let offset_y = $cookies.get("offset_display_y")
+        coords.value.x = (x == null ? 0 : parseInt(x))
+        coords.value.y = (y == null ? 0 : parseInt(y))
+        coords.value.z = (z == null ? 3 : parseFloat(z))
+        offset_display.value.x = (offset_x == null ? 0 : offset_x)
+        offset_display.value.y = (offset_y == null ? 0 : offset_y)
+        map_store.coords.x = coords.value.x
+        map_store.coords.y = coords.value.y
+        map_store.coords.z = coords.value.z
+        map_store.offset_display.x = offset_display.value.x
+        map_store.offset_display.y = offset_display.value.y
         display.value.scrollLeft = offset_display.value.x
         display.value.scrollTop = offset_display.value.y
         load_map()

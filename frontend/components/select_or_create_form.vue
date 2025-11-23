@@ -9,6 +9,9 @@
             <input type="checkbox" class="form-check-input" v-model="new_data" :disabled="props.formList.length == 0">
             <label class="form-check-label">{{ props.formCheckLabel }}</label>
         </div>
+        <div class="col-1">
+            <input type="color" class="form-control form-control-color" v-model="new_color" :disabled="!new_data" title="Choose a color">
+        </div>
         <div class="col">
             <input class="form-control" v-model="new_name" :disabled="!new_data" :placeholder="props.formNewDataPlaceholder">
         </div>
@@ -21,6 +24,7 @@
     const props = defineProps([ 'formData', 'formList', 'formCheckLabel', 'formNewDataPlaceholder' ])
     const new_data = ref(false)
     const new_name = ref("")
+    const new_color = ref("#000000")
 
     onMounted(() => {
         if (props.formList.length == 0)
@@ -28,6 +32,7 @@
         else {
             props.formData.id = props.formList[0].id
             props.formData.name = props.formList[0].name
+            props.formData.color = props.formList[0].color
         }
     })
 
@@ -45,6 +50,7 @@
             new_data.value = false
             props.formData.id = props.formList[0].id
             props.formData.name = props.formList[0].name
+            props.formData.color = props.formList[0].color
         }
     })
 
@@ -53,11 +59,17 @@
             props.formData.name = new_val
     })
 
+    watch(new_color, (new_val) => {
+        if (new_data.value)
+            props.formData.color = new_val.substring(1) // Remove # at the beginning
+    })
+
     watch(() => props.formData.id, (new_id) => {
         if (new_id != -1) {
             for (let form_option of props.formList) {
                 if (form_option.id == new_id) {
                     props.formData.name = form_option.name
+                    props.formData.color = form_option.color
                     break
                 }
             }

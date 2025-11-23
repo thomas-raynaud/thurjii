@@ -189,7 +189,7 @@
         for (let property of properties) {
             if (props.formData[property.name].id == -1) {
                 post_promises.push(new Promise((resolve, reject) => {
-                send_api("POST", property.endpoint, { name: props.formData[property.name].name })
+                send_api("POST", property.endpoint, { name: props.formData[property.name].name, color: props.formData[property.name].color })
                     .then((response) => {
                         resolve(JSON.parse(response.response).id)
                     })
