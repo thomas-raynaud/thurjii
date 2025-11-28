@@ -1,42 +1,62 @@
 <template>
-    <div class="row row-cols-auto">
-        <div class="col">
-            <button
-                type="button"
-                :class="[
-                    'btn',
-                    map_store.state == STATE.ADD_PLOT_SECTION ? 'btn-primary' : 'btn-secondary'
-                ]"
-                @click="add_plot_section()"
-            >
-                Contours de la section
-            </button>
+    <div>
+        <div class="row row-cols-auto mb-3">
+            <div class="col">
+                <button
+                    type="button"
+                    :class="[
+                        'btn',
+                        map_store.state == STATE.ADD_PLOT_SECTION ? 'btn-primary' : 'btn-secondary'
+                    ]"
+                    @click="add_plot_section()"
+                >
+                    Contours de la section
+                </button>
+            </div>
+            <div class="col">
+                <button
+                    type="button"
+                    :class="[
+                        'btn',
+                        map_store.state == STATE.EDIT_LINES_GLOBAL_PLACEMENT ? 'btn-primary' : 'btn-secondary'
+                    ]"
+                    :disabled="!section_drawn"
+                    @click="edit_lines_global_placement()"
+                >
+                    Placement des rangs
+                </button>
+            </div>
+            <div class="col">
+                <button
+                    type="button"
+                    :class="[
+                        'btn',
+                        map_store.state == STATE.EDIT_LINES ? 'btn-primary' : 'btn-secondary'
+                    ]"
+                    :disabled="!section_drawn"
+                    @click="edit_lines()"
+                >
+                    Modifier les rangs
+                </button>
+            </div>
         </div>
-        <div class="col">
-            <button
-                type="button"
-                :class="[
-                    'btn',
-                    map_store.state == STATE.EDIT_LINES_GLOBAL_PLACEMENT ? 'btn-primary' : 'btn-secondary'
-                ]"
-                :disabled="!section_drawn"
-                @click="edit_lines_global_placement()"
-            >
-                Placement des rangs
-            </button>
-        </div>
-        <div class="col">
-            <button
-                type="button"
-                :class="[
-                    'btn',
-                    map_store.state == STATE.EDIT_LINES ? 'btn-primary' : 'btn-secondary'
-                ]"
-                :disabled="!section_drawn"
-                @click="edit_lines()"
-            >
-                Modifier les rangs
-            </button>
+        <div v-show="map_store.state == STATE.EDIT_LINES_GLOBAL_PLACEMENT">
+            <div class="row">
+                <div class="col-4">
+                    <label class="form-label">Ecart entre rangs</label>
+                </div>
+                <div class="col-8">
+                    <input type="range" class="form-range" >
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-4">
+                    <label class="form-label">Orientation des rangs</label>
+                </div>
+                <div class="col-8">
+                    <input type="range" class="form-range" >
+                </div>
+            </div>
         </div>
     </div>
 </template>
