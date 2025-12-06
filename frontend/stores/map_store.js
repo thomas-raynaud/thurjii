@@ -53,5 +53,10 @@ export const map_store = reactive({
             y: 0
         }
     },
-    selecting_zone: false
+    selecting_zone: false,
+
+    line_theta: 0,
+    line_step: 10,
+    line_spread_min: 2,
+    line_spread_max: 100,
 })

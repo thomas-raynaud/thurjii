@@ -33,6 +33,7 @@
             props.formData.id = props.formList[0].id
             props.formData.name = props.formList[0].name
             props.formData.color = props.formList[0].color
+            new_color.value = "#" + props.formData.color
         }
     })
 
@@ -51,6 +52,7 @@
             props.formData.id = props.formList[0].id
             props.formData.name = props.formList[0].name
             props.formData.color = props.formList[0].color
+            new_color.value = "#" + props.formData.color
         }
     })
 

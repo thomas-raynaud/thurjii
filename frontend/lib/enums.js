@@ -7,7 +7,7 @@ const STATE = {
     EDIT_LINES: 5,
     ADD_LINE: 6,
     REMOVE_LINE: 7,
-    SELECT_LINES: 8
+    SELECT_LINES: 8,
 }
 
 const MOUSE_BUTTONS = {

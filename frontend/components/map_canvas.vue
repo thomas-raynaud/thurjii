@@ -10,7 +10,7 @@
 </style>
 
 <script setup>
-    import { useTemplateRef, onMounted } from 'vue'
+    import { useTemplateRef, onMounted, watch } from 'vue'
 
     import {
         get_dims_map,
@@ -46,8 +46,6 @@
         x: -1,
         y: -1
     }
-    let line_theta
-    let line_step
 
     onMounted(() => {
         let dims = get_dims_map(nb_tiles_x, nb_tiles_y)
@@ -56,8 +54,8 @@
         canvas.value.width = dims.width
         canvas.value.height = dims.height
         ctx = canvas.value.getContext("2d")
-        line_theta = 0
-        line_step = 10
+        map_store.line_theta = 0
+        map_store.line_step = 10
         draw()
     })
 
@@ -78,7 +76,11 @@
             ctx.beginPath()
             let hex_color = "#" + map_store.regions_color[i]
             ctx.strokeStyle = hex_color
-            ctx.fillStyle = from_rgb_hex_color_to_rgba(hex_color, 0.5)
+            let opacity = 0.5
+            if ([ STATE.ADD_PLOT_SECTION, STATE.EDIT_LINES, STATE.EDIT_LINES_GLOBAL_PLACEMENT ].includes(map_store.state)) {
+                opacity = 0.25
+            }
+            ctx.fillStyle = from_rgb_hex_color_to_rgba(hex_color, opacity)
             let poly = new Path2D()
             ctx.moveTo(canvas_regions[i][0].x, canvas_regions[i][0].y)
             poly.moveTo(canvas_regions[i][0].x, canvas_regions[i][0].y)
@@ -98,7 +100,8 @@
             let last_point = current_canvas_region.at(-1)
             let cursor_coords = from_rel_coords_to_canvas_pos(map_store.cursor_rel_coords)
             ctx.beginPath()
-            ctx.setLineDash([1, 2])
+            ctx.lineWidth = '3'
+            ctx.setLineDash([2, 3])
             ctx.moveTo(last_point.x, last_point.y)
             ctx.lineTo(cursor_coords.x, cursor_coords.y)
             let color = map_store.regions_color[map_store.current_region_ind]
@@ -183,7 +186,9 @@
         // We start at position start_pos, get the 2 points that intersect the region from that point,
         // then we move in the line_theta direction by a dir_step step, compute the 2 intersecting points from there,
         // and so on until we do not longer intersect the region.
-        let theta_rad = degrees_to_radians(line_theta)
+        start_pos = Number(start_pos)
+        dir_step = Number(dir_step)
+        let theta_rad = degrees_to_radians(map_store.line_theta)
         let intersections
         let line_pos = start_pos
         // p1 space
@@ -231,8 +236,9 @@
 
     const compute_lines = () => {
         map_store.lines[map_store.current_region_ind] = []
-        compute_lines_in_direction(0, line_step)
-        compute_lines_in_direction(-line_step, -line_step)
+        compute_lines_in_direction(0, map_store.line_step)
+        compute_lines_in_direction(-map_store.line_step, -map_store.line_step)
+        draw()
     }
 
     const pan_lines = (e) => {
@@ -243,20 +249,30 @@
     const rotate_lines = (e) => {
         let pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, canvas.value.parentElement)
         let dims_map = get_dims_map(nb_tiles_x, nb_tiles_y)
-        line_theta = ((pos.x / dims_map.width) - 0.5) * 360
+        map_store.line_theta = (((pos.x / dims_map.width) - 0.5) * 360) % 360
+        if (map_store.line_theta < 0)
+            map_store.line_theta = 360 + map_store.line_theta
         compute_lines()
     }
 
     const spread_lines = (e) => {
         let line_cursor_canvas = from_rel_coords_to_canvas_pos(line_cursor)
         let pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, canvas.value.parentElement)
-        line_step = Math.max(get_distance(line_cursor_canvas, pos), 2)
+        map_store.line_step = Math.min(Math.max(get_distance(line_cursor_canvas, pos), map_store.line_spread_min), map_store.line_spread_max)
         compute_lines()
     }
 
     const set_line_cursor = (pos) => {
         line_cursor = pos
     }
+
+    watch(() => map_store.line_theta, () => {
+        compute_lines()
+    })
+
+    watch(() => map_store.line_step, () => {
+        compute_lines()
+    })
 
     defineExpose({
         draw,

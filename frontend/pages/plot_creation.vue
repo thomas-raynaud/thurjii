@@ -47,7 +47,6 @@
         folding: { id: -1, name: "" },
         tasks: [],
         plot_sections: [],
-        plot_section_selected: -1
     })
     const invalid_data = ref(false)
     const invalid_data_message = ref("")
@@ -62,7 +61,7 @@
     })
 
     onMounted(() => {
-        map_store.state = STATE.DISPLAY_PLOT
+        map_store.state = STATE.DISPLAY_VINEYARD
         map_store.regions = []
         map_store.lines = []
         map_store.lines_done = []
@@ -167,11 +166,11 @@
         })
     }
 
-    watch(() => plot_data.value.plot_section_selected, (plot_section_selected, old_plot_selected) => {
+    watch(() => map_store.current_region_ind, (plot_section_selected, old_plot_selected) => {
         if (map_store.state == STATE.ADD_PLOT_SECTION && old_plot_selected != -1) {
             map_store.regions[old_plot_selected] = []
         }
-        map_store.state = STATE.DISPLAY_PLOT
+        map_store.state = STATE.DISPLAY_VINEYARD
         if (plot_section_selected != -1 && map_store.regions[plot_section_selected].length == 0) {
             map_store.state = STATE.ADD_PLOT_SECTION
         }
@@ -179,10 +178,12 @@
         let plot_points = map_store.regions.reduce((accumulator, region) => {
             return accumulator.concat(region)
         }, [])
-        if (plot_section_selected == -1 && plot_points.length > 0) {
-            map_container.value.center_map_on_region(plot_points)
+        if (plot_section_selected == -1) {
+            if (plot_points.length > 0) {
+                map_container.value.center_map_on_region(plot_points)
+            }
         }
-        else if (plot_section_selected != -1) {
+        else {
             if (map_store.regions[plot_section_selected].length > 0) {
                 map_container.value.center_map_on_region(map_store.regions[plot_section_selected])
             }
