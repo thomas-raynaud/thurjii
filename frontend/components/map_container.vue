@@ -121,7 +121,7 @@
             }
             else {
                 // Check if cursor close to a line. If so, display cursor on the point.
-                const MIN_DIST_POINT = 3
+                const MIN_DIST_POINT = 4
                 map_store.line_point_placed = false
                 for (let i = 0; i < map_store.lines[map_store.current_region_ind].length; i++) {
                     let line = map_store.lines[map_store.current_region_ind][i]
@@ -247,30 +247,34 @@
             }
         }
         else if (map_store.state == STATE.EDIT_LINES) {
-            if (e.button == MOUSE_BUTTONS.LEFT_CLICK) {
-                if (map_store.line_point_placed) {
-                    let cursor_pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, container.value)
-                    let a = canvas.value.from_rel_coords_to_canvas_pos(
-                        map_store.lines
-                        [map_store.current_region_ind]
-                        [map_store.current_line_ind]
-                        [map_store.current_line_point_ind]
-                    )
-                    let b = canvas.value.from_rel_coords_to_canvas_pos(
-                        map_store.lines
-                        [map_store.current_region_ind]
-                        [map_store.current_line_ind]
-                        [map_store.current_line_point_ind + 1]
-                    )
-                    map_store.line_point_dragged = true
-                    // Check if line close to an existing point. Set point as current point.
-                    let MIN_DIST_POINT = 3
-                    if (get_distance(cursor_pos, b) <= MIN_DIST_POINT) {
-                        map_store.current_line_point_ind += 1
-                    }
-                    // Check if line close to a line. If so, create a new point and set it as the current point
-                    else if (get_distance(cursor_pos, a) > MIN_DIST_POINT) {
-                        // Create a new point
+            if (map_store.line_point_placed) {
+                let cursor_pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, container.value)
+                let a = canvas.value.from_rel_coords_to_canvas_pos(
+                    map_store.lines
+                    [map_store.current_region_ind]
+                    [map_store.current_line_ind]
+                    [map_store.current_line_point_ind]
+                )
+                let b = canvas.value.from_rel_coords_to_canvas_pos(
+                    map_store.lines
+                    [map_store.current_region_ind]
+                    [map_store.current_line_ind]
+                    [map_store.current_line_point_ind + 1]
+                )
+                map_store.line_point_dragged = true
+                // Check if line close to an existing point. Set point as current point.
+                let MIN_DIST_POINT = 3
+                let cursor_close_to_point = false
+                if (get_distance(cursor_pos, a) <= MIN_DIST_POINT) {
+                    cursor_close_to_point = true
+                }
+                if (get_distance(cursor_pos, b) <= MIN_DIST_POINT) {
+                    map_store.current_line_point_ind += 1
+                    cursor_close_to_point = true
+                }
+                if (e.button == MOUSE_BUTTONS.LEFT_CLICK) {
+                    if (!cursor_close_to_point) {
+                        // Create a new point and set it as the current point
                         let point_pos = get_map_coords(
                             map_store.coords, map_store.offset_display,
                             cursor_pos
@@ -280,6 +284,15 @@
                             [map_store.current_line_ind]
                             .splice(map_store.current_line_point_ind + 1, 0, point_pos)
                         map_store.current_line_point_ind += 1
+                    }
+                }
+                else if (e.button == MOUSE_BUTTONS.RIGHT_CLICK) {
+                    // Delete point if cursor close to one. If the line has less than 2 points, delete the line.
+                    if (cursor_close_to_point) {
+                        map_store.lines
+                            [map_store.current_region_ind]
+                            [map_store.current_line_ind]
+                            .splice(map_store.current_line_point_ind, 1)
                     }
                 }
             }
