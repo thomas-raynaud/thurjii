@@ -77,7 +77,12 @@
             let hex_color = "#" + map_store.regions_color[i]
             ctx.strokeStyle = hex_color
             let opacity = 0.5
-            if ([ STATE.ADD_PLOT_SECTION, STATE.EDIT_LINES, STATE.EDIT_LINES_GLOBAL_PLACEMENT ].includes(map_store.state)) {
+            if (    map_store.state == STATE.ADD_PLOT_SECTION ||
+                    map_store.state == STATE.EDIT_LINES ||
+                    map_store.state == STATE.EDIT_LINES_GLOBAL_PLACEMENT ||
+                    map_store.state == STATE.ADD_LINE ||
+                    map_store.state == STATE.REMOVE_LINE
+            ) {
                 opacity = 0.25
             }
             ctx.fillStyle = from_rgb_hex_color_to_rgba(hex_color, opacity)
@@ -138,7 +143,13 @@
                 draw_lines(ctx, map_store.lines[region_ind], 'green', '2')
             }
         }
-        if (map_store.state == STATE.DISPLAY_PLOT || map_store.state == STATE.SELECT_LINES || map_store.state == STATE.REMOVE_LINE) {
+        if (
+            map_store.state == STATE.DISPLAY_PLOT ||
+            map_store.state == STATE.SELECT_LINES ||
+            map_store.state == STATE.ADD_LINE ||
+            map_store.state == STATE.EDIT_LINES ||
+            map_store.state == STATE.REMOVE_LINE
+        ) {
             draw_lines(ctx, map_store.lines_highlighted[map_store.current_region_ind], 'white', '2')
             
         }

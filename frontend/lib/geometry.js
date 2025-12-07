@@ -51,13 +51,20 @@ const do_intersect = (p1, q1, p2, q2) => {
 }
 
 const is_point_in_polygon = (point, polygon) => {
+	// Winding number algorithm
+	let winding = 0
 	for (let i = 0; i < polygon.length; i++) {
 		let pa = polygon[i]
 		let pb = polygon[(i + 1) % polygon.length]
-		if (orientation(pa, pb, point) < 0)
-			return false
+		let ort = orientation(pa, pb, point)
+		if ((pa.y <= point.y && pb.y > point.y) && ort > 0) {
+			winding -= 1
+		}
+		else if ((pb.y <= point.y && pa.y > point.y) && ort < 0) {
+			winding += 1
+		}
 	}
-	return true
+	return winding != 0
 }
 
 // Check if a new edge added to a polygon intersects with any other edge

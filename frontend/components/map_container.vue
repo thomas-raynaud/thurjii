@@ -107,17 +107,23 @@
         if (map_store.state == STATE.EDIT_LINES) {
             let cursor_pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, container.value)
             if (map_store.line_point_dragged) {
-                // Move the point dragged
-                let cursor_map_pos = get_map_coords(
-                    map_store.coords, map_store.offset_display,
-                    cursor_pos
-                )
-                map_store.lines
-                    [map_store.current_region_ind]
-                    [map_store.current_line_ind]
-                    [map_store.current_line_point_ind]
-                    = cursor_map_pos
-                canvas.value.set_line_cursor(cursor_map_pos)
+                // Move the point dragged, if cursor is IN the region
+                let canvas_region = get_region_canvas_coordinates(map_store.regions[map_store.current_region_ind])
+                if (is_point_in_polygon(cursor_pos, canvas_region)) {
+                    let cursor_map_pos = get_map_coords(
+                        map_store.coords, map_store.offset_display,
+                        cursor_pos
+                    )
+                    map_store.lines
+                        [map_store.current_region_ind]
+                        [map_store.current_line_ind]
+                        [map_store.current_line_point_ind]
+                        = cursor_map_pos
+                    map_store.lines_highlighted[map_store.current_region_ind] = [
+                        map_store.lines[map_store.current_region_ind][map_store.current_line_ind]
+                    ]
+                    canvas.value.set_line_cursor(cursor_map_pos)
+                }
             }
             else {
                 // Check if cursor close to a line. If so, display cursor on the point.
@@ -261,7 +267,7 @@
                     [map_store.current_line_ind]
                     [map_store.current_line_point_ind + 1]
                 )
-                map_store.line_point_dragged = true
+                
                 // Check if line close to an existing point. Set point as current point.
                 let MIN_DIST_POINT = 3
                 let cursor_close_to_point = false
@@ -273,17 +279,25 @@
                     cursor_close_to_point = true
                 }
                 if (e.button == MOUSE_BUTTONS.LEFT_CLICK) {
-                    if (!cursor_close_to_point) {
-                        // Create a new point and set it as the current point
-                        let point_pos = get_map_coords(
-                            map_store.coords, map_store.offset_display,
-                            cursor_pos
-                        )
-                        map_store.lines
-                            [map_store.current_region_ind]
-                            [map_store.current_line_ind]
-                            .splice(map_store.current_line_point_ind + 1, 0, point_pos)
-                        map_store.current_line_point_ind += 1
+                    let canvas_region = get_region_canvas_coordinates(map_store.regions[map_store.current_region_ind])
+                    // Start edition only if point in polygon
+                    if (is_point_in_polygon(cursor_pos, canvas_region)) {
+                        map_store.line_point_dragged = true
+                        if (!cursor_close_to_point) {
+                            // Create a new point and set it as the current point
+                            let point_pos = get_map_coords(
+                                map_store.coords, map_store.offset_display,
+                                cursor_pos
+                            )
+                            map_store.lines
+                                [map_store.current_region_ind]
+                                [map_store.current_line_ind]
+                                .splice(map_store.current_line_point_ind + 1, 0, point_pos)
+                            map_store.lines_highlighted[map_store.current_region_ind] = [
+                                map_store.lines[map_store.current_region_ind][map_store.current_line_ind]
+                            ]
+                            map_store.current_line_point_ind += 1
+                        }
                     }
                 }
                 else if (e.button == MOUSE_BUTTONS.RIGHT_CLICK) {
@@ -380,6 +394,10 @@
             canvas.value.draw()
         }
         map_store.line_point_dragged = false
+        if (map_store.state == STATE.EDIT_LINES) {
+            map_store.lines_highlighted[map_store.current_region_ind] = []
+            canvas.value.draw()
+        }
     }
 
     const end_line_addition = () => {
@@ -464,14 +482,16 @@
     const redraw = () => { canvas.value.draw() }
 
     watch(() => map_store.state, (new_state, old_state) => {
-        if (old_state == STATE.EDIT_LINES && new_state == STATE.EDIT_LINES_GLOBAL_PLACEMENT) {
+        map_store.line_point_placed = false
+        if (new_state == STATE.EDIT_LINES_GLOBAL_PLACEMENT) {
             map_store.lines[map_store.current_region_ind] = []
             // Center map display on region
             center_map_on_region(map_store.regions[map_store.current_region_ind])
             canvas.value.compute_lines()
         }
-        if (new_state == STATE.EDIT_LINES || new_state == STATE.ADD_LINE || new_state == STATE.REMOVE_LINE) {
+        else if (new_state == STATE.EDIT_LINES || new_state == STATE.ADD_LINE || new_state == STATE.REMOVE_LINE) {
             canvas.value.set_line_cursor(null)
+            map_store.current_line_ind
         }
         canvas.value.draw()
     })
