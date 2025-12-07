@@ -23,15 +23,19 @@ const from_mercator_to_canvas_pos = (mc) => {
     return from_rel_coords_to_canvas_pos(rc)
 }
 
-// Convert regions' points from mercator coordinates to canvas coordinates
-const get_regions_canvas_coordinates = () => {
+// Convert region's points from mercator coordinates to canvas coordinates
+const get_region_canvas_coordinates = (region) => {
+    let canvas_region = []
+    for (let i = 0; i < region.length; i++) {
+        canvas_region.push(from_mercator_to_canvas_pos(region[i]))
+    }
+    return canvas_region
+}
+
+const get_regions_canvas_coordinates = (regions) => {
     let canvas_regions = []
-    for (let i = 0; i < map_store.regions.length; i++) {
-        let canvas_region = []
-        for (let j = 0; j < map_store.regions[i].length; j++) {
-            canvas_region.push(from_mercator_to_canvas_pos(map_store.regions[i][j]))
-        }
-        canvas_regions.push(canvas_region)
+    for (let i = 0; i < regions.length; i++) {
+        canvas_regions.push(get_region_canvas_coordinates(regions[i]))
     }
     return canvas_regions
 }
@@ -57,6 +61,7 @@ const draw_cursor_point = (ctx, cursor_pos) => {
 }
 
 const draw_lines = (ctx, line_array, color, line_width) => {
+    ctx.setLineDash([])
     for (let i = 0; i < line_array.length; i++) {
         let line = line_array[i].slice()
         ctx.beginPath()
@@ -75,6 +80,7 @@ const draw_lines = (ctx, line_array, color, line_width) => {
 export {
     from_rel_coords_to_canvas_pos,
     from_mercator_to_canvas_pos,
+    get_region_canvas_coordinates,
     get_regions_canvas_coordinates,
     from_rgb_hex_color_to_rgba,
     draw_cursor_point,

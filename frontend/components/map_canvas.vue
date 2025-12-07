@@ -66,7 +66,7 @@
         if (nb_regions == 0 || (nb_regions == 1 && map_store.regions[0].length == 0))
             return
 
-        let canvas_regions = get_regions_canvas_coordinates()
+        let canvas_regions = get_regions_canvas_coordinates(map_store.regions)
 
         // Draw the regions
         ctx.lineWidth = '1'
@@ -140,13 +140,13 @@
         }
         if (map_store.state == STATE.DISPLAY_PLOT || map_store.state == STATE.SELECT_LINES) {
             draw_lines(ctx, map_store.lines_highlighted[map_store.current_region_ind], 'white', '2')
+            
+        }
+        if (map_store.state == STATE.DISPLAY_PLOT || map_store.state == STATE.SELECT_LINES) {
             draw_lines(ctx, map_store.lines_done[map_store.current_region_ind], 'blue', '2')
         }
-        if (map_store.state == STATE.EDIT_LINES) {
-            // TODO. map_store.current_line_ind
-        }
-        if (map_store.state == STATE.EDIT_LINES_GLOBAL_PLACEMENT) {
-            // Show global line cursor
+        if (map_store.state == STATE.EDIT_LINES_GLOBAL_PLACEMENT || map_store.state == STATE.ADD_LINE) {
+            // Show line cursor
             draw_cursor_point(ctx, line_cursor)
         }
         if (map_store.state == STATE.EDIT_LINES || map_store.state == STATE.REMOVE_LINE) {
@@ -178,6 +178,21 @@
                 ctx.stroke()
                 ctx.fill()
             }
+        }
+        if (map_store.state == STATE.ADD_LINE && map_store.line_point_placed) {
+            // Draw a dash line from the last point in the line to the mouse cursor
+            let last_point = map_store.lines[map_store.current_region_ind][map_store.current_line_ind].at(-1)
+            let last_point_canvas_pos = from_rel_coords_to_canvas_pos(last_point)
+            let cursor_coords = from_rel_coords_to_canvas_pos(map_store.cursor_rel_coords)
+            ctx.beginPath()
+            ctx.lineWidth = '3'
+            ctx.strokeStyle = "white"
+            ctx.setLineDash([2, 3])
+            ctx.moveTo(last_point_canvas_pos.x, last_point_canvas_pos.y)
+            ctx.lineTo(cursor_coords.x, cursor_coords.y)
+            ctx.stroke()
+            // Draw line
+            draw_lines(ctx, map_store.lines_highlighted[map_store.current_region_ind], 'white', '2')
         }
     }
 

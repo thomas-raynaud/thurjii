@@ -1,7 +1,13 @@
 <template>
     <div class="body row justify-content-center">
-        <div class="col-auto">
-            <map-container ref="map_container" nb-tiles-x="3" nb-tiles-y="2" class="mb-3" />
+        <div class="col-auto"
+                :style="{
+                    width: TILE_SIZE * nb_tiles_x + 'px',
+                    height: TILE_SIZE * nb_tiles_y + 'px',
+                    padding: '0px',
+                    'margin-left': '10px',
+                }">
+            <map-container ref="map_container" :nb-tiles-x="nb_tiles_x" :nb-tiles-y="nb_tiles_y" class="mb-3" />
             <map-state-controller v-show="map_store.current_region_ind != -1" />
         </div>
         <div class="col">
@@ -33,7 +39,7 @@
     import PlotForm from '../components/plot_form.vue'
     import { map_store } from '../stores/map_store'
     import { settings_store } from '../stores/settings_store'
-    import { get_map_coords, from_rel_coords_to_mercator, compute_vineyard_bb } from '../lib/map_navigation'
+    import { get_map_coords, from_rel_coords_to_mercator, compute_vineyard_bb, TILE_SIZE } from '../lib/map_navigation'
     import { STATE } from '../lib/enums'
     import { send_api } from '../lib/request'
     import { retrieve_plots, retrieve_tasks } from '../lib/api_retrieval'
@@ -53,6 +59,8 @@
     const plot_form = useTemplateRef("plot_form")
     const map_container = useTemplateRef("map_container")
     let vineyard_bb = []
+    const nb_tiles_x = ref("3")
+    const nb_tiles_y = ref("2")
 
     const nb_lines_total = computed(() => {
         return map_store.lines.reduce((accumulator, lines_section) => {

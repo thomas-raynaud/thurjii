@@ -50,6 +50,16 @@ const do_intersect = (p1, q1, p2, q2) => {
 	return false // Doesn't fall in any of the above cases
 }
 
+const is_point_in_polygon = (point, polygon) => {
+	for (let i = 0; i < polygon.length; i++) {
+		let pa = polygon[i]
+		let pb = polygon[(i + 1) % polygon.length]
+		if (orientation(pa, pb, point) < 0)
+			return false
+	}
+	return true
+}
+
 // Check if a new edge added to a polygon intersects with any other edge
 const check_intersection_polygon = (poly, new_point) => {
     if (poly.length < 2)
@@ -157,6 +167,7 @@ const does_segment_intersect_rectangle = (rect, segment) => {
 }
 
 export {
+	is_point_in_polygon,
     check_intersection_polygon,
 	get_distance,
 	get_distance_from_point_to_line,

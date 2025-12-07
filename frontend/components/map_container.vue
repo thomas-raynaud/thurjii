@@ -41,10 +41,14 @@
         does_segment_intersect_rectangle,
         get_distance,
         get_distance_from_point_to_line,
-        dot_product
+        dot_product,
+        is_point_in_polygon
     } from '../lib/geometry'
     import { map_store } from '../stores/map_store'
     import { STATE, MOUSE_BUTTONS } from '../lib/enums'
+    import {
+        get_region_canvas_coordinates,
+    } from '../lib/map_canvas_utils'
 
     const props = defineProps([ 'nbTilesX', 'nbTilesY' ])
     const nb_tiles_x = ref(parseInt(props.nbTilesX))
@@ -160,6 +164,23 @@
             }
             canvas.value.draw()
         }
+        if (map_store.state == STATE.ADD_LINE) {
+            // Check if cursor in region
+            let in_region = false
+            let cursor_pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, container.value)
+            let canvas_region = get_region_canvas_coordinates(map_store.regions[map_store.current_region_ind])
+            if (is_point_in_polygon(cursor_pos, canvas_region)) {
+                in_region = true
+            }
+            let cursor_map_pos = get_map_coords(
+                map_store.coords, map_store.offset_display,
+                cursor_pos
+            )
+            if (in_region) {
+                canvas.value.set_line_cursor(cursor_map_pos)
+                canvas.value.draw()
+            }
+        }
     }
 
     const mousedown = (e) => {
@@ -228,6 +249,34 @@
             }
             canvas.value.draw()
         }
+        else if (map_store.state == STATE.ADD_LINE) {
+            let cursor_pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, container.value)
+            let canvas_region = get_region_canvas_coordinates(map_store.regions[map_store.current_region_ind])
+            if (is_point_in_polygon(cursor_pos, canvas_region)) {
+                let point_pos = get_map_coords(
+                    map_store.coords, map_store.offset_display,
+                    cursor_pos
+                )
+                if (!map_store.line_point_placed) {
+                    // Add a new line
+                    map_store.lines[map_store.current_region_ind].push([ point_pos ])
+                    map_store.current_line_ind = map_store.lines[map_store.current_region_ind].length - 1
+                    map_store.lines_highlighted[map_store.current_region_ind]
+                        = [ map_store.lines[map_store.current_region_ind][map_store.current_line_ind] ]
+                    map_store.line_point_placed = true
+                }
+                else {
+                    // Add new point to line
+                    map_store.lines[map_store.current_region_ind][map_store.current_line_ind].push(point_pos)
+                    map_store.lines_highlighted[map_store.current_region_ind]
+                        = [ map_store.lines[map_store.current_region_ind][map_store.current_line_ind] ]
+                }
+                canvas.value.draw()
+            }
+            else {
+                end_line_addition()
+            }
+        }
         else if (map_store.state == STATE.DISPLAY_VINEYARD) {
             if (e.button == MOUSE_BUTTONS.LEFT_CLICK || e.button == MOUSE_BUTTONS.MIDDLE_CLICK) {
                 map_panning.value = true
@@ -246,27 +295,13 @@
     }
 
     const mouseup = () => {
-        map_panning.value = false
-        line_panning.value = false
-        line_spreading.value = false
-        line_rotating.value = false
-        if (map_store.selecting_zone) {
-            map_store.selecting_zone = false
-            canvas.value.draw()
-        }
-        map_store.line_point_dragged = false
+        end_interaction()
     }
-
     const mouseleave = () => {
-        map_panning.value = false
-        line_panning.value = false
-        line_spreading.value = false
-        line_rotating.value = false
-        if (map_store.selecting_zone) {
-            map_store.selecting_zone = false
-            canvas.value.draw()
+        end_interaction()
+        if (map_store.state == STATE.ADD_LINE) {
+            end_line_addition()
         }
-        map_store.line_point_dragged = false
     }
 
     const mousewheel = (e) => {
@@ -278,6 +313,31 @@
             store_coords_cookie()
             canvas.value.draw()
         }
+    }
+
+    const end_interaction = () => {
+        map_panning.value = false
+        line_panning.value = false
+        line_spreading.value = false
+        line_rotating.value = false
+        if (map_store.selecting_zone) {
+            map_store.selecting_zone = false
+            canvas.value.draw()
+        }
+        map_store.line_point_dragged = false
+    }
+
+    const end_line_addition = () => {
+        if (!map_store.line_point_placed)
+            return
+        // Delete line if less than 2 points
+        if (map_store.lines[map_store.current_region_ind][map_store.current_line_ind].length < 2) {
+            map_store.lines[map_store.current_region_ind].splice(map_store.current_line_ind, 1)
+        }
+        map_store.lines_highlighted[map_store.current_region_ind] = []
+        map_store.line_point_placed = false
+        map_store.current_line_ind = -1
+        map_store.line_point_placed = false
     }
 
     const add_point_to_region = () => {

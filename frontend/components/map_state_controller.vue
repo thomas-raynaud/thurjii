@@ -21,7 +21,7 @@
                         map_store.state == STATE.EDIT_LINES_GLOBAL_PLACEMENT ? 'btn-primary' : 'btn-secondary'
                     ]"
                     :disabled="!section_drawn"
-                    @click="edit_lines_global_placement()"
+                    @click="map_store.state = STATE.EDIT_LINES_GLOBAL_PLACEMENT"
                 >
                     Placement des rangs
                 </button>
@@ -34,9 +34,35 @@
                         map_store.state == STATE.EDIT_LINES ? 'btn-primary' : 'btn-secondary'
                     ]"
                     :disabled="!section_drawn"
-                    @click="edit_lines()"
+                    @click="map_store.state = STATE.EDIT_LINES"
                 >
                     Modifier les rangs
+                </button>
+            </div>
+            <div class="col">
+                <button
+                    type="button"
+                    :class="[
+                        'btn',
+                        map_store.state == STATE.ADD_LINE ? 'btn-primary' : 'btn-secondary'
+                    ]"
+                    :disabled="!section_drawn"
+                    @click="map_store.state = STATE.ADD_LINE"
+                >
+                    Ajouter des rangs
+                </button>
+            </div>
+            <div class="col">
+                <button
+                    type="button"
+                    :class="[
+                        'btn',
+                        map_store.state == STATE.REMOVE_LINE ? 'btn-primary' : 'btn-secondary'
+                    ]"
+                    :disabled="!section_drawn"
+                    @click="map_store.state = STATE.REMOVE_LINE"
+                >
+                    Supprimer des rangs
                 </button>
             </div>
         </div>
@@ -61,6 +87,12 @@
     </div>
 </template>
 
+<style scoped>
+    .row > .col {
+        margin-bottom: 0.5rem;
+    }
+</style>
+
 <script setup>
     import { onMounted, computed } from 'vue'
 
@@ -81,13 +113,5 @@
         map_store.regions[map_store.current_region_ind] = []
         map_store.lines[map_store.current_region_ind] = []
         map_store.state = STATE.ADD_PLOT_SECTION
-    }
-
-    const edit_lines_global_placement = () => {
-        map_store.state = STATE.EDIT_LINES_GLOBAL_PLACEMENT
-    }
-
-    const edit_lines = () => {
-        map_store.state = STATE.EDIT_LINES
     }
 </script>
