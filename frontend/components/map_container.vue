@@ -181,17 +181,53 @@
                 canvas.value.draw()
             }
         }
+        if (map_store.state == STATE.REMOVE_LINE) {
+            // Check if mouse close to a line.
+            // If so, highlight the line.
+            const MIN_DIST_POINT = 3
+            let cursor_pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, container.value)
+            let line_found = false
+            map_store.current_line_ind = -1
+            map_store.lines_highlighted[map_store.current_region_ind] = []
+            for (let i = 0; i < map_store.lines[map_store.current_region_ind].length; i++) {
+                let line = map_store.lines[map_store.current_region_ind][i]
+                for (let j = 0; j < line.length - 1; j++) {
+                    let a = canvas.value.from_rel_coords_to_canvas_pos(line[j])
+                    let b = canvas.value.from_rel_coords_to_canvas_pos(line[j + 1])
+                    let c = cursor_pos
+                    let cursor_dist = get_distance_from_point_to_line(c, a, b)
+                    if (cursor_dist <= MIN_DIST_POINT) {
+                        map_store.lines_highlighted[map_store.current_region_ind] = [ line ]
+                        line_found = true
+                        map_store.current_line_ind = i
+                        break
+                    }
+                }
+                if (line_found)
+                    break
+            }
+            canvas.value.draw()
+        }
     }
 
     const mousedown = (e) => {
         e.preventDefault()
-        if (map_store.state == STATE.ADD_PLOT_SECTION) {
-            if (e.button == MOUSE_BUTTONS.LEFT_CLICK)
-                add_point_to_region()
-            else if (e.button == MOUSE_BUTTONS.MIDDLE_CLICK) {
+
+        // Map panning
+        if (map_store.state == STATE.ADD_PLOT_SECTION
+                || map_store.state == STATE.EDIT_LINES
+                || map_store.state == STATE.ADD_LINE
+                || map_store.state == STATE.REMOVE_LINE) {
+            if (e.button == MOUSE_BUTTONS.MIDDLE_CLICK) {
                 display.value.start_panning(e)
                 map_panning.value = true
             }
+            canvas.value.draw()
+        }
+
+        if (map_store.state == STATE.ADD_PLOT_SECTION) {
+            if (e.button == MOUSE_BUTTONS.LEFT_CLICK)
+                add_point_to_region()
             else if (e.button == MOUSE_BUTTONS.RIGHT_CLICK)
                 finish_region()
             canvas.value.draw()
@@ -250,31 +286,40 @@
             canvas.value.draw()
         }
         else if (map_store.state == STATE.ADD_LINE) {
-            let cursor_pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, container.value)
-            let canvas_region = get_region_canvas_coordinates(map_store.regions[map_store.current_region_ind])
-            if (is_point_in_polygon(cursor_pos, canvas_region)) {
-                let point_pos = get_map_coords(
-                    map_store.coords, map_store.offset_display,
-                    cursor_pos
-                )
-                if (!map_store.line_point_placed) {
-                    // Add a new line
-                    map_store.lines[map_store.current_region_ind].push([ point_pos ])
-                    map_store.current_line_ind = map_store.lines[map_store.current_region_ind].length - 1
-                    map_store.lines_highlighted[map_store.current_region_ind]
-                        = [ map_store.lines[map_store.current_region_ind][map_store.current_line_ind] ]
-                    map_store.line_point_placed = true
+            if (e.button == MOUSE_BUTTONS.LEFT_CLICK) {
+                let cursor_pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, container.value)
+                let canvas_region = get_region_canvas_coordinates(map_store.regions[map_store.current_region_ind])
+                if (is_point_in_polygon(cursor_pos, canvas_region)) {
+                    let point_pos = get_map_coords(
+                        map_store.coords, map_store.offset_display,
+                        cursor_pos
+                    )
+                    if (!map_store.line_point_placed) {
+                        // Add a new line
+                        map_store.lines[map_store.current_region_ind].push([ point_pos ])
+                        map_store.current_line_ind = map_store.lines[map_store.current_region_ind].length - 1
+                        map_store.lines_highlighted[map_store.current_region_ind]
+                            = [ map_store.lines[map_store.current_region_ind][map_store.current_line_ind] ]
+                        map_store.line_point_placed = true
+                    }
+                    else {
+                        // Add new point to line
+                        map_store.lines[map_store.current_region_ind][map_store.current_line_ind].push(point_pos)
+                        map_store.lines_highlighted[map_store.current_region_ind]
+                            = [ map_store.lines[map_store.current_region_ind][map_store.current_line_ind] ]
+                    }
+                    canvas.value.draw()
                 }
-                else {
-                    // Add new point to line
-                    map_store.lines[map_store.current_region_ind][map_store.current_line_ind].push(point_pos)
-                    map_store.lines_highlighted[map_store.current_region_ind]
-                        = [ map_store.lines[map_store.current_region_ind][map_store.current_line_ind] ]
-                }
-                canvas.value.draw()
             }
-            else {
+            else if (e.button == MOUSE_BUTTONS.RIGHT_CLICK) {
                 end_line_addition()
+            }
+        }
+        else if (map_store.state == STATE.REMOVE_LINE) {
+            if (map_store.current_line_ind != -1) {
+                map_store.lines_highlighted[map_store.current_region_ind] = []
+                map_store.lines[map_store.current_region_ind].splice(map_store.current_line_ind, 1)
+                canvas.value.draw()
             }
         }
         else if (map_store.state == STATE.DISPLAY_VINEYARD) {
@@ -294,19 +339,16 @@
         }
     }
 
-    const mouseup = () => {
-        end_interaction()
-    }
-    const mouseleave = () => {
-        end_interaction()
-        if (map_store.state == STATE.ADD_LINE) {
-            end_line_addition()
-        }
-    }
+    const mouseup = () => { end_interaction() }
+    const mouseleave = () => { end_interaction() }
 
     const mousewheel = (e) => {
         e.preventDefault()
-        if (map_store.state == STATE.ADD_PLOT_SECTION || map_store.state == STATE.DISPLAY_VINEYARD) {
+        if (map_store.state == STATE.ADD_PLOT_SECTION
+                || map_store.state == STATE.EDIT_LINES
+                || map_store.state == STATE.ADD_LINE
+                || map_store.state == STATE.REMOVE_LINE
+                || map_store.state == STATE.DISPLAY_VINEYARD) {
             let display_nav_coords = display.value.zoom(e)
             map_store.coords = display_nav_coords.coords
             map_store.offset_display = display_nav_coords.offset_display
@@ -414,6 +456,9 @@
             // Center map display on region
             center_map_on_region(map_store.regions[map_store.current_region_ind])
             canvas.value.compute_lines()
+        }
+        if (new_state == STATE.EDIT_LINES || new_state == STATE.ADD_LINE || new_state == STATE.REMOVE_LINE) {
+            canvas.value.set_line_cursor(null)
         }
         canvas.value.draw()
     })
