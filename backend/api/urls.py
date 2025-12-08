@@ -5,6 +5,7 @@ from . import views
 
 router = routers.DefaultRouter()
 router.register('plots', views.PlotViewSet)
+router.register('designations', views.DesignationViewSet)
 router.register('varieties', views.VarietyViewSet)
 router.register('prunings', views.PruningViewSet)
 router.register('foldings', views.FoldingViewSet)
@@ -16,6 +17,7 @@ router.register('plot_tasks', views.PlotTaskViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('lines/', views.LineViewSet.as_view({ 'get': 'list' })),
+    path('plots/<int:plot_id>/sections/', views.PlotSectionViewSet.as_view({ 'get': 'list_plot_sections', 'post': 'create' })),
     path('plots/<int:plot_id>/lines/', views.LineViewSet.as_view({ 'get': 'list_plot_lines', 'post': 'create' })),
     path('plots/<int:plot_id>/lines/<int:year>/', views.LineViewSet.as_view({ 'post': 'create' })),
     path('plots/<int:plot_id>/lines/<int:year>/state/', views.LineStateViewSet.as_view({ 'get': 'list' })),

@@ -22,6 +22,11 @@ class PlotSectionSerializer(GeoFeatureModelSerializer):
         geo_field = "region"
         fields = [ 'id', 'name', 'area' ]
 
+class DesignationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Designation
+        fields = [ 'id', 'name', 'color' ]
+
 class VarietySerializer(serializers.ModelSerializer):
     class Meta:
         model = Variety
@@ -31,13 +36,13 @@ class VarietySerializer(serializers.ModelSerializer):
 class PruningSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pruning
-        fields = [ 'id', 'name' ]
+        fields = [ 'id', 'name', 'color' ]
 
 
 class FoldingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Folding
-        fields = [ 'id', 'name' ]
+        fields = [ 'id', 'name', 'color' ]
 
 class LineSerializer(GeoFeatureModelSerializer):
     plot = serializers.SerializerMethodField()

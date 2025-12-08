@@ -21,6 +21,25 @@ class PlotViewSet(viewsets.ModelViewSet):
         plot_data['plot_sections'] = PlotSectionSerializer(plot_sections, many=True).data
         return Response(plot_data)
 
+class PlotSectionViewSet(viewsets.ModelViewSet):
+    queryset = PlotSection.objects.all
+    serializer_class = PlotSectionSerializer
+
+    def list_plot_sections(self, request, *args, **kwargs):
+        plot_id = self.kwargs['plot_id']
+        queryset = PlotSection.objects.filter(plot=plot_id)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+class DesignationViewSet(viewsets.ModelViewSet):
+    queryset = Designation.objects.all()
+    serializer_class = DesignationSerializer
+
 class VarietyViewSet(viewsets.ModelViewSet):
     queryset = Variety.objects.all()
     serializer_class = VarietySerializer
@@ -43,7 +62,8 @@ class LineViewSet(viewsets.ModelViewSet):
 
     def list_plot_lines(self, request, *args, **kwargs):
         plot_id = self.kwargs['plot_id']
-        queryset = Line.objects.filter(plot=plot_id)
+        plot_sections = PlotSection.objects.filter(plot=plot_id)
+        queryset = Line.objects.filter(plot_section__in=plot_sections)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -58,7 +78,8 @@ class LineViewSet(viewsets.ModelViewSet):
         except KeyError:
             year = Season.objects.all().order_by("year").reverse().first().year
         plot_tasks = PlotTask.objects.filter(plot=plot_id, season=year)
-        plot_lines = Line.objects.filter(plot=plot_id)
+        plot_sections = PlotSection.objects.filter(plot=plot_id)
+        plot_lines = Line.objects.filter(plot_section__in=plot_sections)
         for line in plot_lines:
             for task in plot_tasks:
                 line_state = LineState(
@@ -89,7 +110,8 @@ class SeasonViewSet(viewsets.ModelViewSet):
                     new_plot_task = PlotTask(plot=plot, season=new_season, task=plot_task_previous_season.task)
                     new_plot_task.save()
                     # Create LineStates for the new season
-                    plot_lines = Line.objects.filter(plot=plot)
+                    plot_sections = PlotSection.objects.filter(plot=plot)
+                    plot_lines = Line.objects.filter(plot_section__in=plot_sections)
                     for line in plot_lines:
                         line_state = LineState(
                             line=line,
@@ -119,7 +141,8 @@ class PlotTaskViewSet(viewsets.ModelViewSet):
         tasks_request = request.data
         plot_tasks = PlotTask.objects.filter(plot=plot_id, season=year)
         previous_tasks = [ t.task.id for t in plot_tasks ]
-        plot_lines = Line.objects.filter(plot=plot_id)
+        plot_sections = PlotSection.objects.filter(plot=plot_id)
+        plot_lines = Line.objects.filter(plot_section__in=plot_sections)
         plot = Plot.objects.get(pk = plot_id)
         season = Season.objects.get(pk = year)
         # If some tasks are not already registered to the plot, add the new PlotTasks and the new LineStates

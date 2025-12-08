@@ -3,6 +3,12 @@
         <input class="form-control" v-model="formData.name" placeholder="Nom de la parcelle">
     </div>
     <select-or-create-form
+        :form-data="formData.designation"
+        :form-list="designations"
+        form-check-label="Ajouter une nouvelle appellation"
+        form-new-data-placeholder="Nom de l'appellation"
+    />
+    <select-or-create-form
         :form-data="formData.variety"
         :form-list="varieties"
         form-check-label="Ajouter un nouveau cépage"
@@ -89,6 +95,7 @@
     import { map_store } from '../stores/map_store'
 
     const props = defineProps([ 'formData', 'invalidData', 'invalidDataMessage' ])
+    const designations = ref([])
     const varieties = ref([])
     const prunings = ref([])
     const foldings = ref([])
@@ -98,6 +105,13 @@
 
     onMounted(() => {
         map_store.current_region_ind = -1
+        // Load designations
+        send_api("GET", "designations").then((response) => {
+            designations.value = JSON.parse(response.response)
+        }).catch((error) => {
+            console.error("Error when loading designations ...")
+            console.error(error)
+        })
         // Load varieties
         send_api("GET", "varieties").then((response) => {
             varieties.value = JSON.parse(response.response)
@@ -179,8 +193,9 @@
         return "000000"
     }
 
-    const create_variety_pruning_folding = () => {
+    const create_designation_variety_pruning_folding = () => {
         let properties = [
+            { name: "designation", endpoint: "designations" },
             { name: "variety", endpoint: "varieties" },
             { name: "pruning", endpoint: "prunings" },
             { name: "folding", endpoint: "foldings" },
@@ -203,8 +218,17 @@
         return post_promises
     }
 
-    const check_unique_variety_pruning_folding_name = (out_error) => {
+    const check_unique_designation_variety_pruning_folding_name = (out_error) => {
         out_error.message = ""
+        if (props.formData.designation.id == -1) {
+            for (let designation of toRaw(designations.value)) {
+                if (designation.name == props.formData.designation.name) {
+                    out_error.message = "Une appellation avec ce nom existe déjà."
+                    return
+                }
+                    
+            }
+        }
         if (props.formData.variety.id == -1) {
             for (let variety of toRaw(varieties.value)) {
                 if (variety.name == props.formData.variety.name) {
@@ -233,7 +257,7 @@
     }
 
     defineExpose({
-        create_variety_pruning_folding,
-        check_unique_variety_pruning_folding_name,
+        create_designation_variety_pruning_folding,
+        check_unique_designation_variety_pruning_folding_name,
     })
 </script>

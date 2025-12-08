@@ -40,6 +40,7 @@
     import { map_store } from '../stores/map_store'
     import { settings_store } from '../stores/settings_store'
     import { get_map_coords, from_rel_coords_to_mercator, compute_vineyard_bb, TILE_SIZE } from '../lib/map_navigation'
+    import { log_error } from '../lib/log'
     import { STATE } from '../lib/enums'
     import { send_api } from '../lib/request'
     import { retrieve_plots, retrieve_tasks } from '../lib/api_retrieval'
@@ -48,6 +49,7 @@
 
     const plot_data = ref({
         name: "",
+        designation: { id: -1, name: "" },
         variety: { id: -1, name: "" },
         pruning: { id: -1, name: "" },
         folding: { id: -1, name: "" },
@@ -92,61 +94,104 @@
 
     const create_plot = () => {
         invalid_data.value = plot_data.value.name == ""
+            || plot_data.value.designation.name == ""
             || plot_data.value.variety.name == ""
             || plot_data.value.pruning.name == ""
             || plot_data.value.folding.name == ""
+        let is_plot_section_name_blank = false
+        for (let i = 0; i < plot_data.plot_sections.length; i++) {
+            if (plot_data.plot_sections[i].name == "") {
+                is_plot_section_name_blank = true
+                break
+            }
+        }
+        invalid_data.value = invalid_data.value || (plot_data.plot_sections.length > 1 && is_plot_section_name_blank)
         if (invalid_data.value) {
             invalid_data_message.value = "Veuillez compléter tous les champs."
             return
         }
         let error = { message: "" }
-        plot_form.value.check_unique_variety_pruning_folding_name(error)
+        plot_form.value.check_unique_designation_variety_pruning_folding_name(error)
         if (error.message != "") {
             invalid_data.value = true
             invalid_data_message.value = error.message
             return
         }
-        let region = toRaw(map_store.regions.at(-1))
-        region = region.map((x) => [ x.x, x.y ])
-        // GEOJson format
-        const plot_data_req = {
-            type: "Feature",
-            geometry: {
-                type: "Polygon",
-                coordinates: [ region ]
-            },
-            properties: {
-                name: plot_data.value.name,
-                variety: plot_data.value.variety.id,
-                pruning: plot_data.value.pruning.id,
-                folding: plot_data.value.folding.id
-            }
-        }
-        let post_promises = plot_form.value.create_variety_pruning_folding()
-        Promise.all(post_promises).then((post_responses) => {
-            plot_data_req.properties.variety = post_responses[0]
-            plot_data_req.properties.pruning = post_responses[1]
-            plot_data_req.properties.folding = post_responses[2]
-            send_api("POST", "plots", plot_data_req)
-            .then((response) => {
-                let plot = JSON.parse(response.response)
-                let lines_data_req = []
-                for (let i = 0; i < map_store.lines.length; i++) {
+
+        const create_lines_cb = (plot_sections_data) => {
+            let plot_sections = JSON.parse(plot_sections_data.response)
+            let lines_data_req = []
+            for(let i = 0; i < plot_sections.length; i++) {
+                for (let j = 0; j < map_store.lines[i].length; j++) {
                     // Convert line coordinates from canvas space to mercator coords
-                    let line_mc = []
-                    for (let pos of [ "start", "end" ]) {
-                        let p_rel_coords = get_map_coords(map_store.coords, map_store.offset_display, map_store.lines[i][pos])
+                    let line_mc = map_store.lines[i][j].map((point) => {
+                        let p_rel_coords = get_map_coords(map_store.coords, map_store.offset_display, point)
                         let p_mc = from_rel_coords_to_mercator(p_rel_coords.x, p_rel_coords.y)
-                        line_mc.push([ p_mc.x, p_mc.y ])
-                    }
+                        return [ p_mc.x, p_mc.y ]
+                    })
                     lines_data_req.push({
-                        plot: plot.id,
-                        location: {
+                        type: "Feature",
+                        geometry: {
                             type: "LineString",
                             coordinates: line_mc
+                        },
+                        properties: {
+                            plot_section: plot_sections[i].id
                         }
                     })
                 }
+            }
+        }
+
+        const create_plot_sections_cb = (plot_data) => {
+            let plot = JSON.parse(plot_data.response)
+            let regions = toRaw(map_store.regions)
+            let plot_sections_data_req = []
+            for (let i = 0; i < regions.length; i++) {
+                let region = regions[i].map((x) => [ x.x, x.y ])
+                // GEOJson format
+                plot_sections_data_req.push(
+                    {
+                        type: "Feature",
+                        geometry: {
+                            type: "Polygon",
+                            coordinates: [ region ]
+                        },
+                        properties: {
+                            name: plot_data.plot_sections[i].name,
+                        }
+                    }
+                )
+            }
+            send_api("POST", "plots/" + plot.id + "/sections", plot_sections_data_req).then(create_lines_cb)
+        }
+
+        const create_plot_promise = (dvpf_data) => {
+            const plot_data_req = {
+                name: plot_data.value.name,
+                designation:    dvpf_data[0],
+                variety:        dvpf_data[1],
+                pruning:        dvpf_data[2],
+                folding:        dvpf_data[3]
+            }
+            send_api("POST", "plots", plot_data_req).then(create_plot_sections_cb)
+        }
+
+        let dvpf_post_promises = plot_form.value.create_designation_variety_pruning_folding()
+        Promise.all(dvpf_post_promises).then((dvpf_data) => {
+            create_plot_promise(dvpf_data).then((plot_data) => {
+                let plot_sections_tasks_post_promises = [
+                    create_plot_sections(plot_data),
+                    create_tasks_promise(plot_data),
+                ]
+                Promise.all(plot_sections_tasks_post_promises).then((plot_sections_tasks_data) => {
+                    create_lines_promise(plot_sections_tasks_data[0]).then(() => {
+                        router.push('plots/' + plot_data.id)
+                    }).catch((error) => { log_error("Error: could not plot lines associated to plot " + plot_data.id + "...", error) })
+                }).catch((errors) => { log_error("Error: could not plot sections/tasks associated to plot " + plot_data.id + "...", errors) })
+            }).catch((error) => { log_error("Error: could not create plot ...", error) })
+        }).catch((errors) => { log_error("Error: could not create designation/variety/pruning/folding ...", errors) })
+
                 let post_promises_lines_tasks = []
                 post_promises_lines_tasks.push(send_api("POST", "plots/" + plot.id + "/lines/" + settings_store.current_season, lines_data_req))
                 let task_ids = []
@@ -156,22 +201,8 @@
                     }
                 }
                 post_promises_lines_tasks.push(send_api("POST", "plots/" + plot.id + "/plot_tasks/" + settings_store.current_season, task_ids))
-                Promise.all(post_promises_lines_tasks).then(() => {
-                    router.push('plots/' + plot.id)
-                })
-                .catch((error) => {
-                    console.error("Could not create lines associated to plot " + plot.id + " ...")
-                    console.error(error)
-                })
+
             })
-            .catch((error) => {
-                console.error("Could not create plot ...")
-                console.error(error)
-            })
-        })
-        .catch((errors) => {
-            console.error(errors)
-        })
     }
 
     watch(() => map_store.current_region_ind, (plot_section_selected, old_plot_selected) => {
