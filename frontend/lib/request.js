@@ -8,8 +8,12 @@ const send_api = (method, endpoint, data={}) => {
 		xhr.open(method, BACKEND_URL + endpoint + "/", true)
 		xhr.setRequestHeader("Content-Type", "application/json")
 		xhr.onreadystatechange = () => {
-			if (xhr.readyState === XMLHttpRequest.DONE)
+			if (xhr.readyState === XMLHttpRequest.DONE) {
+				if (xhr.status == 400 || xhr.status == 500) {
+					reject(xhr)
+				}
 				resolve(xhr)
+			}
 		}
 		xhr.onerror = () => {
 			reject(xhr)

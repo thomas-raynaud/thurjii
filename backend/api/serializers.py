@@ -7,7 +7,7 @@ from shapely.geometry import Polygon
 class PlotSerializer(serializers.ModelSerializer):
     class Meta:
         model = Plot
-        fields = [ 'id', 'name', 'variety', 'pruning', 'folding' ]
+        fields = [ 'id', 'name', 'designation', 'variety', 'pruning', 'folding' ]
 
 class PlotSectionSerializer(GeoFeatureModelSerializer):
     area = serializers.SerializerMethodField()
@@ -20,7 +20,7 @@ class PlotSectionSerializer(GeoFeatureModelSerializer):
     class Meta:
         model = PlotSection
         geo_field = "region"
-        fields = [ 'id', 'name', 'area' ]
+        fields = [ 'id', 'name', 'area', 'plot' ]
 
 class DesignationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -51,7 +51,7 @@ class LineSerializer(GeoFeatureModelSerializer):
         geo_field = "location"
         fields = [ 'id', 'plot', 'plot_section' ]
     def get_plot(self, obj):
-        return obj.plot_section.plot
+        return obj.plot_section.plot.id
 
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:

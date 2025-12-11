@@ -99,13 +99,13 @@
             || plot_data.value.pruning.name == ""
             || plot_data.value.folding.name == ""
         let is_plot_section_name_blank = false
-        for (let i = 0; i < plot_data.plot_sections.length; i++) {
-            if (plot_data.plot_sections[i].name == "") {
+        for (let i = 0; i < plot_data.value.plot_sections.length; i++) {
+            if (plot_data.value.plot_sections[i].name == "") {
                 is_plot_section_name_blank = true
                 break
             }
         }
-        invalid_data.value = invalid_data.value || (plot_data.plot_sections.length > 1 && is_plot_section_name_blank)
+        invalid_data.value = invalid_data.value || (plot_data.value.plot_sections.length > 1 && is_plot_section_name_blank)
         if (invalid_data.value) {
             invalid_data_message.value = "Veuillez compléter tous les champs."
             return
@@ -118,10 +118,53 @@
             return
         }
 
-        const create_lines_cb = (plot_sections_data) => {
-            let plot_sections = JSON.parse(plot_sections_data.response)
+        const create_plot_promise = async (plot_name, dvpf_res) => {
+            const plot_data_req = {
+                name: plot_name,
+                designation:    dvpf_res[0],
+                variety:        dvpf_res[1],
+                pruning:        dvpf_res[2],
+                folding:        dvpf_res[3]
+            }
+            return send_api("POST", "plots", plot_data_req)
+        }
+
+        const create_plot_sections_promise = async (plot_sections_data, plot_id) => {
+            let regions = toRaw(map_store.regions)
+            let plot_sections_data_req = []
+            for (let i = 0; i < regions.length; i++) {
+                let region = regions[i].map((x) => [ x.x, x.y ])
+                // GEOJson format
+                plot_sections_data_req.push(
+                    {
+                        type: "Feature",
+                        geometry: {
+                            type: "Polygon",
+                            coordinates: [ region ]
+                        },
+                        properties: {
+                            name: plot_sections_data[i].name,
+                            plot: plot_id
+                        },
+                    }
+                )
+            }
+            return send_api("POST", "plots/" + plot_id + "/sections", plot_sections_data_req)
+        }
+
+        const create_tasks_promise = async (plot_tasks_data, plot_id) => {
+            let task_ids = []
+            for (let task of plot_tasks_data) {
+                if (task.checked) {
+                    task_ids.push(task.id)
+                }
+            }
+            return send_api("POST", "plots/" + plot_id + "/plot_tasks/" + settings_store.current_season, task_ids)
+        }
+
+        const create_lines_promise = async (plot_id, plot_sections_data) => {
             let lines_data_req = []
-            for(let i = 0; i < plot_sections.length; i++) {
+            for(let i = 0; i < plot_sections_data.length; i++) {
                 for (let j = 0; j < map_store.lines[i].length; j++) {
                     // Convert line coordinates from canvas space to mercator coords
                     let line_mc = map_store.lines[i][j].map((point) => {
@@ -136,82 +179,37 @@
                             coordinates: line_mc
                         },
                         properties: {
-                            plot_section: plot_sections[i].id
+                            plot_section: plot_sections_data[i].id
                         }
                     })
                 }
             }
-        }
-
-        const create_plot_sections_cb = (plot_data) => {
-            let plot = JSON.parse(plot_data.response)
-            let regions = toRaw(map_store.regions)
-            let plot_sections_data_req = []
-            for (let i = 0; i < regions.length; i++) {
-                let region = regions[i].map((x) => [ x.x, x.y ])
-                // GEOJson format
-                plot_sections_data_req.push(
-                    {
-                        type: "Feature",
-                        geometry: {
-                            type: "Polygon",
-                            coordinates: [ region ]
-                        },
-                        properties: {
-                            name: plot_data.plot_sections[i].name,
-                        }
-                    }
-                )
-            }
-            send_api("POST", "plots/" + plot.id + "/sections", plot_sections_data_req).then(create_lines_cb)
-        }
-
-        const create_plot_promise = (dvpf_data) => {
-            const plot_data_req = {
-                name: plot_data.value.name,
-                designation:    dvpf_data[0],
-                variety:        dvpf_data[1],
-                pruning:        dvpf_data[2],
-                folding:        dvpf_data[3]
-            }
-            send_api("POST", "plots", plot_data_req).then(create_plot_sections_cb)
+            return send_api("POST", "plots/" + plot_id + "/lines/" + settings_store.current_season, lines_data_req)
         }
 
         let dvpf_post_promises = plot_form.value.create_designation_variety_pruning_folding()
-        Promise.all(dvpf_post_promises).then((dvpf_data) => {
-            create_plot_promise(dvpf_data).then((plot_data) => {
+        Promise.all(dvpf_post_promises).then((dvpf_res) => {
+            create_plot_promise(plot_data.value.name, dvpf_res).then((plot_res) => {
+                let plot_id = JSON.parse(plot_res.response).id
                 let plot_sections_tasks_post_promises = [
-                    create_plot_sections(plot_data),
-                    create_tasks_promise(plot_data),
+                    create_plot_sections_promise(plot_data.value.plot_sections, plot_id),
+                    create_tasks_promise(plot_data.value.tasks, plot_id),
                 ]
-                Promise.all(plot_sections_tasks_post_promises).then((plot_sections_tasks_data) => {
-                    create_lines_promise(plot_sections_tasks_data[0]).then(() => {
-                        router.push('plots/' + plot_data.id)
-                    }).catch((error) => { log_error("Error: could not plot lines associated to plot " + plot_data.id + "...", error) })
-                }).catch((errors) => { log_error("Error: could not plot sections/tasks associated to plot " + plot_data.id + "...", errors) })
+                Promise.all(plot_sections_tasks_post_promises).then((plot_sections_tasks_res) => {
+                    let plot_sections_res = JSON.parse(plot_sections_tasks_res[0].response)
+                    create_lines_promise(plot_id, plot_sections_res).then(() => {
+                        router.push('plots/' + plot_id)
+                    }).catch((error) => { log_error("Error: could not create lines associated to plot " + plot_id + "...", error) })
+                }).catch((errors) => { log_error("Error: could not create sections/tasks associated to plot " + plot_id + "...", errors) })
             }).catch((error) => { log_error("Error: could not create plot ...", error) })
         }).catch((errors) => { log_error("Error: could not create designation/variety/pruning/folding ...", errors) })
-
-                let post_promises_lines_tasks = []
-                post_promises_lines_tasks.push(send_api("POST", "plots/" + plot.id + "/lines/" + settings_store.current_season, lines_data_req))
-                let task_ids = []
-                for (let task of plot_data.value.tasks) {
-                    if (task.checked) {
-                        task_ids.push(task.id)
-                    }
-                }
-                post_promises_lines_tasks.push(send_api("POST", "plots/" + plot.id + "/plot_tasks/" + settings_store.current_season, task_ids))
-
-            })
     }
 
-    watch(() => map_store.current_region_ind, (plot_section_selected, old_plot_selected) => {
-        if (map_store.state == STATE.ADD_PLOT_SECTION && old_plot_selected != -1) {
-            map_store.regions[old_plot_selected] = []
-        }
+    watch(() => map_store.current_region_ind, (plot_section_selected) => {
         map_store.state = STATE.DISPLAY_VINEYARD
-        if (plot_section_selected != -1 && map_store.regions[plot_section_selected].length == 0) {
-            map_store.state = STATE.ADD_PLOT_SECTION
+        if (plot_section_selected != -1) {
+            if (map_store.regions[plot_section_selected].length == 0)
+                map_store.state = STATE.ADD_PLOT_SECTION
         }
         // Recenter map
         let plot_points = map_store.regions.reduce((accumulator, region) => {

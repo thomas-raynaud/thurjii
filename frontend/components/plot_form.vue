@@ -76,7 +76,20 @@
             </div>
             <div v-for="plot_section in formData.plot_sections" class="card mb-3" @click="toggle_section_selected(plot_section.idx)">
                 <div class="card-body" :class="{ 'text-bg-primary': map_store.current_region_ind == plot_section.idx }">
-                    <input class="form-control" v-model="plot_section.name" placeholder="Nom de la section">
+                    <div class="row">
+                        <div class="col">
+                            <input class="form-control col-auto" v-model="plot_section.name" placeholder="Nom de la section" />
+                        </div>
+                        <div class="col-md-auto">
+                            <button
+                                type="button" class="btn btn-light"
+                                @click="delete_plot_section(plot_section.idx)"
+                            >
+                                Supprimer
+                            </button>
+                        </div>
+                        
+                    </div>
                 </div>
             </div>
         </div>
@@ -92,6 +105,7 @@
 
     import SelectOrCreateForm from '../components/select_or_create_form.vue'
     import { send_api } from '../lib/request'
+    import { STATE } from '../lib/enums'
     import { map_store } from '../stores/map_store'
 
     const props = defineProps([ 'formData', 'invalidData', 'invalidDataMessage' ])
@@ -102,6 +116,8 @@
     const new_task_name = ref("")
     const task_name_empty = ref(false)
     const task_name_already_exists = ref(false)
+
+    let section_deleted = false
 
     onMounted(() => {
         map_store.current_region_ind = -1
@@ -134,6 +150,20 @@
             console.error(error)
         })
     })
+
+    const delete_plot_section = (plot_section_idx) => {
+        props.formData.plot_sections.splice(plot_section_idx, 1)
+        for (let i = plot_section_idx; i < props.formData.plot_sections.length; i++) {
+            props.formData.plot_sections[i].idx -= 1
+        }
+        map_store.regions.splice(plot_section_idx, 1)
+        map_store.regions_color.splice(plot_section_idx, 1)
+        map_store.lines.splice(plot_section_idx, 1)
+        map_store.lines_done.splice(plot_section_idx, 1)
+        map_store.lines_highlighted.splice(plot_section_idx, 1)
+        map_store.current_region_ind = -1
+        section_deleted = true
+    }
 
     const add_task = () => {
         if (new_task_name.value == "") {
@@ -179,8 +209,17 @@
     }
 
     const toggle_section_selected = (section_idx) => {
-        if (section_idx == map_store.current_region_ind)
+        // Ignore toggle if user has clicked on the "delete section" button
+        if (section_deleted) {
+            section_deleted = false
+            return
+        }
+        if (section_idx == map_store.current_region_ind) {
+            if (map_store.state == STATE.ADD_PLOT_SECTION) {
+                map_store.regions[section_idx] = []
+            }
             map_store.current_region_ind = -1
+        }
         else
             map_store.current_region_ind = section_idx
     }

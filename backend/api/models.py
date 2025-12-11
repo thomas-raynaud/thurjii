@@ -28,10 +28,10 @@ class Designation(models.Model):
 
 class Plot(models.Model):
     name = models.CharField(max_length=50, unique=True)
+    designation = models.ForeignKey(Designation, on_delete=models.CASCADE)
     variety = models.ForeignKey(Variety, on_delete=models.CASCADE)
     pruning = models.ForeignKey(Pruning, on_delete=models.CASCADE)
     folding = models.ForeignKey(Folding, on_delete=models.CASCADE)
-    designation = models.ForeignKey(Designation, on_delete=models.CASCADE)
     
     def __str__(self):
         return self.name

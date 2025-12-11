@@ -83,8 +83,15 @@ const get_distance = (p1, p2) => {
 	return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2))
 }
 
-const get_distance_from_point_to_line = (p, lp1, lp2) => {
-	return Math.abs((lp2.y - lp1.y) * p.x - (lp2.x - lp1.x) * p.y + lp2.x * lp1.y - lp2.y * lp1.x) / get_distance(lp1, lp2) 
+const get_distance_from_point_to_segment = (p, s1, s2) => {
+	let s1s2 = { x: s2.x - s1.x, y: s2.y - s1.y }
+	let s1p = { x: p.x - s1.x, y: p.y - s1.y }
+	let s_length = get_distance(s1, s2)
+	let proj_rel = dot_product(s1s2, s1p) / Math.pow(s_length, 2)
+	if (proj_rel < 0.0 || proj_rel > 1.0) {
+		return Math.min(get_distance(p, s1), get_distance(p, s2))
+	}
+	return Math.abs((s2.y - s1.y) * p.x - (s2.x - s1.x) * p.y + s2.x * s1.y - s2.y * s1.x) / s_length
 }
 
 const dot_product = (ab, cd) => {
@@ -177,7 +184,7 @@ export {
 	is_point_in_polygon,
     check_intersection_polygon,
 	get_distance,
-	get_distance_from_point_to_line,
+	get_distance_from_point_to_segment,
 	rotate,
 	translate,
 	get_lines_intersection_point,

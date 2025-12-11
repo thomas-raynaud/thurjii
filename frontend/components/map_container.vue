@@ -40,7 +40,7 @@
         check_intersection_polygon,
         does_segment_intersect_rectangle,
         get_distance,
-        get_distance_from_point_to_line,
+        get_distance_from_point_to_segment,
         dot_product,
         is_point_in_polygon
     } from '../lib/geometry'
@@ -135,14 +135,12 @@
                         let a = canvas.value.from_rel_coords_to_canvas_pos(line[j])
                         let b = canvas.value.from_rel_coords_to_canvas_pos(line[j + 1])
                         let c = cursor_pos
-                        let cursor_dist = get_distance_from_point_to_line(c, a, b)
+                        let cursor_dist = get_distance_from_point_to_segment(c, a, b)
                         if (cursor_dist <= MIN_DIST_POINT) {
                             let ab = { x: b.x - a.x, y: b.y - a.y }
                             let ac = { x: c.x - a.x, y: c.y - a.y }
                             let ab_dist = get_distance(a, b)
                             let proj_rel = dot_product(ab, ac) / Math.pow(ab_dist, 2)
-                            if (proj_rel < 0.0 || proj_rel > 1.0)
-                                break
                             map_store.line_point_placed = true
                             let proj_p = {
                                 x: a.x + ab.x * proj_rel,
@@ -201,7 +199,7 @@
                     let a = canvas.value.from_rel_coords_to_canvas_pos(line[j])
                     let b = canvas.value.from_rel_coords_to_canvas_pos(line[j + 1])
                     let c = cursor_pos
-                    let cursor_dist = get_distance_from_point_to_line(c, a, b)
+                    let cursor_dist = get_distance_from_point_to_segment(c, a, b)
                     if (cursor_dist <= MIN_DIST_POINT) {
                         map_store.lines_highlighted[map_store.current_region_ind] = [ line ]
                         line_found = true

@@ -32,9 +32,15 @@ class PlotSectionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     def create(self, request, *args, **kwargs):
+        plot_id = self.kwargs['plot_id']
+        if len(request.data) == 1 and request.data[0]['properties']['name'] == '':
+            plot = Plot.objects.get(pk = plot_id)
+            request.data[0]['properties']['name'] = plot.name
         serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data['features'], status=status.HTTP_201_CREATED, headers=headers)
 
 class DesignationViewSet(viewsets.ModelViewSet):
     queryset = Designation.objects.all()
@@ -69,6 +75,8 @@ class LineViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         plot_id = self.kwargs['plot_id']
+        for line in request.data:
+            print(line)
         serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)

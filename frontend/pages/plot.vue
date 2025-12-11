@@ -110,10 +110,12 @@
     const plot = ref({
         id: -1,
         name: "",
+        designation: { id: -1, name: "" },
         variety: { id: -1, name: " "},
         pruning: { id: -1, name: " "},
         folding: { id: -1, name: " "},
         tasks: [],
+        plot_sections: [],
         area: 0
     })
     let plot_backup = {}
@@ -131,7 +133,7 @@
         map_store.state = STATE.DISPLAY_PLOT
         map_store.regions = [ [] ]
         map_store.lines = []
-        map_store.lines_done = []
+        map_store.lines_done = [ [] ]
         let get_promises = []
         plot.value.id = route.params.id
         get_promises.push(new Promise((resolve) => {
@@ -196,6 +198,10 @@
                 }
             }
             nextTick(() => {
+                console.log(map_store.regions)
+                console.log(map_store.lines)
+                console.log(map_store.lines_done)
+                console.log(map_store.lines_highlighted)
                 map_container.value.center_map_on_region([].concat(...map_store.regions))
             })
             

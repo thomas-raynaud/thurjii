@@ -27,8 +27,10 @@
     const new_color = ref("#000000")
 
     onMounted(() => {
-        if (props.formList.length == 0)
+        if (props.formList.length == 0) {
             new_data.value = true
+            props.formData.color = new_color.value.substring(1)
+        }
         else {
             props.formData.id = props.formList[0].id
             props.formData.name = props.formList[0].name
