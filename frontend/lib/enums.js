@@ -16,7 +16,15 @@ const MOUSE_BUTTONS = {
     RIGHT_CLICK: 2,
 }
 
+const PLOT_COLOR_TYPES = {
+    DESIGNATION: 0,
+    VARIETY: 1,
+    PRUNING: 2,
+    FOLDING: 3
+}
+
 export {
     STATE,
-    MOUSE_BUTTONS
+    MOUSE_BUTTONS,
+    PLOT_COLOR_TYPES
 }

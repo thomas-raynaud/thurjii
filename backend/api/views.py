@@ -9,7 +9,8 @@ class PlotViewSet(viewsets.ModelViewSet):
     queryset = Plot.objects.all().order_by('id')
     serializer_class = PlotSerializer
     def list(self, request, *args, **kwargs):
-        plot_data = self.get_serializer(self.queryset, many=True).data
+        queryset = Plot.objects.all().order_by('id')
+        plot_data = self.get_serializer(queryset, many=True).data
         for i in range(0, len(plot_data)):
             plot_sections = PlotSection.objects.filter(plot=plot_data[i]['id'])
             plot_data[i]['plot_sections'] = PlotSectionSerializer(plot_sections, many=True).data
@@ -22,7 +23,6 @@ class PlotViewSet(viewsets.ModelViewSet):
         return Response(plot_data)
 
 class PlotSectionViewSet(viewsets.ModelViewSet):
-    queryset = PlotSection.objects.all
     serializer_class = PlotSectionSerializer
 
     def list_plot_sections(self, request, *args, **kwargs):
@@ -63,7 +63,6 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
 
 class LineViewSet(viewsets.ModelViewSet):
-    queryset = Line.objects.all()
     serializer_class = LineSerializer
 
     def list_plot_lines(self, request, *args, **kwargs):
@@ -108,8 +107,9 @@ class SeasonViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         new_season = serializer.save()
         # Create the PlotTasks and LineStates for this new season, based on the previous season's PlotTasks
-        if self.queryset.count() > 0:
-            previous_season = self.queryset[0]
+        queryset = Season.objects.all().order_by("year").reverse()
+        if queryset.count() > 0:
+            previous_season = queryset[0]
             plots = Plot.objects.all()
             for plot in plots:
                 plot_tasks_previous_season = PlotTask.objects.filter(plot=plot, season=previous_season)
@@ -194,7 +194,8 @@ class LogViewSet(viewsets.ModelViewSet):
     def list_season_logs(self, request, *args, **kwargs):
         year = self.kwargs['year']
         plot_tasks_season = PlotTask.objects.filter(season=year)
-        serializer = self.get_serializer(self.queryset.filter(plot_task__in=plot_tasks_season), many=True)
+        queryset = Log.objects.all().order_by("date", "id").reverse()
+        serializer = self.get_serializer(queryset.filter(plot_task__in=plot_tasks_season), many=True)
         return Response(serializer.data)
 
 class LineStateViewSet(viewsets.ModelViewSet):

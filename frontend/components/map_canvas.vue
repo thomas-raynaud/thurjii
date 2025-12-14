@@ -144,8 +144,6 @@
             }
         }
         if (
-            map_store.state == STATE.DISPLAY_PLOT ||
-            map_store.state == STATE.SELECT_LINES ||
             map_store.state == STATE.ADD_LINE ||
             map_store.state == STATE.EDIT_LINES ||
             map_store.state == STATE.REMOVE_LINE
@@ -154,7 +152,11 @@
             
         }
         if (map_store.state == STATE.DISPLAY_PLOT || map_store.state == STATE.SELECT_LINES) {
-            draw_lines(ctx, map_store.lines_done[map_store.current_region_ind], 'blue', '2')
+            for (let i = 0; i < map_store.regions.length; i++) {
+                draw_lines(ctx, map_store.lines_done[i], 'blue', '2')
+                draw_lines(ctx, map_store.lines_highlighted[i], 'white', '2')
+            }
+            
         }
         if (map_store.state == STATE.EDIT_LINES_GLOBAL_PLACEMENT) {
             // Show line cursor

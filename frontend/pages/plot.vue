@@ -51,8 +51,8 @@
                         </div>
                     </ul>
                     <p>Superficie : {{ plot.area }} ha</p>
-                    <p>{{ map_store.lines.length }} rangs</p>
-                    <p v-show="map_store.lines_done.length > 0">{{ map_store.lines_done.length }} rangs terminés</p>
+                    <p>{{ nb_lines }} rangs</p>
+                    <p v-show="nb_lines_done > 0">{{ nb_lines_done }} rangs terminés</p>
                 </div>
                 <div v-show="update_display == true">
                     <plot-form :form-data="plot" :invalid-data="invalid_data" />
@@ -85,7 +85,7 @@
 </template>
 
 <script setup>
-    import { ref, useTemplateRef, onMounted, nextTick } from 'vue'
+    import { ref, useTemplateRef, onMounted, nextTick, computed } from 'vue'
     import { useRoute, useRouter } from 'vue-router'
 
     import MapContainer from '../components/map_container.vue'
@@ -93,7 +93,7 @@
     import { settings_store } from '../stores/settings_store'
     import { map_store } from '../stores/map_store'
     import { send_api } from '../lib/request'
-    import { STATE } from '../lib/enums'
+    import { PLOT_COLOR_TYPES, STATE } from '../lib/enums'
     import {
         retrieve_plot,
         retrieve_plot_season_plot_tasks,
@@ -110,10 +110,10 @@
     const plot = ref({
         id: -1,
         name: "",
-        designation: { id: -1, name: "" },
-        variety: { id: -1, name: " "},
-        pruning: { id: -1, name: " "},
-        folding: { id: -1, name: " "},
+        designation:    { id: -1, name: "", color: null },
+        variety:        { id: -1, name: "", color: null },
+        pruning:        { id: -1, name: "", color: null },
+        folding:        { id: -1, name: "", color: null },
         tasks: [],
         plot_sections: [],
         area: 0
@@ -129,11 +129,19 @@
     const no_changes_detected = ref(false)
     const active_task_id = ref(-1)
 
+    const nb_lines = computed(() => {
+        return map_store.lines.map((region_lines) => region_lines.length).reduce((acc, val) => acc + val, 0)
+    })
+    const nb_lines_done = computed(() => {
+        return map_store.lines_done.map((region_lines) => region_lines.length).reduce((acc, val) => acc + val, 0)
+    })
+
     onMounted(() => {
         map_store.state = STATE.DISPLAY_PLOT
         map_store.regions = [ [] ]
-        map_store.lines = []
+        map_store.lines = [ [] ]
         map_store.lines_done = [ [] ]
+        map_store.lines_highlighted = [ [] ]
         let get_promises = []
         plot.value.id = route.params.id
         get_promises.push(new Promise((resolve) => {
@@ -159,12 +167,6 @@
             })
         }))
         get_promises.push(new Promise((resolve) => {
-            retrieve_plot_lines(plot.value.id).then((lines) => {
-                map_store.lines = lines
-                resolve()
-            }).catch(() => {})
-        }))
-        get_promises.push(new Promise((resolve) => {
             retrieve_tasks().then((tasks) => {
                 plot.value.tasks = tasks
                 for (let i = 0; i < plot.value.tasks.length; i++) {
@@ -180,37 +182,62 @@
                 resolve()
             })
         }))
-        get_promises.push(new Promise((resolve) => {
-            send_api("GET", "varieties").then((response) => {
-                resolve(JSON.parse(response.response))
-            })
-        }))
-        Promise.all(get_promises).then((results) => {
-            map_store.state = STATE.DISPLAY_PLOT
-            let varieties = results[4]
-            for (let variety of varieties) {
-                if (variety.id == plot.value.variety.id) {
-                    plot.value.variety.name = variety.name
-                    for (let i = 0; i < map_store.regions.length; i++) {
-                        map_store.regions_color.push(variety.color)
+        Promise.all(get_promises).then(() => {
+            get_promises = []
+            get_promises.push(new Promise((resolve) => {
+                send_api("GET", "designations/" + plot.value.designation.id).then((response) => {
+                    plot.value.designation = JSON.parse(response.response)
+                    resolve()
+                })
+            }))
+            get_promises.push(new Promise((resolve) => {
+                send_api("GET", "varieties/" + plot.value.variety.id).then((response) => {
+                    plot.value.variety = JSON.parse(response.response)
+                    resolve()
+                })
+            }))
+            get_promises.push(new Promise((resolve) => {
+                send_api("GET", "prunings/" + plot.value.pruning.id).then((response) => {
+                    plot.value.pruning = JSON.parse(response.response)
+                    resolve()
+                })
+            }))
+            get_promises.push(new Promise((resolve) => {
+                send_api("GET", "foldings/" + plot.value.folding.id).then((response) => {
+                    plot.value.folding = JSON.parse(response.response)
+                    resolve()
+                })
+            }))
+            get_promises.push(new Promise((resolve, reject) => {
+                retrieve_plot_lines(plot.value.id).then((lines) => {
+                    let section_id_idx_map = new Map()
+                    for (let i = 0; i < plot.value.plot_sections.length; i++) {
+                        section_id_idx_map.set(plot.value.plot_sections[i].id, i)
                     }
-                    break
-                }
-            }
-            nextTick(() => {
-                console.log(map_store.regions)
-                console.log(map_store.lines)
-                console.log(map_store.lines_done)
-                console.log(map_store.lines_highlighted)
-                map_container.value.center_map_on_region([].concat(...map_store.regions))
+                    map_store.lines = new Array(plot.value.plot_sections.length).fill([])
+                    map_store.lines_done = new Array(plot.value.plot_sections.length).fill([])
+                    map_store.lines_highlighted = new Array(plot.value.plot_sections.length).fill([])
+                    for (let line of lines) {
+                        map_store.lines[section_id_idx_map.get(line.plot_section_id)].push(line.coordinates)
+                    }
+                    resolve()
+                }).catch((error) => { reject(error) })
+            }))
+            Promise.all(get_promises).then(() => {
+                map_store.state = STATE.DISPLAY_PLOT
+                let plot_color_type = "designation"
+                if (settings_store.plot_color_type == PLOT_COLOR_TYPES.VARIETY)
+                    plot_color_type = "variety"
+                else if (settings_store.plot_color_type == PLOT_COLOR_TYPES.PRUNING)
+                    plot_color_type = "pruning"
+                if (settings_store.plot_color_type == PLOT_COLOR_TYPES.FOLDING)
+                    plot_color_type = "folding"
+                map_store.regions_color = new Array(map_store.regions.length).fill(plot.value[plot_color_type].color)
+                nextTick(() => {
+                    map_container.value.center_map_on_region([].concat(...map_store.regions))
+                })
             })
-            
-            send_api("GET", "prunings/" + plot.value.pruning.id).then((response) => {
-                plot.value.pruning.name = JSON.parse(response.response).name
-            })
-            send_api("GET", "foldings/" + plot.value.folding.id).then((response) => {
-                plot.value.folding.name = JSON.parse(response.response).name
-            })
+
             let get_promises_plot_tasks_line_states = [
                 new Promise((resolve) => {
                     retrieve_plot_line_states(plot.value.id, settings_store.current_season).then((plot_line_states) => {

@@ -114,15 +114,9 @@ const retrieve_plot_lines = (plot_id) => {
             let lines = []
             for (let i = 0; i < lines_api.length; i++) {
                 lines.push({
-                    start: {
-                        x: lines_api[i].geometry.coordinates[0][0],
-                        y: lines_api[i].geometry.coordinates[0][1],
-                    },
-                    end: {
-                        x: lines_api[i].geometry.coordinates[1][0],
-                        y: lines_api[i].geometry.coordinates[1][1],
-                    },
-                    id: lines_api[i].id
+                    coordinates: lines_api[i].geometry.coordinates.map((l) => { return { x: l[0], y: l[1] }}),
+                    id: lines_api[i].id,
+                    plot_section_id: lines_api[i].properties.plot_section
                 })
             }
             resolve(lines)

@@ -21,7 +21,7 @@
                             v-for="plot in plots"
                             :key="plot.id"
                         >
-                            <div class="card">
+                            <div class="card card-plot">
                                 <div class="card-img-top d-flex justify-content-center img-container">
                                     <map-display
                                         ref="map_displays" 
@@ -49,6 +49,9 @@
 </template>
 
 <style scoped>
+    .card-plot {
+        width: 258px;
+    }
     .img-container {
         height: 256px;
         background-color: black;
