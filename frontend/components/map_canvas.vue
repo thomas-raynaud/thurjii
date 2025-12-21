@@ -74,6 +74,7 @@
             if (canvas_regions[i].length == 0)
                 continue
             ctx.beginPath()
+            console.log(map_store.regions_color)
             let hex_color = "#" + map_store.regions_color[i]
             ctx.strokeStyle = hex_color
             let opacity = 0.5
