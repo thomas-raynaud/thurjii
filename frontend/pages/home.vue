@@ -17,7 +17,7 @@
                         </div>
                     </div>
                     <div class="row row-cols-4">
-                        <div class="col"
+                        <div class="col card-plot-container"
                             v-for="plot in plots"
                             :key="plot.id"
                         >
@@ -49,8 +49,12 @@
 </template>
 
 <style scoped>
+    .card-plot-container {
+        margin: 0 0.5rem;
+    }
     .card-plot {
         width: 258px;
+        margin: 0 1rem;
     }
     .img-container {
         height: 256px;

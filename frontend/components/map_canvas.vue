@@ -74,7 +74,6 @@
             if (canvas_regions[i].length == 0)
                 continue
             ctx.beginPath()
-            console.log(map_store.regions_color)
             let hex_color = "#" + map_store.regions_color[i]
             ctx.strokeStyle = hex_color
             let opacity = 0.5
@@ -296,11 +295,13 @@
     }
 
     watch(() => map_store.line_theta, () => {
-        compute_lines()
+        if (map_store.state == STATE.EDIT_LINES_GLOBAL_PLACEMENT)
+            compute_lines()
     })
 
     watch(() => map_store.line_step, () => {
-        compute_lines()
+        if (map_store.state == STATE.EDIT_LINES_GLOBAL_PLACEMENT)
+            compute_lines()
     })
 
     defineExpose({

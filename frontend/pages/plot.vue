@@ -142,6 +142,7 @@
         map_store.lines = [ [] ]
         map_store.lines_done = [ [] ]
         map_store.lines_highlighted = [ [] ]
+        map_store.current_region_ind = -1
         let get_promises = []
         plot.value.id = route.params.id
         get_promises.push(new Promise((resolve) => {

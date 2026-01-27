@@ -12,9 +12,9 @@ class PlotSerializer(serializers.ModelSerializer):
 class PlotSectionSerializer(GeoFeatureModelSerializer):
     area = serializers.SerializerMethodField()
     def get_area(self, obj):
-        transformer = pyproj.Transformer.from_crs("epsg:3857", "epsg:4326")
+        transformer = pyproj.Transformer.from_crs("epsg:3857", "epsg:9779") # 9779 = RGF93 v2 (lon-lat) -> https://epsg.io/9779
         coords = [ transformer.transform(point[0], point[1]) for point in obj.region[0] ]
-        geod = pyproj.Geod(ellps="WGS84")
+        geod = pyproj.Geod(ellps="GRS80")
         poly = Polygon(coords)
         return abs(geod.geometry_area_perimeter(poly)[0])
     class Meta:

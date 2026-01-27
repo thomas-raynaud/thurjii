@@ -4,6 +4,7 @@ const format_plot = (plot_api) => {
     return {
         id: plot_api.id,
         name: plot_api.name,
+        designation: plot_api.designation,
         variety: plot_api.variety,
         pruning: plot_api.pruning,
         folding: plot_api.folding,

@@ -4,3 +4,5 @@ const DVPF_NAMES = [
     "pruning",
     "folding"
 ]
+
+export { DVPF_NAMES }
