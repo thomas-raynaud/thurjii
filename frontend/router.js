@@ -2,6 +2,7 @@ import { createWebHashHistory, createRouter } from 'vue-router'
 import home             from './pages/home.vue'
 import map_page         from './pages/map.vue'
 import statistics       from './pages/statistics.vue'
+import settings         from './pages/settings.vue'
 import about            from './pages/about.vue'
 import plot_creation    from './pages/plot_creation.vue'
 import plot             from './pages/plot.vue'
@@ -30,6 +31,11 @@ const router = createRouter({
             path: '/statistics',
             name: 'statistics',
             component: statistics
+        },
+        {
+            path: '/settings',
+            name: 'settings',
+            component: settings
         },
         {
             path: '/about',

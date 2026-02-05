@@ -22,6 +22,11 @@
                     <p>Statistiques</p>
                 </div>
             </router-link>
+            <router-link to="/settings">
+                <div>
+                    <p>Paramètres</p>
+                </div>
+            </router-link>
             <router-link to="/about">
                 <div>
                     <p>A propos</p>
@@ -42,6 +47,9 @@
         get_current_season().then((current_season) => {
             settings_store.current_season = current_season
         })
+
+        let color_type = $cookies.get("color_type")
+        settings_store.plot_color_type = (color_type == null ? 1 : parseInt(color_type))
     })
 
 

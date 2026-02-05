@@ -5,4 +5,11 @@ const DVPF_NAMES = [
     "folding"
 ]
 
-export { DVPF_NAMES }
+const DVPF_NAMES_FR = [
+    "désignation",
+    "variété",
+    "taille",
+    "pliage"
+]
+
+export { DVPF_NAMES, DVPF_NAMES_FR }

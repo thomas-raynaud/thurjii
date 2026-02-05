@@ -20,7 +20,8 @@ const PLOT_COLOR_TYPES = {
     DESIGNATION: 0,
     VARIETY: 1,
     PRUNING: 2,
-    FOLDING: 3
+    FOLDING: 3,
+    LENGTH: 4,
 }
 
 export {
