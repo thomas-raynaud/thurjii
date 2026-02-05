@@ -50,9 +50,27 @@
                             </li>
                         </div>
                     </ul>
-                    <p>Superficie : {{ plot.area }} ha</p>
-                    <p>{{ nb_lines }} rangs</p>
-                    <p v-show="nb_lines_done > 0">{{ nb_lines_done }} rangs terminés</p>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col"></th>
+                                <th scope="col">Superficie</th>
+                                <th scope="col">Nombre de rangs</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="i in plot.plot_sections.length">
+                                <th scope="row">{{ plot.plot_sections[i - 1].name }}</th>
+                                <td>{{ plot.plot_sections[i - 1].area }}</td>
+                                <td>{{ map_store.lines[i - 1].length }}</td>
+                            </tr>
+                            <tr v-if="plot.plot_sections.length > 1">
+                                <th scope="row">TOTAL</th>
+                                <td>{{ plot.area }}</td>
+                                <td>{{ nb_lines }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
                 <div v-show="update_display == true">
                     <plot-form :form-data="plot" :invalid-data="invalid_data" />
@@ -115,8 +133,9 @@
         pruning:        { id: -1, name: "", color: null },
         folding:        { id: -1, name: "", color: null },
         tasks: [],
-        plot_sections: [],
-        area: 0
+        plot_sections: [ [ { name: "", area: 0} ] ],
+        area: 0,
+        areas: []
     })
     let plot_backup = {}
     const plot_found = ref(false)
@@ -155,10 +174,19 @@
                 map_store.regions = plot.value.plot_sections.reduce((accumulator, plot_section) => {
                     return accumulator.concat([ plot_section.region ])
                 }, [])
-                let area = plot.value.plot_sections.reduce((accumulator, plot_section) => {
+                map_store.lines = []
+                map_store.lines_done = []
+                map_store.lines_highlighted = []
+                for (let i = 0; i < plot.value.plot_sections.length; i++) {
+                    map_store.lines.push([])
+                    map_store.lines_done.push([])
+                    map_store.lines_highlighted.push([])
+                }
+                plot.value.area = plot.value.plot_sections.reduce((accumulator, plot_section) => {
+                    plot_section.area = Math.floor((plot_section.area / 10000) * 100) / 100
                     return accumulator + plot_section.area
                 }, 0)
-                plot.value.area = Math.floor((area / 10000) * 100) / 100
+                plot.value.area = Math.floor(plot.value.area * 100) / 100
                 plot_loading.value = false
                 plot_found.value = true
                 resolve()
@@ -211,13 +239,18 @@
             }))
             get_promises.push(new Promise((resolve, reject) => {
                 retrieve_plot_lines(plot.value.id).then((lines) => {
+                    map_store.lines = []
+                    map_store.lines_done = []
+                    map_store.lines_highlighted = []
+                    map_store.plot_section_names = []
                     let section_id_idx_map = new Map()
                     for (let i = 0; i < plot.value.plot_sections.length; i++) {
                         section_id_idx_map.set(plot.value.plot_sections[i].id, i)
+                        map_store.lines.push([])
+                        map_store.lines_done.push([])
+                        map_store.lines_highlighted.push([])
+                        map_store.plot_section_names.push(plot.value.plot_sections[i].name)
                     }
-                    map_store.lines = new Array(plot.value.plot_sections.length).fill([])
-                    map_store.lines_done = new Array(plot.value.plot_sections.length).fill([])
-                    map_store.lines_highlighted = new Array(plot.value.plot_sections.length).fill([])
                     for (let line of lines) {
                         map_store.lines[section_id_idx_map.get(line.plot_section_id)].push(line.coordinates)
                     }
