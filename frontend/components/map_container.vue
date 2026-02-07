@@ -118,7 +118,7 @@
                         [map_store.current_region_ind]
                         [map_store.current_line_ind]
                         [map_store.current_line_point_ind]
-                        = cursor_map_pos
+                        = from_rel_coords_to_mercator(cursor_map_pos)
                     map_store.lines_highlighted[map_store.current_region_ind] = [
                         map_store.lines[map_store.current_region_ind][map_store.current_line_ind]
                     ]
@@ -132,8 +132,8 @@
                 for (let i = 0; i < map_store.lines[map_store.current_region_ind].length; i++) {
                     let line = map_store.lines[map_store.current_region_ind][i]
                     for (let j = 0; j < line.length - 1; j++) {
-                        let a = canvas.value.from_rel_coords_to_canvas_pos(line[j])
-                        let b = canvas.value.from_rel_coords_to_canvas_pos(line[j + 1])
+                        let a = canvas.value.from_mercator_to_canvas_pos(line[j])
+                        let b = canvas.value.from_mercator_to_canvas_pos(line[j + 1])
                         let c = cursor_pos
                         let cursor_dist = get_distance_from_point_to_segment(c, a, b)
                         if (cursor_dist <= MIN_DIST_POINT) {
@@ -196,8 +196,8 @@
             for (let i = 0; i < map_store.lines[map_store.current_region_ind].length; i++) {
                 let line = map_store.lines[map_store.current_region_ind][i]
                 for (let j = 0; j < line.length - 1; j++) {
-                    let a = canvas.value.from_rel_coords_to_canvas_pos(line[j])
-                    let b = canvas.value.from_rel_coords_to_canvas_pos(line[j + 1])
+                    let a = canvas.value.from_mercator_to_canvas_pos(line[j])
+                    let b = canvas.value.from_mercator_to_canvas_pos(line[j + 1])
                     let c = cursor_pos
                     let cursor_dist = get_distance_from_point_to_segment(c, a, b)
                     if (cursor_dist <= MIN_DIST_POINT) {
@@ -253,13 +253,13 @@
         else if (map_store.state == STATE.EDIT_LINES) {
             if (map_store.line_point_placed) {
                 let cursor_pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, container.value)
-                let a = canvas.value.from_rel_coords_to_canvas_pos(
+                let a = canvas.value.from_mercator_to_canvas_pos(
                     map_store.lines
                     [map_store.current_region_ind]
                     [map_store.current_line_ind]
                     [map_store.current_line_point_ind]
                 )
-                let b = canvas.value.from_rel_coords_to_canvas_pos(
+                let b = canvas.value.from_mercator_to_canvas_pos(
                     map_store.lines
                     [map_store.current_region_ind]
                     [map_store.current_line_ind]
@@ -283,10 +283,10 @@
                         map_store.line_point_dragged = true
                         if (!cursor_close_to_point) {
                             // Create a new point and set it as the current point
-                            let point_pos = get_map_coords(
+                            let point_pos = from_rel_coords_to_mercator(get_map_coords(
                                 map_store.coords, map_store.offset_display,
                                 cursor_pos
-                            )
+                            ))
                             map_store.lines
                                 [map_store.current_region_ind]
                                 [map_store.current_line_ind]
@@ -315,13 +315,13 @@
                 let cursor_pos = get_mouse_pos({ x: e.clientX, y: e.clientY }, container.value)
                 let canvas_region = get_region_canvas_coordinates(map_store.regions[map_store.current_region_ind])
                 if (is_point_in_polygon(cursor_pos, canvas_region)) {
-                    let point_pos = get_map_coords(
+                    let point_pos_mc = from_rel_coords_to_mercator(get_map_coords(
                         map_store.coords, map_store.offset_display,
                         cursor_pos
-                    )
+                    ))
                     if (!map_store.line_point_placed) {
                         // Add a new line
-                        map_store.lines[map_store.current_region_ind].push([ point_pos ])
+                        map_store.lines[map_store.current_region_ind].push([ point_pos_mc ])
                         map_store.current_line_ind = map_store.lines[map_store.current_region_ind].length - 1
                         map_store.lines_highlighted[map_store.current_region_ind]
                             = [ map_store.lines[map_store.current_region_ind][map_store.current_line_ind] ]
@@ -329,7 +329,7 @@
                     }
                     else {
                         // Add new point to line
-                        map_store.lines[map_store.current_region_ind][map_store.current_line_ind].push(point_pos)
+                        map_store.lines[map_store.current_region_ind][map_store.current_line_ind].push(point_pos_mc)
                         map_store.lines_highlighted[map_store.current_region_ind]
                             = [ map_store.lines[map_store.current_region_ind][map_store.current_line_ind] ]
                     }
@@ -412,7 +412,7 @@
     }
 
     const add_point_to_region = () => {
-        let new_point = from_rel_coords_to_mercator(map_store.cursor_rel_coords.x, map_store.cursor_rel_coords.y)
+        let new_point = from_rel_coords_to_mercator(map_store.cursor_rel_coords)
         if (check_intersection_polygon(map_store.regions[map_store.current_region_ind], new_point)) {
             map_store.regions[map_store.current_region_ind] = []
         }
@@ -479,7 +479,7 @@
 
     const redraw = () => { canvas.value.draw() }
 
-    watch(() => map_store.state, (new_state, old_state) => {
+    watch(() => map_store.state, (new_state) => {
         map_store.line_point_placed = false
         if (new_state == STATE.EDIT_LINES_GLOBAL_PLACEMENT) {
             map_store.lines[map_store.current_region_ind] = []

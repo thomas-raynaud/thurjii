@@ -18,6 +18,7 @@ const get_map_height = (map_element) => {
 }
 
 const get_map_coords = (coords, offset, pos, map_element=null) => {
+    // Return relative coordinates from pos parameter in canvas coordinates
     let mouse_pos = Object.assign({}, pos)
     if (map_element != null)
         mouse_pos = get_mouse_pos(pos, map_element)
@@ -44,10 +45,10 @@ const get_viewport_coords = (pos, map_element) => {
     }
 }
 
-const from_rel_coords_to_mercator = (x, y) => {
+const from_rel_coords_to_mercator = (p) => {
     return {
-        x: EQUATOR * ((x) - 0.5),
-        y: EQUATOR * ((1 - y) - 0.5)
+        x: EQUATOR * ((p.x) - 0.5),
+        y: EQUATOR * ((1 - p.y) - 0.5)
     }
 }
 

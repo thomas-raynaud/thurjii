@@ -134,6 +134,7 @@
             let plot_sections_data_req = []
             for (let i = 0; i < regions.length; i++) {
                 let region = regions[i].map((x) => [ x.x, x.y ])
+                console.log(region)
                 // GEOJson format
                 plot_sections_data_req.push(
                     {
@@ -168,9 +169,7 @@
                 for (let j = 0; j < map_store.lines[i].length; j++) {
                     // Convert line coordinates from canvas space to mercator coords
                     let line_mc = map_store.lines[i][j].map((point) => {
-                        let p_rel_coords = get_map_coords(map_store.coords, map_store.offset_display, point)
-                        let p_mc = from_rel_coords_to_mercator(p_rel_coords.x, p_rel_coords.y)
-                        return [ p_mc.x, p_mc.y ]
+                        return [ point.x, point.y ]
                     })
                     lines_data_req.push({
                         type: "Feature",

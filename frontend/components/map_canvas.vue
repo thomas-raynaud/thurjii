@@ -15,7 +15,8 @@
     import {
         get_dims_map,
         get_mouse_pos,
-        get_map_coords
+        get_map_coords,
+        from_rel_coords_to_mercator
     } from '../lib/map_navigation'
     import {
         get_distance,
@@ -195,7 +196,7 @@
         if (map_store.state == STATE.ADD_LINE && map_store.line_point_placed) {
             // Draw a dash line from the last point in the line to the mouse cursor
             let last_point = map_store.lines[map_store.current_region_ind][map_store.current_line_ind].at(-1)
-            let last_point_canvas_pos = from_rel_coords_to_canvas_pos(last_point)
+            let last_point_canvas_pos = from_mercator_to_canvas_pos(last_point)
             let cursor_coords = from_rel_coords_to_canvas_pos(map_store.cursor_rel_coords)
             ctx.beginPath()
             ctx.lineWidth = '3'
@@ -249,7 +250,7 @@
                     && intersection.y <= Math.max(c.y, d.y)
                 ) {
                     let intersection_rel_coords = get_map_coords(map_store.coords, map_store.offset_display, intersection)
-                    intersections.push(intersection_rel_coords)
+                    intersections.push(from_rel_coords_to_mercator(intersection_rel_coords))
                 }
             }
             if (intersections.length >= 2) {

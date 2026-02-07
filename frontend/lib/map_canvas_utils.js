@@ -67,10 +67,10 @@ const draw_lines = (ctx, line_array, color, line_width) => {
         ctx.beginPath()
         ctx.strokeStyle = color
         ctx.lineWidth = line_width
-        let p = from_rel_coords_to_canvas_pos(line[0])
+        let p = from_mercator_to_canvas_pos(line[0])
         ctx.moveTo(p.x, p.y)
         for (let point of line.slice(1)) {
-            point = from_rel_coords_to_canvas_pos(point)
+            point = from_mercator_to_canvas_pos(point)
             ctx.lineTo(point.x, point.y)
         }
         ctx.stroke()

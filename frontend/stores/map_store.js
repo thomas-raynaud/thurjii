@@ -21,11 +21,13 @@ export const map_store = reactive({
         x: 0,
         y: 0
     },
+    // Line coords, mercator coordinates
     lines: [[]],
     lines_done: [[]],
     lines_highlighted: [[]],
+
     show_plot_names: true,
-    // Plot section related arrays, all with the same index
+    // Plot section related arrays, all with the same index. Mercator coordinates
     regions: [ [] ],
     region_centers: [],
     plot_section_names: [],

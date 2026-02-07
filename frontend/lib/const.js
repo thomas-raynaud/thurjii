@@ -6,7 +6,7 @@ const DVPF_NAMES = [
 ]
 
 const DVPF_NAMES_FR = [
-    "désignation",
+    "appellation",
     "variété",
     "taille",
     "pliage"

@@ -9,8 +9,8 @@
             </div>
             <div class="col">
                 <div v-show="update_display == false">
-                    <div class="row align-items-center mb-3">
-                        <div class="col-8">
+                    <div class="row justify-content-between mb-3">
+                        <div class="col">
                             <h3>{{ plot.name }}</h3>
                         </div>
                         <div class="col">
