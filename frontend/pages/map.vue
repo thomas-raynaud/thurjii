@@ -55,11 +55,13 @@
                         let plot_regions = plot.plot_sections.reduce((accumulator, plot_section) => {
                             return accumulator.concat([ plot_section.region ])
                         }, [])
-                        regions_dvpf.value.designation.push(plot.designation)
-                        regions_dvpf.value.variety.push(plot.variety)
-                        regions_dvpf.value.pruning.push(plot.pruning)
-                        regions_dvpf.value.folding.push(plot.folding)
-                        map_store.regions = plot_regions
+                        for (let i = 0; i < plot.plot_sections.length; i++) {
+                            regions_dvpf.value.designation.push(plot.designation)
+                            regions_dvpf.value.variety.push(plot.variety)
+                            regions_dvpf.value.pruning.push(plot.pruning)
+                            regions_dvpf.value.folding.push(plot.folding)
+                        }
+                        map_store.regions = map_store.regions.concat(plot_regions)
                         map_store.region_centers.push(get_polygon_center([].concat(...plot_regions)))
                         map_store.plot_names.push(plot.name)
                     }

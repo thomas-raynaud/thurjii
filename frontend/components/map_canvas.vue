@@ -172,8 +172,8 @@
             ctx.fillStyle = "white"
             ctx.font = "12px"
             ctx.textBaseline = "middle"
-            for (let i = 0; i < map_store.plot_centers.length; i++) {
-                let text_pos = from_mercator_to_canvas_pos(map_store.plot_centers[i])
+            for (let i = 0; i < map_store.region_centers.length; i++) {
+                let text_pos = from_mercator_to_canvas_pos(map_store.region_centers[i])
                 let plot_name = map_store.plot_names[i]
                 ctx.fillText(plot_name, (text_pos.x - ctx.measureText(plot_name).width / 2), text_pos.y)
             }

@@ -134,7 +134,6 @@
             let plot_sections_data_req = []
             for (let i = 0; i < regions.length; i++) {
                 let region = regions[i].map((x) => [ x.x, x.y ])
-                console.log(region)
                 // GEOJson format
                 plot_sections_data_req.push(
                     {
