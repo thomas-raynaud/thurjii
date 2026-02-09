@@ -76,6 +76,7 @@
     } from '../lib/api_retrieval'
     import { STATE } from '../lib/enums'
     import { compute_vineyard_bb } from '../lib/map_navigation'
+    import { fill_regions_dvpf, load_dvpf_map, set_colors } from '../lib/dvpf_colors'
 
     const map_container = useTemplateRef("map_container")
     const toast_component = useTemplateRef("toast_component")
@@ -91,13 +92,18 @@
         date: undefined
     })
     let vineyard_bb = { min: -1, max: -1 }
+    let dvpf_map
 
     onMounted(() => {
         retrieve_plots().then((in_plots) => {
             plots.value = in_plots
             vineyard_bb = compute_vineyard_bb(in_plots)
-            configure_map()
-            update_map_lines()
+            load_dvpf_map().then((in_dvpf_map) => {
+                dvpf_map = in_dvpf_map
+                configure_map()
+                update_map_lines()
+            })
+            
         })
         retrieve_tasks().then((in_tasks) => {
             tasks.value = in_tasks
@@ -111,15 +117,20 @@
     })
 
     const configure_map = () => {
+        map_store.regions = []
         if (log_data.value.plot_id == -1) {
             map_store.state = STATE.DISPLAY_VINEYARD
-            map_store.regions = []
             map_store.lines_highlighted = []
             for (let plot of plots.value) {
-                map_store.regions.push(toRaw(plot.region))
+                let plot_regions = plot.plot_sections.reduce((accumulator, plot_section) => {
+                    return accumulator.concat([ plot_section.region ])
+                }, [])
+                map_store.regions = map_store.regions.concat(plot_regions)
             }
             map_store.show_plot_names = false
-            if (vineyard_bb != null) {
+            if (plots.value.length > 0) {
+                let regions_dvpf = fill_regions_dvpf(plots._rawValue)
+                set_colors(dvpf_map, regions_dvpf)
                 map_container.value.center_map_on_region([ vineyard_bb.min, vineyard_bb.max ])
             }
         }
@@ -127,37 +138,54 @@
             map_store.state = STATE.DISPLAY_PLOT
             for (let plot of plots.value) {
                 if (plot.id == log_data.value.plot_id) {
-                    map_store.regions = [ toRaw(plot.region) ]
+                    map_store.regions = plot.plot_sections.reduce((accumulator, plot_section) => {
+                        return accumulator.concat([ plot_section.region ])
+                    }, [])
+                    let regions_dvpf = fill_regions_dvpf([ toRaw(plot) ])
+                    set_colors(dvpf_map, regions_dvpf)
                     break
                 }
             }
             map_container.value.center_map_on_region(map_store.regions[0])
-            retrieve_plot_lines(log_data.value.plot_id).then((lines) => {
-                map_store.lines = lines
-                map_container.value.redraw()
-            }).catch(() => {})
+            update_map_lines.then(() => { map_container.value.redraw() })
+            
         }
     }
 
     const update_map_lines = () => {
-        map_store.lines_highlighted = []
-        map_store.lines_done = []
-        if (log_data.value.plot_task_id == -1) {
-            map_container.value.redraw()
-            return
-        }
-        retrieve_plot_line_states(log_data.value.plot_id, settings_store.current_season).then((line_states) => {
-            for (let line_state of line_states) {
-                if (line_state.done) {
-                    map_store.lines_done.push({
-                        start: { x: line_state.line_location.start[0], y: line_state.line_location.start[1] },
-                        end: { x: line_state.line_location.end[0], y: line_state.line_location.end[1] },
-                        id: line_state.line
-                    })
-                }
+        return new Promise((resolve) => {
+            map_store.lines = []
+            map_store.lines_highlighted = []
+            map_store.lines_done = []
+            if (log_data.value.plot_id == -1) {
+                resolve()
+                return
             }
-            map_container.value.redraw()
+            console.log('e')
+            retrieve_plot_lines(log_data.value.plot_id).then((lines) => {
+                console.log('f')
+                map_store.lines = lines
+                console.log(lines)
+                if (log_data.value.plot_task_id == -1) {
+                    resolve()
+                    return
+                }
+                retrieve_plot_line_states(log_data.value.plot_id, settings_store.current_season).then((line_states) => {
+                    for (let line_state of line_states) {
+                        if (line_state.done) {
+                            /*map_store.lines_done.push({
+                                start: { x: line_state.line_location.start[0], y: line_state.line_location.start[1] },
+                                end: { x: line_state.line_location.end[0], y: line_state.line_location.end[1] },
+                                id: line_state.line
+                            })*/
+                        }
+                    }
+                    resolve()
+                })
+            })
         })
+        
+        
     }
 
     const load_plot_tasks = () => {
@@ -186,7 +214,7 @@
     watch(() => log_data.value.plot_id, () => {
         configure_map()
         load_plot_tasks().then(() => {
-            update_map_lines()
+            update_map_lines.then(() => { map_container.value.redraw() })
         })
         
     })
@@ -196,7 +224,7 @@
             map_store.state = STATE.DISPLAY_PLOT
         else
             map_store.state = STATE.SELECT_LINES
-        update_map_lines()
+        update_map_lines.then(() => { map_container.value.redraw() })
     })
 
     const create_log = () => {
