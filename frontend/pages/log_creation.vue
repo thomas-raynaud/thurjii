@@ -31,7 +31,7 @@
             <div class="invalid-feedback mb-3" :style="{'display': invalid_data ? 'block' : 'none'}">
                 Veuillez compléter tous les champs. Assurez-vous que les champs saisis soient valides.
             </div>
-            <p v-show="lines_selected > 0"> {{ lines_selected.length }} rangs sélectionnés</p>
+            <p v-show="lines_selected > 0"> {{ lines_selected }} rangs sélectionnés</p>
             <div class="row row-cols-auto">
                 <div class="col">
                     <button
@@ -241,7 +241,7 @@
             map_store.state = STATE.DISPLAY_PLOT
         else
             map_store.state = STATE.SELECT_LINES
-        update_map_lines.then(() => { map_container.value.redraw() })
+        update_map_lines().then(() => { map_container.value.redraw() })
     })
 
     const create_log = () => {

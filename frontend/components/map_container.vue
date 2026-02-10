@@ -460,20 +460,32 @@
             { x: map_store.zone_selection.end.x, y: map_store.zone_selection.end.y },
             { x: map_store.zone_selection.end.x, y: map_store.zone_selection.start.y },
         ]
-        for (let line of map_store.lines) {
-            let line_already_done = false
-            for (let line_done of map_store.lines_done) {
-                if (line.id == line_done.id) {
-                    line_already_done = true
-                    break
+        let line_section_ind = 0
+        for (let lines_section of map_store.lines) {
+            map_store.lines_highlighted.push([])
+            for (let line of lines_section) {
+                let line_already_done = false
+                for (let line_done of map_store.lines_done[line_section_ind]) {
+                    if (line.id == line_done.id) {
+                        line_already_done = true
+                        break
+                    }
                 }
+                if (line_already_done)
+                    continue
+                let line_in_rect = false
+                for (let i = 0; i < line.length - 1; i++) {
+                    let line_p1 = canvas.value.from_mercator_to_canvas_pos(line[i])
+                    let line_p2 = canvas.value.from_mercator_to_canvas_pos(line[i + 1])
+                    if (does_segment_intersect_rectangle(rect, [ line_p1, line_p2 ])) {
+                        line_in_rect = true
+                        break
+                    }
+                }
+                if (line_in_rect)
+                    map_store.lines_highlighted[line_section_ind].push(line)
             }
-            if (line_already_done)
-                continue
-            let line_start = canvas.value.from_mercator_to_canvas_pos(line.start)
-            let line_end = canvas.value.from_mercator_to_canvas_pos(line.end)
-            if (does_segment_intersect_rectangle(rect, [ line_start, line_end ]))
-                map_store.lines_highlighted.push(line)
+            line_section_ind++
         }
     }
 
