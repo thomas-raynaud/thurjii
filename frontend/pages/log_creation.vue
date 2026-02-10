@@ -31,7 +31,7 @@
             <div class="invalid-feedback mb-3" :style="{'display': invalid_data ? 'block' : 'none'}">
                 Veuillez compléter tous les champs. Assurez-vous que les champs saisis soient valides.
             </div>
-            <p v-show="map_store.lines_highlighted.length > 0"> {{ map_store.lines_highlighted.length }} rangs sélectionnés</p>
+            <p v-show="lines_selected > 0"> {{ lines_selected.length }} rangs sélectionnés</p>
             <div class="row row-cols-auto">
                 <div class="col">
                     <button
@@ -60,7 +60,7 @@
 </template>
 
 <script setup>
-    import { ref, onMounted, useTemplateRef, watch, toRaw } from 'vue'
+    import { ref, onMounted, useTemplateRef, watch, toRaw, computed } from 'vue'
 
     import MapContainer from '../components/map_container.vue'
     import Toast from '../components/toast.vue'
@@ -75,7 +75,7 @@
         retrieve_plot_line_states
     } from '../lib/api_retrieval'
     import { STATE } from '../lib/enums'
-    import { compute_vineyard_bb } from '../lib/map_navigation'
+    import { compute_plot_array_bb } from '../lib/map_navigation'
     import { fill_regions_dvpf, load_dvpf_map, set_colors } from '../lib/dvpf_colors'
 
     const map_container = useTemplateRef("map_container")
@@ -94,10 +94,14 @@
     let vineyard_bb = { min: -1, max: -1 }
     let dvpf_map
 
+    const lines_selected = computed(() => {
+        return map_store.lines_highlighted.reduce((acc, lh) => { return acc + lh.length }, 0)
+    })
+
     onMounted(() => {
         retrieve_plots().then((in_plots) => {
             plots.value = in_plots
-            vineyard_bb = compute_vineyard_bb(in_plots)
+            vineyard_bb = compute_plot_array_bb(in_plots)
             load_dvpf_map().then((in_dvpf_map) => {
                 dvpf_map = in_dvpf_map
                 configure_map()
@@ -118,6 +122,10 @@
 
     const configure_map = () => {
         map_store.regions = []
+        map_store.lines = []
+        map_store.lines_done = []
+        map_store.lines_highlighted = []
+        let plot_bb = null
         if (log_data.value.plot_id == -1) {
             map_store.state = STATE.DISPLAY_VINEYARD
             map_store.lines_highlighted = []
@@ -131,7 +139,6 @@
             if (plots.value.length > 0) {
                 let regions_dvpf = fill_regions_dvpf(plots._rawValue)
                 set_colors(dvpf_map, regions_dvpf)
-                map_container.value.center_map_on_region([ vineyard_bb.min, vineyard_bb.max ])
             }
         }
         else {
@@ -141,31 +148,43 @@
                     map_store.regions = plot.plot_sections.reduce((accumulator, plot_section) => {
                         return accumulator.concat([ plot_section.region ])
                     }, [])
+                    plot_bb = compute_plot_array_bb([ plot ])
                     let regions_dvpf = fill_regions_dvpf([ toRaw(plot) ])
                     set_colors(dvpf_map, regions_dvpf)
                     break
                 }
             }
-            map_container.value.center_map_on_region(map_store.regions[0])
-            update_map_lines.then(() => { map_container.value.redraw() })
             
+            update_map_lines().then(() => { map_container.value.redraw() })
+        }
+        empty_lines_arrays()
+        if (log_data.value.plot_id == -1)
+            map_container.value.center_map_on_region([ vineyard_bb.min, vineyard_bb.max ])
+        else {
+            map_container.value.center_map_on_region([ plot_bb.min, plot_bb.max ])
+        }
+    }
+
+    const empty_lines_arrays = () => {
+        map_store.lines = []
+        map_store.lines_done = []
+        map_store.lines_highlighted = []
+        for (let i = 0; i < map_store.regions.length; i++) {
+            map_store.lines.push([])
+            map_store.lines_done.push([])
+            map_store.lines_highlighted.push([])
         }
     }
 
     const update_map_lines = () => {
         return new Promise((resolve) => {
-            map_store.lines = []
-            map_store.lines_highlighted = []
-            map_store.lines_done = []
+            empty_lines_arrays()
             if (log_data.value.plot_id == -1) {
                 resolve()
                 return
             }
-            console.log('e')
             retrieve_plot_lines(log_data.value.plot_id).then((lines) => {
-                console.log('f')
-                map_store.lines = lines
-                console.log(lines)
+                map_store.lines = lines.lines_coords
                 if (log_data.value.plot_task_id == -1) {
                     resolve()
                     return
@@ -184,8 +203,6 @@
                 })
             })
         })
-        
-        
     }
 
     const load_plot_tasks = () => {
@@ -214,7 +231,7 @@
     watch(() => log_data.value.plot_id, () => {
         configure_map()
         load_plot_tasks().then(() => {
-            update_map_lines.then(() => { map_container.value.redraw() })
+            update_map_lines().then(() => { map_container.value.redraw() })
         })
         
     })

@@ -17,7 +17,7 @@
     import { map_store } from '../stores/map_store'
     import { STATE } from '../lib/enums'
     
-    import { compute_vineyard_bb } from '../lib/map_navigation'
+    import { compute_plot_array_bb } from '../lib/map_navigation'
     import { get_polygon_center } from '../lib/geometry'
     import {
         retrieve_plots,
@@ -42,7 +42,7 @@
                 map_store.region_centers.push(get_polygon_center([].concat(...plot_regions)))
                 map_store.plot_names.push(plot.name)
             }
-            let vineyard_bb = compute_vineyard_bb(plots)
+            let vineyard_bb = compute_plot_array_bb(plots)
             if (vineyard_bb != null) {
                 map_container.value.center_map_on_region([ vineyard_bb.min, vineyard_bb.max ])
             }

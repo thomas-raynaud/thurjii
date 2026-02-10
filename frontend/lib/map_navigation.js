@@ -94,7 +94,7 @@ const get_region_center_params = (region, dims_map) => {
     }
 }
 
-const compute_vineyard_bb = (plot_array) => {
+const compute_plot_array_bb = (plot_array) => {
     let points = plot_array.reduce((accumulator, plot) => {
         let plot_points = plot.plot_sections.reduce((acc2, plot_section) => {
             return acc2.concat(plot_section.region)
@@ -115,5 +115,5 @@ export {
     get_dims_map,
     get_region_center_params,
     from_rel_coords_to_mercator, from_mercator_to_rel_coords,
-    compute_vineyard_bb
+    compute_plot_array_bb
 }

@@ -239,20 +239,14 @@
             }))
             get_promises.push(new Promise((resolve, reject) => {
                 retrieve_plot_lines(plot.value.id).then((lines) => {
-                    map_store.lines = []
+                    map_store.lines = lines.lines_coords
                     map_store.lines_done = []
                     map_store.lines_highlighted = []
                     map_store.plot_section_names = []
-                    let section_id_idx_map = new Map()
                     for (let i = 0; i < plot.value.plot_sections.length; i++) {
-                        section_id_idx_map.set(plot.value.plot_sections[i].id, i)
-                        map_store.lines.push([])
                         map_store.lines_done.push([])
                         map_store.lines_highlighted.push([])
                         map_store.plot_section_names.push(plot.value.plot_sections[i].name)
-                    }
-                    for (let line of lines) {
-                        map_store.lines[section_id_idx_map.get(line.plot_section_id)].push(line.coordinates)
                     }
                     resolve()
                 }).catch((error) => { reject(error) })

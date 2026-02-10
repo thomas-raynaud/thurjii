@@ -39,7 +39,7 @@
     import PlotForm from '../components/plot_form.vue'
     import { map_store } from '../stores/map_store'
     import { settings_store } from '../stores/settings_store'
-    import { get_map_coords, from_rel_coords_to_mercator, compute_vineyard_bb, TILE_SIZE } from '../lib/map_navigation'
+    import { get_map_coords, from_rel_coords_to_mercator, compute_plot_array_bb, TILE_SIZE } from '../lib/map_navigation'
     import { log_error } from '../lib/log'
     import { STATE } from '../lib/enums'
     import { send_api } from '../lib/request'
@@ -79,7 +79,7 @@
         map_store.current_region_ind = -1
 
         retrieve_plots().then((plots_api) => {
-            vineyard_bb = compute_vineyard_bb(plots_api)
+            vineyard_bb = compute_plot_array_bb(plots_api)
             if (vineyard_bb != null) {
                 map_container.value.center_map_on_region([ vineyard_bb.min, vineyard_bb.max ])
             }

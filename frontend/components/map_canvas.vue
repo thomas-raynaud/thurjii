@@ -157,7 +157,6 @@
                 draw_lines(ctx, map_store.lines_done[i], 'blue', '2')
                 draw_lines(ctx, map_store.lines_highlighted[i], 'white', '2')
             }
-            
         }
         if (map_store.state == STATE.EDIT_LINES_GLOBAL_PLACEMENT) {
             // Show line cursor
