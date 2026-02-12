@@ -74,11 +74,14 @@ class PlotTaskSerializer(serializers.ModelSerializer):
 
 class LineStateSerializer(serializers.ModelSerializer):
     plot = serializers.SerializerMethodField()
+    plot_section = serializers.SerializerMethodField()
     task = serializers.SerializerMethodField()
     season = serializers.SerializerMethodField()
     line_location = serializers.SerializerMethodField()
     def get_plot(self, obj):
         return obj.plot_task.plot.id
+    def get_plot_section(self, obj):
+        return obj.line.plot_section.id
     def get_task(self, obj):
         return obj.plot_task.task.id
     def get_season(self, obj):
@@ -88,7 +91,7 @@ class LineStateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = LineState
-        fields = [ 'line', 'plot_task', 'plot', 'task', 'season', 'done', 'line_location' ]
+        fields = [ 'line', 'plot_task', 'plot', 'plot_section', 'task', 'season', 'done', 'line_location' ]
 
 class LogSerializer(serializers.ModelSerializer):
     plot_name = serializers.SerializerMethodField()

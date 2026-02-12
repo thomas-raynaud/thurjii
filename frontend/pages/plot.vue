@@ -138,6 +138,7 @@
         areas: []
     })
     let plot_backup = {}
+    let section_id_ind_map = new Map()
     const plot_found = ref(false)
     const plot_loading = ref(true)
     const nb_tiles_x = ref(4)
@@ -178,6 +179,7 @@
                 map_store.lines_done = []
                 map_store.lines_highlighted = []
                 for (let i = 0; i < plot.value.plot_sections.length; i++) {
+                    section_id_ind_map.set(plot.value.plot_sections[i].id, i)
                     map_store.lines.push([])
                     map_store.lines_done.push([])
                     map_store.lines_highlighted.push([])
@@ -436,6 +438,9 @@
 
     const select_task = (task_id) => {
         map_store.lines_done = []
+        for (let i = 0; i < plot.value.plot_sections.length; i++) {
+            map_store.lines_done.push([])
+        }
         if (task_id == active_task_id.value) {
             active_task_id.value = -1
             map_container.value.redraw()
@@ -446,8 +451,8 @@
             if (task_id == plot.value.tasks[i].plot_task_id) {
                 for (let line_state of plot.value.tasks[i].line_states) {
                     if (line_state.done) {
-                        map_store.lines_done.push({
-                            loc: line_state.line_location.map((point) => { return { x: point[0], y: point[1] }}),
+                        map_store.lines_done[section_id_ind_map.get(line_state.plot_section)].push({
+                            loc: line_state.line_location,
                             id: line_state.line
                         })
                     }

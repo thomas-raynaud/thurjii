@@ -204,7 +204,7 @@
                         if (line_state.done) {
                             let section_ind = lines_id_ind_map.get(line_state.line)[0]
                             let line_ind = lines_id_ind_map.get(line_state.line)[1]
-                            map_store.lines_done.push(
+                            map_store.lines_done[section_ind].push(
                                 map_store.lines[section_ind][line_ind]
                             )
                         }
@@ -269,15 +269,17 @@
                 date: log_data.value.date
             }
             let line_states_put_data = []
-            for (let line_selected of map_store.lines_highlighted) {
-                line_states_put_data.push({
-                    line: line_selected.id,
-                    plot_task: log_data.value.plot_task_id,
-                    done: true
-                })
+            for (let lines_section of map_store.lines_highlighted) {
+                for (let line_selected of lines_section) {
+                    line_states_put_data.push({
+                        line: line_selected.id,
+                        plot_task: log_data.value.plot_task_id,
+                        done: true
+                    })
+                }
             }
             let post_promises = []
-            /*post_promises.push(send_api("POST", "logs", log_post_data))
+            post_promises.push(send_api("POST", "logs", log_post_data))
             post_promises.push(send_api("PUT", "line_states", line_states_put_data))
             Promise.all(post_promises).then((responses) => {
                 if (responses[0].status == 400) {
@@ -293,25 +295,29 @@
             .catch((errors) => {
                 console.error(errors)
                 toast_component.value.display_toast("Erreur : le log n'a pas pu être créé")
-            })*/
-            
-            
+            })
         }
     }
 
     const reset_lines = () => {
         let line_states_put_data = []
-        for (let line_done of map_store.lines_done) {
-            line_states_put_data.push({
-                line: line_done.id,
-                plot_task: log_data.value.plot_task_id,
-                done: false
-            })
+        for (let lines_section of map_store.lines_done) {
+            for (let line_done of lines_section) {
+                line_states_put_data.push({
+                    line: line_done.id,
+                    plot_task: log_data.value.plot_task_id,
+                    done: false
+                })
+            }
         }
         send_api("PUT", "line_states", line_states_put_data)
         .then(() => {
             map_store.lines_done = []
+            for (let i = 0; i < map_store.regions.length; i++) {
+                map_store.lines_done.push([])
+            }
             map_container.value.redraw()
+            toast_component.value.display_toast("Rangs réinitialisés")
         })
     }
 </script>
