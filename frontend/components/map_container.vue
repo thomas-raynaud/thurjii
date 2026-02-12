@@ -117,7 +117,7 @@
                     map_store.lines
                         [map_store.current_region_ind]
                         [map_store.current_line_ind]
-                        [map_store.current_line_point_ind]
+                        .loc[map_store.current_line_point_ind]
                         = from_rel_coords_to_mercator(cursor_map_pos)
                     map_store.lines_highlighted[map_store.current_region_ind] = [
                         map_store.lines[map_store.current_region_ind][map_store.current_line_ind]
@@ -130,7 +130,7 @@
                 const MIN_DIST_POINT = 4
                 map_store.line_point_placed = false
                 for (let i = 0; i < map_store.lines[map_store.current_region_ind].length; i++) {
-                    let line = map_store.lines[map_store.current_region_ind][i]
+                    let line = map_store.lines[map_store.current_region_ind][i].loc
                     for (let j = 0; j < line.length - 1; j++) {
                         let a = canvas.value.from_mercator_to_canvas_pos(line[j])
                         let b = canvas.value.from_mercator_to_canvas_pos(line[j + 1])
@@ -195,9 +195,9 @@
             map_store.lines_highlighted[map_store.current_region_ind] = []
             for (let i = 0; i < map_store.lines[map_store.current_region_ind].length; i++) {
                 let line = map_store.lines[map_store.current_region_ind][i]
-                for (let j = 0; j < line.length - 1; j++) {
-                    let a = canvas.value.from_mercator_to_canvas_pos(line[j])
-                    let b = canvas.value.from_mercator_to_canvas_pos(line[j + 1])
+                for (let j = 0; j < line.loc.length - 1; j++) {
+                    let a = canvas.value.from_mercator_to_canvas_pos(line.loc[j])
+                    let b = canvas.value.from_mercator_to_canvas_pos(line.loc[j + 1])
                     let c = cursor_pos
                     let cursor_dist = get_distance_from_point_to_segment(c, a, b)
                     if (cursor_dist <= MIN_DIST_POINT) {
@@ -257,13 +257,13 @@
                     map_store.lines
                     [map_store.current_region_ind]
                     [map_store.current_line_ind]
-                    [map_store.current_line_point_ind]
+                    .loc[map_store.current_line_point_ind]
                 )
                 let b = canvas.value.from_mercator_to_canvas_pos(
                     map_store.lines
                     [map_store.current_region_ind]
                     [map_store.current_line_ind]
-                    [map_store.current_line_point_ind + 1]
+                    .loc[map_store.current_line_point_ind + 1]
                 )
                 
                 // Check if line close to an existing point. Set point as current point.
@@ -290,6 +290,7 @@
                             map_store.lines
                                 [map_store.current_region_ind]
                                 [map_store.current_line_ind]
+                                .loc
                                 .splice(map_store.current_line_point_ind + 1, 0, point_pos)
                             map_store.lines_highlighted[map_store.current_region_ind] = [
                                 map_store.lines[map_store.current_region_ind][map_store.current_line_ind]
@@ -304,6 +305,7 @@
                         map_store.lines
                             [map_store.current_region_ind]
                             [map_store.current_line_ind]
+                            .loc
                             .splice(map_store.current_line_point_ind, 1)
                     }
                 }
@@ -321,7 +323,7 @@
                     ))
                     if (!map_store.line_point_placed) {
                         // Add a new line
-                        map_store.lines[map_store.current_region_ind].push([ point_pos_mc ])
+                        map_store.lines[map_store.current_region_ind].push({ id: -1, loc: [ point_pos_mc ] })
                         map_store.current_line_ind = map_store.lines[map_store.current_region_ind].length - 1
                         map_store.lines_highlighted[map_store.current_region_ind]
                             = [ map_store.lines[map_store.current_region_ind][map_store.current_line_ind] ]
@@ -329,7 +331,7 @@
                     }
                     else {
                         // Add new point to line
-                        map_store.lines[map_store.current_region_ind][map_store.current_line_ind].push(point_pos_mc)
+                        map_store.lines[map_store.current_region_ind][map_store.current_line_ind].loc.push(point_pos_mc)
                         map_store.lines_highlighted[map_store.current_region_ind]
                             = [ map_store.lines[map_store.current_region_ind][map_store.current_line_ind] ]
                     }
@@ -474,9 +476,9 @@
                 if (line_already_done)
                     continue
                 let line_in_rect = false
-                for (let i = 0; i < line.length - 1; i++) {
-                    let line_p1 = canvas.value.from_mercator_to_canvas_pos(line[i])
-                    let line_p2 = canvas.value.from_mercator_to_canvas_pos(line[i + 1])
+                for (let i = 0; i < line.loc.length - 1; i++) {
+                    let line_p1 = canvas.value.from_mercator_to_canvas_pos(line.loc[i])
+                    let line_p2 = canvas.value.from_mercator_to_canvas_pos(line.loc[i + 1])
                     if (does_segment_intersect_rectangle(rect, [ line_p1, line_p2 ])) {
                         line_in_rect = true
                         break

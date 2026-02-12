@@ -63,7 +63,7 @@ const draw_cursor_point = (ctx, cursor_pos) => {
 const draw_lines = (ctx, line_array, color, line_width) => {
     ctx.setLineDash([])
     for (let i = 0; i < line_array.length; i++) {
-        let line = line_array[i].slice()
+        let line = line_array[i].loc.slice()
         ctx.beginPath()
         ctx.strokeStyle = color
         ctx.lineWidth = line_width

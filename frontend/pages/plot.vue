@@ -239,7 +239,7 @@
             }))
             get_promises.push(new Promise((resolve, reject) => {
                 retrieve_plot_lines(plot.value.id).then((lines) => {
-                    map_store.lines = lines.lines_coords
+                    map_store.lines = lines
                     map_store.lines_done = []
                     map_store.lines_highlighted = []
                     map_store.plot_section_names = []
@@ -375,9 +375,7 @@
                     plot.value.tasks[i].line_states = []
                     for (let line of map_store.lines) {
                         plot.value.tasks[i].line_states.push({
-                            line_location: {
-                                start: line.start, end: line.end
-                            },
+                            line_location: line.loc,
                             line: line.id,
                             plot: plot.value.id,
                             task: plot.value.tasks[i].id,
@@ -449,8 +447,7 @@
                 for (let line_state of plot.value.tasks[i].line_states) {
                     if (line_state.done) {
                         map_store.lines_done.push({
-                            start: { x: line_state.line_location.start[0], y: line_state.line_location.start[1] },
-                            end: { x: line_state.line_location.end[0], y: line_state.line_location.end[1] },
+                            loc: line_state.line_location.map((point) => { return { x: point[0], y: point[1] }}),
                             id: line_state.line
                         })
                     }

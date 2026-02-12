@@ -117,7 +117,7 @@ const retrieve_plot_lines = (plot_id) => {
             for (let i = 0; i < lines_api.length; i++) {
                 section_id_set.add(lines_api[i].properties.plot_section)
                 lines.push({
-                    coordinates: lines_api[i].geometry.coordinates.map((l) => { return { x: l[0], y: l[1] }}),
+                    loc: lines_api[i].geometry.coordinates.map((l) => { return { x: l[0], y: l[1] }}),
                     id: lines_api[i].id,
                     plot_section_id: lines_api[i].properties.plot_section
                 })
@@ -125,17 +125,14 @@ const retrieve_plot_lines = (plot_id) => {
             let sections_ids = Array.from(section_id_set).sort()
             let section_id_idx_map = new Map()
             let lines_sections = []
-            let lines_coords = []
             for (let i = 0; i < sections_ids.length; i++) {
                 section_id_idx_map.set(sections_ids[i], i)
                 lines_sections.push([])
-                lines_coords.push([])
             }
             for (let line of lines) {
                 lines_sections[section_id_idx_map.get(line.plot_section_id)].push(line)
-                lines_coords[section_id_idx_map.get(line.plot_section_id)].push(line.coordinates)
             }
-            resolve( { lines_details: lines_sections, lines_coords: lines_coords })
+            resolve(lines_sections)
         }).catch((error) => {
             console.error("Error when loading lines of plot #" + plot_id + " ...")
             console.error(error)

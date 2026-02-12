@@ -39,7 +39,7 @@
     import PlotForm from '../components/plot_form.vue'
     import { map_store } from '../stores/map_store'
     import { settings_store } from '../stores/settings_store'
-    import { get_map_coords, from_rel_coords_to_mercator, compute_plot_array_bb, TILE_SIZE } from '../lib/map_navigation'
+    import { compute_plot_array_bb, TILE_SIZE } from '../lib/map_navigation'
     import { log_error } from '../lib/log'
     import { STATE } from '../lib/enums'
     import { send_api } from '../lib/request'
@@ -167,7 +167,7 @@
             for(let i = 0; i < plot_sections_data.length; i++) {
                 for (let j = 0; j < map_store.lines[i].length; j++) {
                     // Convert line coordinates from canvas space to mercator coords
-                    let line_mc = map_store.lines[i][j].map((point) => {
+                    let line_mc = map_store.lines[i][j].loc.map((point) => {
                         return [ point.x, point.y ]
                     })
                     lines_data_req.push({

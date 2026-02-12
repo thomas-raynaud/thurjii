@@ -194,7 +194,7 @@
         }
         if (map_store.state == STATE.ADD_LINE && map_store.line_point_placed) {
             // Draw a dash line from the last point in the line to the mouse cursor
-            let last_point = map_store.lines[map_store.current_region_ind][map_store.current_line_ind].at(-1)
+            let last_point = map_store.lines[map_store.current_region_ind][map_store.current_line_ind].loc.at(-1)
             let last_point_canvas_pos = from_mercator_to_canvas_pos(last_point)
             let cursor_coords = from_rel_coords_to_canvas_pos(map_store.cursor_rel_coords)
             ctx.beginPath()
@@ -254,9 +254,8 @@
             }
             if (intersections.length >= 2) {
                 if (dir_step < 0)
-                    map_store.lines[map_store.current_region_ind].unshift([ intersections[0], intersections[1] ])
-                else
-                    map_store.lines[map_store.current_region_ind].push([ intersections[0], intersections[1] ])
+                    map_store.lines[map_store.current_region_ind].unshift({ id: -1, loc: [ intersections[0], intersections[1] ] })
+                    map_store.lines[map_store.current_region_ind].push({ id: -1, loc: [ intersections[0], intersections[1] ] })
             }
             line_pos += dir_step
         } while (intersections.length > 0)

@@ -48,7 +48,7 @@
                         type="button"
                         class="btn btn-light"
                         @click="reset_lines()"
-                        :disabled="map_store.lines_done.length == 0"
+                        :disabled="nb_lines_done == 0"
                     >
                         Réinitialiser tous les rangs
                     </button>
@@ -93,9 +93,13 @@
     })
     let vineyard_bb = { min: -1, max: -1 }
     let dvpf_map
+    let lines_id_ind_map = new Map()
 
     const lines_selected = computed(() => {
         return map_store.lines_highlighted.reduce((acc, lh) => { return acc + lh.length }, 0)
+    })
+    const nb_lines_done = computed(() => {
+        return map_store.lines_done.reduce((acc, ld) => { return acc + ld.length }, 0)
     })
 
     onMounted(() => {
@@ -154,8 +158,6 @@
                     break
                 }
             }
-            
-            update_map_lines().then(() => { map_container.value.redraw() })
         }
         empty_lines_arrays()
         if (log_data.value.plot_id == -1)
@@ -184,19 +186,27 @@
                 return
             }
             retrieve_plot_lines(log_data.value.plot_id).then((lines) => {
-                map_store.lines = lines.lines_coords
+                map_store.lines = lines
+                lines_id_ind_map.clear()
+                for (let i = 0; i < lines.length; i++) {
+                    for (let j = 0; j < lines[i].length; j++) {
+                        lines_id_ind_map.set(lines[i][j].id, [i, j])
+                    }
+                }
                 if (log_data.value.plot_task_id == -1) {
                     resolve()
                     return
                 }
                 retrieve_plot_line_states(log_data.value.plot_id, settings_store.current_season).then((line_states) => {
                     for (let line_state of line_states) {
+                        if (line_state.plot_task != log_data.value.plot_task_id)
+                            continue
                         if (line_state.done) {
-                            /*map_store.lines_done.push({
-                                start: { x: line_state.line_location.start[0], y: line_state.line_location.start[1] },
-                                end: { x: line_state.line_location.end[0], y: line_state.line_location.end[1] },
-                                id: line_state.line
-                            })*/
+                            let section_ind = lines_id_ind_map.get(line_state.line)[0]
+                            let line_ind = lines_id_ind_map.get(line_state.line)[1]
+                            map_store.lines_done.push(
+                                map_store.lines[section_ind][line_ind]
+                            )
                         }
                     }
                     resolve()
@@ -267,7 +277,7 @@
                 })
             }
             let post_promises = []
-            post_promises.push(send_api("POST", "logs", log_post_data))
+            /*post_promises.push(send_api("POST", "logs", log_post_data))
             post_promises.push(send_api("PUT", "line_states", line_states_put_data))
             Promise.all(post_promises).then((responses) => {
                 if (responses[0].status == 400) {
@@ -283,7 +293,7 @@
             .catch((errors) => {
                 console.error(errors)
                 toast_component.value.display_toast("Erreur : le log n'a pas pu être créé")
-            })
+            })*/
             
             
         }
