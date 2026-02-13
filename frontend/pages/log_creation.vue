@@ -15,10 +15,19 @@
                 <option value="-1">Sélectionnez une tâche</option>
                 <option v-for="task in plot_tasks" :value="task.id"> {{ task.name }} </option>
             </select>
+            <label class="form-label">Nombre d'heures</label>
             <input 
                 class="form-control mb-3"
                 v-model="log_data.nb_hours"
                 placeholder="Nombre d'heures"
+                type="number"
+                :disabled="log_data.plot_id==-1"
+            />
+            <label class="form-label">Nombre de personnes</label>
+            <input 
+                class="form-control mb-3"
+                v-model="log_data.nb_ppl"
+                placeholder="Nombre de personnes"
                 type="number"
                 :disabled="log_data.plot_id==-1"
             />
@@ -122,6 +131,7 @@
         let mm = String(today.getMonth() + 1).padStart(2, '0')
         let yyyy = today.getFullYear()
         log_data.value.date = yyyy + "-" + mm + "-" + dd
+        log_data.value.nb_ppl = 1
     })
 
     const configure_map = () => {
@@ -264,7 +274,7 @@
             invalid_data.value = false
             let log_post_data = {
                 plot_task: log_data.value.plot_task_id,
-                nb_hours: log_data.value.nb_hours,
+                nb_hours: log_data.value.nb_hours * log_data.value.nb_ppl,
                 comment: log_data.value.comment,
                 date: log_data.value.date
             }

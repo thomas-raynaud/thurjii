@@ -23,7 +23,19 @@
                         >
                             <div class="card">
                                 <div class="card-body">
-                                    <h5 class="card-title">{{ log.plot_name + " - " + log.task_name }}</h5>
+                                    <div class="row">
+                                        <div class="col">
+                                            <h5 class="card-title">{{ log.plot_name + " - " + log.task_name }}</h5>
+                                        </div>
+                                        <div class="col-auto">
+                                            <button
+                                                type="button" class="btn btn-outline-danger"
+                                                @click="delete_log(log.id)"
+                                            >
+                                                Supprimer
+                                            </button>
+                                        </div>
+                                    </div>
                                     <h6 class="card-subtitle mb-2 text-body-secondary">{{ log.date }}</h6>
                                     <p class="card-text"> Temps passé : {{ log.nb_hours }} </p>
                                     <p class="card-text"> {{ log.comment }} </p>
@@ -34,23 +46,27 @@
                 </div>
             </div>
         </div>
-        
     </div>
+    <toast ref="toast_component" />
 </template>
 
 <style scoped>
 </style>
 
 <script setup>
-    import { ref, onMounted } from 'vue'
+    import { ref, onMounted, useTemplateRef } from 'vue'
+
+    import Toast from '../components/toast.vue'
 
     import {
         retrieve_logs,
         get_current_season
     } from '../lib/api_retrieval'
     import { settings_store } from '../stores/settings_store'
+    import { send_api } from '../lib/request'
 
     const logs = ref([])
+    const toast_component = useTemplateRef("toast_component")
 
     onMounted(() => {
         get_current_season().then((current_season) => {
@@ -71,5 +87,22 @@
             }
         })
         .catch(() => {})
+    }
+
+    const delete_log = (log_id) => {
+        send_api("DELETE", "logs/" + log_id).then((response) => {
+            if (response.status == 500) {
+                console.error("Could not delete log #" + log_id + " ...")
+                toast_component.value.display_toast("Erreur : le log n'a pas pu être supprimé ...")
+            }
+            else {
+                load_logs()
+                toast_component.value.display_toast("Log supprimé")
+            }
+        }).catch((error) => {
+            console.error("Could not delete plot #" + plot.value.id + " ...")
+            console.error(error)
+            toast_component.value.display_toast("Erreur : le log n'a pas pu être supprimé ...")
+        })
     }
 </script>

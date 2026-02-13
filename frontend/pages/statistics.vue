@@ -16,7 +16,7 @@
 
     onMounted(() => {
         retrieve_plots().then((plots) => {
-            let area = plots.reduce((accumulator, plot) => accumulator + plot.area, 0)
+            let area = plots.reduce((acc, plot) => { return acc + plot.plot_sections.reduce((acc2, section) => acc2 + section.area, 0) }, 0)
             total_area.value = Math.floor((area / 10000) * 100) / 100
         })
     })
