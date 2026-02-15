@@ -1,8 +1,27 @@
 from .models import *
+from .libs.geometry import *
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
-import pyproj
-from shapely.geometry import Polygon
+
+
+def get_sum_distance_plot_lines(plot):
+    plot_sections = PlotSection.objects.filter(plot=plot.id)
+    lines = Line.objects.filter(plot_section__in=plot_sections)
+    sum_distances = 0.0
+    for line in lines:
+        sum_distances += get_distance(line.location)
+    return sum_distances
+
+def get_sum_distance_plot_lines_done(plot_task):
+    plot_sections = PlotSection.objects.filter(plot=plot_task.plot.id)
+    lines = Line.objects.filter(plot_section__in=plot_sections)
+    line_states = LineState.objects.filter(line__in=lines)
+    sum_distances_lines_done = 0.0
+    for line, line_state in zip(lines, line_states):
+        if line_state.done:
+            sum_distances_lines_done += get_distance(line.location)
+    return sum_distances_lines_done
+
 
 class PlotSerializer(serializers.ModelSerializer):
     class Meta:
@@ -12,11 +31,7 @@ class PlotSerializer(serializers.ModelSerializer):
 class PlotSectionSerializer(GeoFeatureModelSerializer):
     area = serializers.SerializerMethodField()
     def get_area(self, obj):
-        transformer = pyproj.Transformer.from_crs("epsg:3857", "epsg:9779") # 9779 = RGF93 v2 (lon-lat) -> https://epsg.io/9779
-        coords = [ transformer.transform(point[0], point[1]) for point in obj.region[0] ]
-        geod = pyproj.Geod(ellps="GRS80")
-        poly = Polygon(coords)
-        return abs(geod.geometry_area_perimeter(poly)[0])
+        return get_area_polygon(obj.region[0])
     class Meta:
         model = PlotSection
         geo_field = "region"
@@ -54,9 +69,20 @@ class LineSerializer(GeoFeatureModelSerializer):
         return obj.plot_section.plot.id
 
 class TaskSerializer(serializers.ModelSerializer):
+    completion = serializers.SerializerMethodField()
+    def get_completion(self, obj):
+        plot_tasks = PlotTask.objects.filter(task=obj.id)
+        if len(plot_tasks) == 0:
+            return -1.0
+        sum_lines_distance = 0.0
+        sum_lines_done_distance = 0.0
+        for plot_task in plot_tasks:
+            sum_lines_distance += get_sum_distance_plot_lines(plot_task.plot)
+            sum_lines_done_distance += get_sum_distance_plot_lines_done(plot_task)
+        return sum_lines_done_distance / sum_lines_distance
     class Meta:
         model = Task
-        fields = [ 'id', 'name' ]
+        fields = [ 'id', 'name', 'completion' ]
 
 class SeasonSerializer(serializers.ModelSerializer):
     class Meta:
@@ -65,12 +91,15 @@ class SeasonSerializer(serializers.ModelSerializer):
 
 class PlotTaskSerializer(serializers.ModelSerializer):
     task_name = serializers.SerializerMethodField()
+    completion = serializers.SerializerMethodField()
     def get_task_name(self, obj):
         return obj.task.name
+    def get_completion(self, obj):
+        return get_sum_distance_plot_lines_done(obj) / get_sum_distance_plot_lines(obj.plot)
 
     class Meta:
         model = PlotTask
-        fields = [ 'id', 'plot', 'task', 'task_name', 'season' ]
+        fields = [ 'id', 'plot', 'task', 'task_name', 'season', 'completion' ]
 
 class LineStateSerializer(serializers.ModelSerializer):
     plot = serializers.SerializerMethodField()

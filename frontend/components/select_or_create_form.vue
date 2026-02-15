@@ -74,6 +74,7 @@
                 if (form_option.id == new_id) {
                     props.formData.name = form_option.name
                     props.formData.color = form_option.color
+                    new_color.value = "#" + props.formData.color
                     break
                 }
             }

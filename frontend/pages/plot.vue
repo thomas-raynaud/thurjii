@@ -14,7 +14,7 @@
                             <h3>{{ plot.name }}</h3>
                         </div>
                         <div class="col">
-                            <div class="row row-cols-auto">
+                            <div class="row row-cols-auto justify-content-end">
                                 <div class="col">
                                     <button
                                         type="button" class="btn btn-outline-primary"
@@ -34,6 +34,7 @@
                             </div>
                         </div>
                     </div>
+                    <p>Appellation : {{ plot.designation.name }}</p>
                     <p>Cépage : {{ plot.variety.name }}</p>
                     <p>Taille : {{ plot.pruning.name }}</p>
                     <p>Pliage : {{ plot.folding.name }}</p>
@@ -46,7 +47,7 @@
                                 ]"
                                 v-if="task.checked" @click="select_task(task.plot_task_id)">
                                 {{ task.name }}
-                                <span class="badge text-bg-primary rounded-pill"> {{ Math.round((task.nb_lines_done / task.line_states.length) * 10000) / 100 }}%</span>
+                                <span class="badge text-bg-primary rounded-pill"> {{ task.completion }}%</span>
                             </li>
                         </div>
                     </ul>
@@ -152,9 +153,6 @@
     const nb_lines = computed(() => {
         return map_store.lines.map((region_lines) => region_lines.length).reduce((acc, val) => acc + val, 0)
     })
-    const nb_lines_done = computed(() => {
-        return map_store.lines_done.map((region_lines) => region_lines.length).reduce((acc, val) => acc + val, 0)
-    })
 
     onMounted(() => {
         map_store.state = STATE.DISPLAY_PLOT
@@ -168,6 +166,7 @@
         get_promises.push(new Promise((resolve) => {
             retrieve_plot(plot.value.id).then((plot_api) => {
                 plot.value.name = plot_api.name
+                plot.value.designation.id = plot_api.designation
                 plot.value.variety.id = plot_api.variety
                 plot.value.pruning.id = plot_api.pruning
                 plot.value.folding.id = plot_api.folding
@@ -290,6 +289,7 @@
                             plot.value.tasks[i].checked = true
                             plot.value.tasks[i].checked_db = true
                             plot.value.tasks[i].plot_task_id = plot_task.id
+                            plot.value.tasks[i].completion = Math.round(plot_task.completion * 10000) / 100
                             no_tasks_registered.value = false
                             break
                         }
@@ -302,14 +302,6 @@
                         if (plot_line_state.plot_task == plot.value.tasks[i].plot_task_id) {
                             plot.value.tasks[i].line_states.push(plot_line_state)
                         }
-                    }
-                }
-                for (let i = 0; i < plot.value.tasks.length; i++) {
-                    // Compute the percentage done for each task
-                    plot.value.tasks[i].nb_lines_done = 0
-                    for (let line_state of plot.value.tasks[i].line_states) {
-                        if (line_state.done)
-                            plot.value.tasks[i].nb_lines_done++
                     }
                 }
             })
@@ -343,50 +335,47 @@
                 )
             )
         }
+        else {
+            request_promises.push(new Promise((resolve) => { resolve(null) }))
+        }
         if (has_plot_changed) {
             let plot_data = {
                 id: plot.value.id,
-                type: "Feature",
-                geometry: {
-                    type: "Polygon",
-                    coordinates: [
-                    map_store.regions[0].map((x) => [ x.x, x.y ])
-                    ]
-                },
-                properties: {
-                    name: plot.value.name,
-                    variety: plot.value.variety.id,
-                    pruning: plot.value.pruning.id,
-                    folding: plot.value.folding.id
-                }
+                name: plot.value.name,
+                designation: plot.value.designation.id,
+                variety: plot.value.variety.id,
+                pruning: plot.value.pruning.id,
+                folding: plot.value.folding.id
             }
             request_promises.push(send_api("PUT", "plots/" + plot.value.id, plot_data))
         }
         Promise.all(request_promises).then((responses) => {
-            let new_plot_tasks = JSON.parse(responses[0].response)
-            for (let i = 0; i < plot.value.tasks.length; i++) {
-                if (!plot.value.tasks[i].checked_db) {
-                    for (let new_plot_task of new_plot_tasks) {
-                        if (new_plot_task.task == plot.value.tasks[i].id) {
-                            plot.value.tasks[i].plot_task_id = new_plot_task.id
-                            plot.value.tasks[i].checked_db = true
-                            plot.value.tasks[i].nb_lines_done = 0
-                            break
+            if (responses[0] != null) {
+                let new_plot_tasks = JSON.parse(responses[0].response)
+                for (let i = 0; i < plot.value.tasks.length; i++) {
+                    if (!plot.value.tasks[i].checked_db) {
+                        for (let new_plot_task of new_plot_tasks) {
+                            if (new_plot_task.task == plot.value.tasks[i].id) {
+                                plot.value.tasks[i].plot_task_id = new_plot_task.id
+                                plot.value.tasks[i].checked_db = true
+                                plot.value.tasks[i].completion = 0.0
+                                break
+                            }
+                        }
+                        plot.value.tasks[i].line_states = []
+                        for (let line of map_store.lines) {
+                            plot.value.tasks[i].line_states.push({
+                                line_location: line.loc,
+                                line: line.id,
+                                plot: plot.value.id,
+                                task: plot.value.tasks[i].id,
+                                season: settings_store.current_season,
+                                done: false
+                            })
                         }
                     }
-                    plot.value.tasks[i].line_states = []
-                    for (let line of map_store.lines) {
-                        plot.value.tasks[i].line_states.push({
-                            line_location: line.loc,
-                            line: line.id,
-                            plot: plot.value.id,
-                            task: plot.value.tasks[i].id,
-                            season: settings_store.current_season,
-                            done: false
-                        })
-                    }
+                    plot.value.tasks[i].checked_db = plot.value.tasks[i].checked
                 }
-                plot.value.tasks[i].checked_db = plot.value.tasks[i].checked
             }
             update_display.value = false
         })
@@ -418,6 +407,7 @@
 
     const clone_plot = (in_plot) => {
         let out_plot = Object.assign({}, in_plot)
+        out_plot.designation = Object.assign({}, in_plot.designation)
         out_plot.variety = Object.assign({}, in_plot.variety)
         out_plot.pruning = Object.assign({}, in_plot.pruning)
         out_plot.folding = Object.assign({}, in_plot.folding)
@@ -430,6 +420,7 @@
 
     const has_plot_been_modified = () => {
         return !(plot.value.name == plot_backup.name &&
+            plot.value.designation.id == plot_backup.designation.id &&
             plot.value.variety.id == plot_backup.variety.id &&
             plot.value.pruning.id == plot_backup.pruning.id &&
             plot.value.folding.id == plot_backup.folding.id
