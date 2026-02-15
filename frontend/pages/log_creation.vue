@@ -113,6 +113,13 @@
 
     onMounted(() => {
         retrieve_plots().then((in_plots) => {
+            in_plots.sort((a, b) => {
+                const name_a = a.name.toUpperCase()
+                const name_b = b.name.toUpperCase()
+                if (name_a < name_b) { return -1 }
+                if (name_a > name_b) { return 1 }
+                return 0
+            })
             plots.value = in_plots
             vineyard_bb = compute_plot_array_bb(in_plots)
             load_dvpf_map().then((in_dvpf_map) => {
@@ -274,7 +281,7 @@
             invalid_data.value = false
             let log_post_data = {
                 plot_task: log_data.value.plot_task_id,
-                nb_hours: log_data.value.nb_hours * log_data.value.nb_ppl,
+                nb_hours: Math.round(log_data.value.nb_hours * log_data.value.nb_ppl * 100) / 100,
                 comment: log_data.value.comment,
                 date: log_data.value.date
             }

@@ -12,7 +12,6 @@ def get_area_polygon(in_poly_coords):
 
 def get_distance(in_line_coords):
     coords = np.array([ transformer.transform(point[0], point[1]) for point in in_line_coords ])
-    coords_lon, coords_lats = coords
     geod = pyproj.Geod(ellps="GRS80")
     [ coords_lon, coords_lats ] = np.hsplit(coords, 2)
     coords_lon = coords_lon.reshape(1, coords_lon.shape[0])[0]

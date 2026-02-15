@@ -95,7 +95,10 @@ class PlotTaskSerializer(serializers.ModelSerializer):
     def get_task_name(self, obj):
         return obj.task.name
     def get_completion(self, obj):
-        return get_sum_distance_plot_lines_done(obj) / get_sum_distance_plot_lines(obj.plot)
+        sum_dist = get_sum_distance_plot_lines(obj.plot)
+        if sum_dist == 0.0:
+            return 0.0
+        return get_sum_distance_plot_lines_done(obj) / sum_dist
 
     class Meta:
         model = PlotTask

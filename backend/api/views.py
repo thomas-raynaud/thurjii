@@ -74,8 +74,6 @@ class LineViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         plot_id = self.kwargs['plot_id']
-        for line in request.data:
-            print(line)
         serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)

@@ -484,8 +484,9 @@
                         break
                     }
                 }
-                if (line_in_rect)
+                if (line_in_rect) {
                     map_store.lines_highlighted[line_section_ind].push(line)
+                }
             }
             line_section_ind++
         }

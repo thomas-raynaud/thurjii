@@ -82,8 +82,8 @@
             for (let i = 0; i < logs.value.length; i++) {
                 let nb_hours = parseFloat(logs.value[i].nb_hours)
                 let nb_hours_int = Math.floor(nb_hours)
-                let nb_minutes = (nb_hours - nb_hours_int) * 60
-                logs.value[i].nb_hours = nb_hours_int + "h" + ((nb_minutes > 0) ? nb_minutes : "")
+                let nb_minutes = Math.round((nb_hours - nb_hours_int) * 60)
+                logs.value[i].nb_hours = nb_hours_int + "h" + ((nb_minutes > 0) ? nb_minutes + "m" : "")
             }
         })
         .catch(() => {})

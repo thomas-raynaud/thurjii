@@ -134,7 +134,7 @@
                         if (plot_task.completion == 0.0) {
                             fill_plot_table(task.plots_todo, designations_todo_map, plot_task, plot, designation)
                         }
-                        else if (plot_task.completion == 100.0) {
+                        else if (plot_task.completion == 1.0) {
                             fill_plot_table(task.plots_done, designations_done_map, plot_task, plot, designation)
                         }
                         else {
