@@ -93,6 +93,7 @@ class LineViewSet(viewsets.ModelViewSet):
                     done=False
                 )
                 line_state.save()
+        # Update plot section's lines length
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data['features'], status=status.HTTP_201_CREATED, headers=headers)
 

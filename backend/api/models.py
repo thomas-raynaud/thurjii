@@ -1,6 +1,10 @@
 from django.db import models
 from datetime import date
 from django.contrib.gis.db import models as modelsPG
+from functools import reduce
+
+from .libs.geometry import *
+
 
 class Variety(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -32,16 +36,25 @@ class Plot(models.Model):
     variety = models.ForeignKey(Variety, on_delete=models.CASCADE)
     pruning = models.ForeignKey(Pruning, on_delete=models.CASCADE)
     folding = models.ForeignKey(Folding, on_delete=models.CASCADE)
-    
     def __str__(self):
         return self.name
+    def get_sum_distance_lines(self):
+        plot_sections = PlotSection.objects.filter(plot=self.id)
+        return reduce(lambda x, y : x.lines_length + y.lines_length, plot_sections)
 
 class PlotSection(models.Model):
     name = models.CharField(max_length=50)
     plot = models.ForeignKey(Plot, on_delete=models.CASCADE)
     region = modelsPG.PolygonField()
+    lines_length = models.DecimalField(max_digits=8, decimal_places=3)
     def __str__(self):
         return self.name + "(" + self.plot.name + ")"
+    def get_sum_distance_lines(self):
+        lines = Line.objects.filter(plot_section=self.id)
+        sum_distances = 0.0
+        for line in lines:
+            sum_distances += get_distance(line.location)
+        return sum_distances
 
 class Group(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -86,6 +99,16 @@ class Task(models.Model):
     name = models.CharField(max_length=50, unique=True)
     def __str__(self):
         return self.name
+    def get_completion(self):
+        plot_tasks = PlotTask.objects.filter(task=self.id)
+        if len(plot_tasks) == 0:
+            return -1.0
+        sum_lines_distance = 0.0
+        sum_lines_done_distance = 0.0
+        for plot_task in plot_tasks:
+            sum_lines_distance += plot_task.plot.get_sum_distance_plot_lines()
+            sum_lines_done_distance += plot_task.get_sum_lines_distances_done()
+        return sum_lines_done_distance / sum_lines_distance
 
 class PlotTask(models.Model):
     plot = models.ForeignKey(Plot, on_delete=models.CASCADE)
@@ -100,10 +123,35 @@ class PlotTask(models.Model):
         ]
     def __str__(self):
         return str(self.plot) + " - " + str(self.task) + " - " + str(self.season)
+    def get_sum_lines_distances_done(self):
+        plot_sections = PlotSection.objects.filter(plot=self.plot.id)
+        lines = Line.objects.filter(plot_section__in=plot_sections)
+        line_states = LineState.objects.filter(line__in=lines)
+        sum_distances_lines_done = 0.0
+        for line, line_state in zip(lines, line_states):
+            if line_state.done:
+                sum_distances_lines_done += get_distance(line.location)
+        return sum_distances_lines_done
+    def get_completion(self):
+        
+
+
+class Log(models.Model):
+    plot_task = models.ForeignKey(PlotTask, on_delete=models.CASCADE)
+    nb_hours = models.DecimalField(max_digits=5, decimal_places=2)
+    nb_persons = models.DecimalField(max_digits=5, decimal_places=2)
+    date = models.DateField()
+    comment = models.TextField(max_length=300, blank=True)
+    def __str__(self):
+        return (
+            "Log of plot " + self.plot_task.plot.name + " - "
+            + str(self.plot_task.task) + " - " + str(self.date)
+        )
 
 class LineState(models.Model):
     line = models.ForeignKey(Line, on_delete=models.CASCADE)
     plot_task = models.ForeignKey(PlotTask, on_delete=models.CASCADE)
+    log = models.ForeignKey(Log, on_delete=models.CASCADE)
     done = models.BooleanField(default=False)
     class Meta:
         constraints = [
@@ -114,17 +162,6 @@ class LineState(models.Model):
         ]
     def __str__(self):
         return str(self.line) + " - " + str(self.plot_task) + (" (done)" if self.done else "")
-
-class Log(models.Model):
-    plot_task = models.ForeignKey(PlotTask, on_delete=models.CASCADE)
-    nb_hours = models.DecimalField(max_digits=5, decimal_places=2)
-    date = models.DateField()
-    comment = models.TextField(max_length=300, blank=True)
-    def __str__(self):
-        return (
-            "Log of plot " + self.plot_task.plot.name + " - "
-            + str(self.plot_task.task) + " - " + str(self.date)
-        )
 
 class Reminder(models.Model):
     name = models.CharField(max_length=100)

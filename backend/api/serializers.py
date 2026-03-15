@@ -4,25 +4,6 @@ from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 
-def get_sum_distance_plot_lines(plot):
-    plot_sections = PlotSection.objects.filter(plot=plot.id)
-    lines = Line.objects.filter(plot_section__in=plot_sections)
-    sum_distances = 0.0
-    for line in lines:
-        sum_distances += get_distance(line.location)
-    return sum_distances
-
-def get_sum_distance_plot_lines_done(plot_task):
-    plot_sections = PlotSection.objects.filter(plot=plot_task.plot.id)
-    lines = Line.objects.filter(plot_section__in=plot_sections)
-    line_states = LineState.objects.filter(line__in=lines)
-    sum_distances_lines_done = 0.0
-    for line, line_state in zip(lines, line_states):
-        if line_state.done:
-            sum_distances_lines_done += get_distance(line.location)
-    return sum_distances_lines_done
-
-
 class PlotSerializer(serializers.ModelSerializer):
     class Meta:
         model = Plot
@@ -35,7 +16,7 @@ class PlotSectionSerializer(GeoFeatureModelSerializer):
     class Meta:
         model = PlotSection
         geo_field = "region"
-        fields = [ 'id', 'name', 'area', 'plot' ]
+        fields = [ 'id', 'name', 'area', 'plot', 'lines_length' ]
 
 class DesignationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -71,15 +52,7 @@ class LineSerializer(GeoFeatureModelSerializer):
 class TaskSerializer(serializers.ModelSerializer):
     completion = serializers.SerializerMethodField()
     def get_completion(self, obj):
-        plot_tasks = PlotTask.objects.filter(task=obj.id)
-        if len(plot_tasks) == 0:
-            return -1.0
-        sum_lines_distance = 0.0
-        sum_lines_done_distance = 0.0
-        for plot_task in plot_tasks:
-            sum_lines_distance += get_sum_distance_plot_lines(plot_task.plot)
-            sum_lines_done_distance += get_sum_distance_plot_lines_done(plot_task)
-        return sum_lines_done_distance / sum_lines_distance
+        return obj.get_completion()
     class Meta:
         model = Task
         fields = [ 'id', 'name', 'completion' ]
