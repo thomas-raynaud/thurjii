@@ -133,8 +133,9 @@ class PlotTask(models.Model):
                 sum_distances_lines_done += get_distance(line.location)
         return sum_distances_lines_done
     def get_completion(self):
-        
-
+        sum_lines_distance = self.plot.get_sum_distance_lines()
+        sum_lines_done_distance = self.get_sum_lines_distances_done()
+        return sum_lines_done_distance / sum_lines_distance
 
 class Log(models.Model):
     plot_task = models.ForeignKey(PlotTask, on_delete=models.CASCADE)

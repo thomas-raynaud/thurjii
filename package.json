@@ -4,7 +4,7 @@
   "description": "Vineyard management website",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build-frontend": "cd frontend; webpack --mode=production --config webpack.config.js; ./build-wasm",
+    "build-frontend": "cd frontend; webpack --mode=production --config webpack.config.js",
     "start-frontend": "cd frontend; webpack-dev-server --mode=development",
     "start-backend": "cd backend; python manage.py runserver 8081"
   },
@@ -16,28 +16,28 @@
   "license": "ISC",
   "devDependencies": {
     "@vue/compiler-sfc": "^3.4.21",
-    "copy-webpack-plugin": "^12.0.2",
+    "copy-webpack-plugin": "^14.0.0",
     "css-loader": "^6.11.0",
     "file-loader": "^6.2.0",
-    "html-webpack-plugin": "^5.6.6",
+    "html-webpack-plugin": "^5.6.8",
     "jquery": "^3.7.1",
-    "js-cookie": "^3.0.5",
-    "sass": "^1.97.3",
-    "sass-loader": "^16.0.6",
+    "js-cookie": "^3.0.8",
+    "sass": "^1.102.0",
+    "sass-loader": "^16.0.8",
     "source-map-loader": "^5.0.0",
     "vue-loader": "^17.4.2",
     "vue-router": "^4.6.4",
-    "webpack": "^5.104.1",
+    "webpack": "^5.109.2",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.2.3"
+    "webpack-dev-server": "^6.0.0"
   },
   "dependencies": {
     "bootstrap": "^5.3.8",
     "jquery": "^3.7.1",
-    "js-cookie": "^3.0.5",
-    "sass": "^1.97.3",
+    "js-cookie": "^3.0.8",
+    "sass": "^1.102.0",
     "style-loader": "^3.3.4",
-    "vue": "^3.5.13",
+    "vue": "^3.5.40",
     "vue-cookies": "^1.8.6",
     "vue-router": "^4.6.4"
   }
