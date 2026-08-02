@@ -85,8 +85,10 @@
                     let plot_points = plots.value[i].plot_sections.reduce((accumulator, plot_section) => {
                         return accumulator.concat(plot_section.region)
                     }, [])
-                    let center_params = get_region_center_params(plot_points, [ 1, 1 ])
-                    map_displays.value[i].position_map(center_params.pos, center_params.zoom, { x: 0.5, y: 0.5 })
+                    if (plot_points.length > 0) { // When plot has 1+ sections
+                        let center_params = get_region_center_params(plot_points, [ 1, 1 ])
+                        map_displays.value[i].position_map(center_params.pos, center_params.zoom, { x: 0.5, y: 0.5 })
+                    }
                 }
             })
         })

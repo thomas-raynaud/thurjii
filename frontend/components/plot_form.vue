@@ -178,11 +178,10 @@
             }
             else {
                 let task = JSON.parse(response.response)
-                task.checked = true
                 props.formData.tasks.push({
                     id: task.id,
                     name: task.name,
-                    checked: false,
+                    checked: true,
                     checked_db: false,
                     plot_task_id: -1,
                     line_states: []

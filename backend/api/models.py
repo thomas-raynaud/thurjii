@@ -40,6 +40,8 @@ class Plot(models.Model):
         return self.name
     def get_sum_distance_lines(self):
         plot_sections = PlotSection.objects.filter(plot=self.id)
+        if len(plot_sections) == 0:
+            return 0
         return reduce(lambda x, y : x.lines_length + y.lines_length, plot_sections)
 
 class PlotSection(models.Model):
@@ -106,8 +108,10 @@ class Task(models.Model):
         sum_lines_distance = 0.0
         sum_lines_done_distance = 0.0
         for plot_task in plot_tasks:
-            sum_lines_distance += plot_task.plot.get_sum_distance_plot_lines()
+            sum_lines_distance += plot_task.plot.get_sum_distance_lines()
             sum_lines_done_distance += plot_task.get_sum_lines_distances_done()
+        if sum_lines_distance == 0:
+            return 0.0
         return sum_lines_done_distance / sum_lines_distance
 
 class PlotTask(models.Model):

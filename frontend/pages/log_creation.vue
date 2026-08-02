@@ -121,13 +121,14 @@
                 return 0
             })
             plots.value = in_plots
-            vineyard_bb = compute_plot_array_bb(in_plots)
-            load_dvpf_map().then((in_dvpf_map) => {
-                dvpf_map = in_dvpf_map
-                configure_map()
-                update_map_lines()
-            })
-            
+            if (in_plots.length > 0) {
+                vineyard_bb = compute_plot_array_bb(in_plots)
+                load_dvpf_map().then((in_dvpf_map) => {
+                    dvpf_map = in_dvpf_map
+                    configure_map()
+                    update_map_lines()
+                })
+            }
         })
         retrieve_tasks().then((in_tasks) => {
             tasks.value = in_tasks

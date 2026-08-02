@@ -27,11 +27,6 @@
                     <p>Paramètres</p>
                 </div>
             </router-link>
-            <router-link to="/about">
-                <div>
-                    <p>A propos</p>
-                </div>
-            </router-link>
         </div>
         <router-view />
     </div>

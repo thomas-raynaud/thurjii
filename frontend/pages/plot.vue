@@ -263,7 +263,9 @@
                     plot_color_type = "folding"
                 map_store.regions_color = new Array(map_store.regions.length).fill(plot.value[plot_color_type].color)
                 nextTick(() => {
-                    map_container.value.center_map_on_region([].concat(...map_store.regions))
+                    if (map_store.regions.length > 0) {
+                        map_container.value.center_map_on_region([].concat(...map_store.regions))
+                    }
                 })
             })
 
