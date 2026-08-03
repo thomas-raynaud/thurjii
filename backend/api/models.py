@@ -42,7 +42,7 @@ class Plot(models.Model):
         plot_sections = PlotSection.objects.filter(plot=self.id)
         if len(plot_sections) == 0:
             return 0
-        return reduce(lambda x, y : x.lines_length + y.lines_length, plot_sections)
+        return float(sum(plot_section.lines_length for plot_section in plot_sections))
 
 class PlotSection(models.Model):
     name = models.CharField(max_length=50)
@@ -156,7 +156,7 @@ class Log(models.Model):
 class LineState(models.Model):
     line = models.ForeignKey(Line, on_delete=models.CASCADE)
     plot_task = models.ForeignKey(PlotTask, on_delete=models.CASCADE)
-    log = models.ForeignKey(Log, on_delete=models.CASCADE)
+    log = models.ForeignKey(Log, on_delete=models.CASCADE, blank=True, null=True)
     done = models.BooleanField(default=False)
     class Meta:
         constraints = [
