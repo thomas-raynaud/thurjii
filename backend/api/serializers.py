@@ -16,7 +16,7 @@ class PlotSectionSerializer(GeoFeatureModelSerializer):
     class Meta:
         model = PlotSection
         geo_field = "region"
-        fields = [ 'id', 'name', 'area', 'plot', 'lines_length' ]
+        fields = [ 'id', 'name', 'area', 'plot' ]
 
 class DesignationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -68,10 +68,14 @@ class PlotTaskSerializer(serializers.ModelSerializer):
     def get_task_name(self, obj):
         return obj.task.name
     def get_completion(self, obj):
-        sum_dist = obj.plot.get_sum_distance_lines()
-        if sum_dist == 0.0:
+        sum_lines_distance = obj.plot.get_sum_distance_lines()
+        if sum_lines_distance == 0.0:
             return 0.0
-        return obj.get_sum_lines_distances_done() / sum_dist
+        sum_lines_done_distance = obj.get_sum_lines_distances_done()
+        print("plot task completion")
+        print(sum_lines_distance)
+        print(sum_lines_done_distance)
+        return sum_lines_done_distance / sum_lines_distance
 
     class Meta:
         model = PlotTask
@@ -107,4 +111,4 @@ class LogSerializer(serializers.ModelSerializer):
         return obj.plot_task.task.name
     class Meta:
         model = Log
-        fields = [ 'id', 'plot_task', 'plot_name', 'task_name', 'nb_hours', 'date', 'comment' ]
+        fields = [ 'id', 'plot_task', 'plot_name', 'task_name', 'nb_hours', 'nb_persons', 'date', 'comment' ]

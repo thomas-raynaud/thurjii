@@ -98,6 +98,8 @@ python manage.py migrate
   -> [Site pour administration des données](http://localhost:8081/admin)
 
 # TODO
+- Fix page parcelle avec mauvais ID
+- Fix couleur polygone creation section parcelle après avoir ajouté nouvelle appellation
 - Rappels : ajout, affichage, cocher comme étant fait
 - Réparations
 - Statistiques sur bouteilles vendues, et outil pour générer des fichiers DTI+ pour la douane

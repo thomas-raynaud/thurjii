@@ -42,13 +42,12 @@ class Plot(models.Model):
         plot_sections = PlotSection.objects.filter(plot=self.id)
         if len(plot_sections) == 0:
             return 0
-        return float(sum(plot_section.lines_length for plot_section in plot_sections))
+        return float(sum(plot_section.get_sum_distance_lines() for plot_section in plot_sections))
 
 class PlotSection(models.Model):
     name = models.CharField(max_length=50)
     plot = models.ForeignKey(Plot, on_delete=models.CASCADE)
     region = modelsPG.PolygonField()
-    lines_length = models.DecimalField(max_digits=8, decimal_places=3)
     def __str__(self):
         return self.name + "(" + self.plot.name + ")"
     def get_sum_distance_lines(self):
@@ -130,16 +129,12 @@ class PlotTask(models.Model):
     def get_sum_lines_distances_done(self):
         plot_sections = PlotSection.objects.filter(plot=self.plot.id)
         lines = Line.objects.filter(plot_section__in=plot_sections)
-        line_states = LineState.objects.filter(line__in=lines)
+        line_states = LineState.objects.filter(line__in=lines, plot_task=self.id)
         sum_distances_lines_done = 0.0
         for line, line_state in zip(lines, line_states):
             if line_state.done:
                 sum_distances_lines_done += get_distance(line.location)
         return sum_distances_lines_done
-    def get_completion(self):
-        sum_lines_distance = self.plot.get_sum_distance_lines()
-        sum_lines_done_distance = self.get_sum_lines_distances_done()
-        return sum_lines_done_distance / sum_lines_distance
 
 class Log(models.Model):
     plot_task = models.ForeignKey(PlotTask, on_delete=models.CASCADE)

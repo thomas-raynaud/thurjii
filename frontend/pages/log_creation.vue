@@ -282,7 +282,8 @@
             invalid_data.value = false
             let log_post_data = {
                 plot_task: log_data.value.plot_task_id,
-                nb_hours: Math.round(log_data.value.nb_hours * log_data.value.nb_ppl * 100) / 100,
+                nb_hours: log_data.value.nb_hours,
+                nb_persons: log_data.value.nb_ppl,
                 comment: log_data.value.comment,
                 date: log_data.value.date
             }
