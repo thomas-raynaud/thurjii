@@ -372,7 +372,7 @@
                                 plot: plot.value.id,
                                 task: plot.value.tasks[i].id,
                                 season: settings_store.current_season,
-                                done: false
+                                log: null
                             })
                         }
                     }
@@ -443,7 +443,7 @@
         for (let i = 0; i < plot.value.tasks.length; i++) {
             if (task_id == plot.value.tasks[i].plot_task_id) {
                 for (let line_state of plot.value.tasks[i].line_states) {
-                    if (line_state.done) {
+                    if (line_state.log != null) {
                         map_store.lines_done[section_id_ind_map.get(line_state.plot_section)].push({
                             loc: line_state.line_location,
                             id: line_state.line

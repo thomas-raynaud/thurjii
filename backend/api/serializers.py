@@ -100,7 +100,7 @@ class LineStateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = LineState
-        fields = [ 'line', 'plot_task', 'plot', 'plot_section', 'task', 'season', 'done', 'line_location' ]
+        fields = [ 'line', 'plot_task', 'plot', 'plot_section', 'task', 'season', 'log', 'line_location' ]
 
 class LogSerializer(serializers.ModelSerializer):
     plot_name = serializers.SerializerMethodField()

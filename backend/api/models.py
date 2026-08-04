@@ -132,7 +132,7 @@ class PlotTask(models.Model):
         line_states = LineState.objects.filter(line__in=lines, plot_task=self.id)
         sum_distances_lines_done = 0.0
         for line, line_state in zip(lines, line_states):
-            if line_state.done:
+            if line_state.log != None:
                 sum_distances_lines_done += get_distance(line.location)
         return sum_distances_lines_done
 
@@ -151,8 +151,7 @@ class Log(models.Model):
 class LineState(models.Model):
     line = models.ForeignKey(Line, on_delete=models.CASCADE)
     plot_task = models.ForeignKey(PlotTask, on_delete=models.CASCADE)
-    log = models.ForeignKey(Log, on_delete=models.CASCADE, blank=True, null=True)
-    done = models.BooleanField(default=False)
+    log = models.ForeignKey(Log, on_delete=models.SET_NULL, blank=True, null=True)
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -161,7 +160,7 @@ class LineState(models.Model):
             )
         ]
     def __str__(self):
-        return str(self.line) + " - " + str(self.plot_task) + (" (done)" if self.done else "")
+        return str(self.line) + " - " + str(self.plot_task) + (" (done)" if self.log.id != "null" else "")
 
 class Reminder(models.Model):
     name = models.CharField(max_length=100)

@@ -212,6 +212,6 @@ class LineStateViewSet(viewsets.ModelViewSet):
         new_line_states = request.data
         for new_line_state in new_line_states:
             line_state = LineState.objects.filter(line=new_line_state['line'], plot_task=new_line_state['plot_task'])[0]
-            line_state.done = new_line_state['done']
+            line_state.log = Log.objects.get(pk = new_line_state['log'])
             line_state.save()
         return Response(None, status=status.HTTP_200_OK)
