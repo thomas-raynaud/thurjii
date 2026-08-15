@@ -253,9 +253,12 @@
                 }
             }
             if (intersections.length >= 2) {
-                if (dir_step < 0)
+                if (dir_step < 0) {
                     map_store.lines[map_store.current_region_ind].unshift({ id: -1, loc: [ intersections[0], intersections[1] ] })
+                }
+                else {
                     map_store.lines[map_store.current_region_ind].push({ id: -1, loc: [ intersections[0], intersections[1] ] })
+                }
             }
             line_pos += dir_step
         } while (intersections.length > 0)
