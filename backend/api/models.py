@@ -131,9 +131,9 @@ class PlotTask(models.Model):
         lines = Line.objects.filter(plot_section__in=plot_sections)
         line_states = LineState.objects.filter(line__in=lines, plot_task=self.id)
         sum_distances_lines_done = 0.0
-        for line, line_state in zip(lines, line_states):
+        for line_state in line_states:
             if line_state.log != None:
-                sum_distances_lines_done += get_distance(line.location)
+                sum_distances_lines_done += get_distance(line_state.line.location)
         return sum_distances_lines_done
 
 class Log(models.Model):
@@ -160,7 +160,7 @@ class LineState(models.Model):
             )
         ]
     def __str__(self):
-        return str(self.line) + " - " + str(self.plot_task) + (" (done)" if self.log.id != "null" else "")
+        return str(self.line) + " - " + str(self.plot_task) + (" (done)" if self.log != None else "")
 
 class Reminder(models.Model):
     name = models.CharField(max_length=100)
