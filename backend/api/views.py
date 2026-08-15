@@ -89,8 +89,7 @@ class LineViewSet(viewsets.ModelViewSet):
             for task in plot_tasks:
                 line_state = LineState(
                     line=line,
-                    plot_task=task,
-                    done=False
+                    plot_task=task
                 )
                 line_state.save()
         # Update plot section's lines length
@@ -122,8 +121,7 @@ class SeasonViewSet(viewsets.ModelViewSet):
                     for line in plot_lines:
                         line_state = LineState(
                             line=line,
-                            plot_task=new_plot_task,
-                            done=False
+                            plot_task=new_plot_task
                         )
                         line_state.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -167,8 +165,7 @@ class PlotTaskViewSet(viewsets.ModelViewSet):
                 for line in plot_lines:
                     line_state = LineState(
                         line=line,
-                        plot_task=plot_task,
-                        done=False
+                        plot_task=plot_task
                     )
                     line_state.save()
         # If some previous tasks are not in the new list of task, delete them

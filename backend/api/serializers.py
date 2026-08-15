@@ -72,9 +72,6 @@ class PlotTaskSerializer(serializers.ModelSerializer):
         if sum_lines_distance == 0.0:
             return 0.0
         sum_lines_done_distance = obj.get_sum_lines_distances_done()
-        print("plot task completion")
-        print(sum_lines_distance)
-        print(sum_lines_done_distance)
         return sum_lines_done_distance / sum_lines_distance
 
     class Meta:
