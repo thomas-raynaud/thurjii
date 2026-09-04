@@ -169,7 +169,7 @@
         if (map_store.state == STATE.DISPLAY_VINEYARD && map_store.show_plot_names == true) {
             // Display the plot names
             ctx.fillStyle = "white"
-            ctx.font = "12px"
+            ctx.font = "13px"
             ctx.textBaseline = "middle"
             for (let i = 0; i < map_store.region_centers.length; i++) {
                 let text_pos = from_mercator_to_canvas_pos(map_store.region_centers[i])

@@ -72,7 +72,7 @@
                     <label class="form-label">Ecart entre rangs</label>
                 </div>
                 <div class="col-8">
-                    <input type="range" class="form-range" v-model="map_store.line_step" :min="map_store.line_spread_min" :max="map_store.line_spread_max" step="0.2">
+                    <input type="range" class="form-range" v-model="map_store.line_step" :min="map_store.line_spread_min" :max="map_store.line_spread_max" step="0.15">
                 </div>
             </div>
             <div class="row">
@@ -80,7 +80,7 @@
                     <label class="form-label">Orientation des rangs</label>
                 </div>
                 <div class="col-8">
-                    <input type="range" class="form-range" v-model="map_store.line_theta" min="0" max="360" step="0.5">
+                    <input type="range" class="form-range" v-model="map_store.line_theta" min="0" max="360" step="0.25">
                 </div>
             </div>
         </div>

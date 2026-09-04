@@ -87,7 +87,7 @@
         retrieve_tasks().then((tasks_api) => {
             plot_data.value.tasks = tasks_api
             for (let i = 0; i < plot_data.value.tasks.length; i++) {
-                plot_data.value.tasks[i].checked = false
+                plot_data.value.tasks[i].checked = true
             }
         })
     })

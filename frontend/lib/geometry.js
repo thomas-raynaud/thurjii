@@ -153,15 +153,10 @@ const compute_bb = (points) => {
 }
 
 const get_polygon_center = (poly) => {
-	let sum_x = 0
-	let sum_y = 0
-	for (let point of poly) {
-		sum_x += point.x
-		sum_y += point.y
-	}
+	let bb = compute_bb(poly)
 	return {
-		x: sum_x / poly.length,
-		y: sum_y / poly.length
+		x: (bb.min.x + bb.max.x) / 2.0,
+		y: (bb.min.y + bb.max.y) / 2.0,
 	}
 }
 
