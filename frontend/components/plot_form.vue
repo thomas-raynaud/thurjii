@@ -105,7 +105,7 @@
 
     import SelectOrCreateForm from '../components/select_or_create_form.vue'
     import { send_api } from '../lib/request'
-    import { PLOT_COLOR_TYPES, STATE } from '../lib/enums'
+    import { STATE } from '../lib/enums'
     import { map_store } from '../stores/map_store'
     import { settings_store } from '../stores/settings_store'
 
@@ -160,29 +160,16 @@
     })
 
     const set_region_color = () => {
-        if (settings_store.plot_color_type == PLOT_COLOR_TYPES.DESIGNATION) {
-            for (let designation of designations.value) {
-                if (props.formData.designation.id == designation.id)
-                    region_color = designation.color
-            }
-        }
-        else if (settings_store.plot_color_type == PLOT_COLOR_TYPES.VARIETY) {
-            for (let variety of varieties.value) {
-                if (props.formData.variety.id == variety.id)
-                    region_color = variety.color
-            }
-        }
-        else if (settings_store.plot_color_type == PLOT_COLOR_TYPES.PRUNING) {
-            for (let pruning of prunings.value) {
-                if (props.formData.pruning.id == pruning.id)
-                    region_color = pruning.color
-            }
-        }
-        else {
-            for (let folding of foldings.value) {
-                if (props.formData.folding.id == folding.id)
-                    region_color = folding.color
-            }
+        let dvpf = [ designations, varieties, prunings, foldings ]
+        let dvpf_values = [
+            props.formData.designation,
+            props.formData.variety,
+            props.formData.pruning,
+            props.formData.folding
+        ]
+        for (let el of dvpf[settings_store.plot_color_type].value) {
+            if (dvpf_values[settings_store.plot_color_type].id == el.id)
+                region_color = el.color
         }
         map_store.regions_color.fill(region_color)
     }
