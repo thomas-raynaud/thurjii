@@ -44,6 +44,7 @@
     import { STATE } from '../lib/enums'
     import { send_api } from '../lib/request'
     import { retrieve_plots, retrieve_tasks } from '../lib/api_retrieval'
+import Map_container from '../components/map_container.vue'
 
     const router = useRouter()
 
@@ -227,4 +228,6 @@
             }
         }
     })
+
+    watch(() => map_store.regions_color, () => { map_container.value.redraw() }, {deep: true})
 </script>

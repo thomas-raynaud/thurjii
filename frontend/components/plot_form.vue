@@ -101,12 +101,13 @@
 </template>
 
 <script setup>
-    import { onMounted, ref, toRaw } from 'vue'
+    import { onMounted, ref, toRaw, watch } from 'vue'
 
     import SelectOrCreateForm from '../components/select_or_create_form.vue'
     import { send_api } from '../lib/request'
-    import { STATE } from '../lib/enums'
+    import { PLOT_COLOR_TYPES, STATE } from '../lib/enums'
     import { map_store } from '../stores/map_store'
+    import { settings_store } from '../stores/settings_store'
 
     const props = defineProps([ 'formData', 'invalidData', 'invalidDataMessage' ])
     const designations = ref([])
@@ -118,38 +119,73 @@
     const task_name_already_exists = ref(false)
 
     let section_deleted = false
+    let region_color = "000000"
 
     onMounted(() => {
         map_store.current_region_ind = -1
-        // Load designations
-        send_api("GET", "designations").then((response) => {
-            designations.value = JSON.parse(response.response)
-        }).catch((error) => {
-            console.error("Error when loading designations ...")
-            console.error(error)
-        })
-        // Load varieties
-        send_api("GET", "varieties").then((response) => {
-            varieties.value = JSON.parse(response.response)
-        }).catch((error) => {
-            console.error("Error when loading varieties ...")
-            console.error(error)
-        })
-        // Load prunings
-        send_api("GET", "prunings").then((response) => {
-            prunings.value = JSON.parse(response.response)
-        }).catch((error) => {
-            console.error("Error when loading prunings ...")
-            console.error(error)
-        })
-        // Load foldings
-        send_api("GET", "foldings").then((response) => {
-            foldings.value = JSON.parse(response.response)
-        }).catch((error) => {
-            console.error("Error when loading foldings ...")
-            console.error(error)
+        
+        let dvpf_promises = [
+            // Load designations
+            send_api("GET", "designations").then((response) => {
+                designations.value = JSON.parse(response.response)
+            }).catch((error) => {
+                console.error("Error when loading designations ...")
+                console.error(error)
+            }),
+            // Load varieties
+            send_api("GET", "varieties").then((response) => {
+                varieties.value = JSON.parse(response.response)
+            }).catch((error) => {
+                console.error("Error when loading varieties ...")
+                console.error(error)
+            }),
+            // Load prunings
+            send_api("GET", "prunings").then((response) => {
+                prunings.value = JSON.parse(response.response)
+            }).catch((error) => {
+                console.error("Error when loading prunings ...")
+                console.error(error)
+            }),
+            // Load foldings
+            send_api("GET", "foldings").then((response) => {
+                foldings.value = JSON.parse(response.response)
+            }).catch((error) => {
+                console.error("Error when loading foldings ...")
+                console.error(error)
+            })
+        ]
+        Promise.all(dvpf_promises).then(() => {
+            set_region_color()
         })
     })
+
+    const set_region_color = () => {
+        if (settings_store.plot_color_type == PLOT_COLOR_TYPES.DESIGNATION) {
+            for (let designation of designations.value) {
+                if (props.formData.designation.id == designation.id)
+                    region_color = designation.color
+            }
+        }
+        else if (settings_store.plot_color_type == PLOT_COLOR_TYPES.VARIETY) {
+            for (let variety of varieties.value) {
+                if (props.formData.variety.id == variety.id)
+                    region_color = variety.color
+            }
+        }
+        else if (settings_store.plot_color_type == PLOT_COLOR_TYPES.PRUNING) {
+            for (let pruning of prunings.value) {
+                if (props.formData.pruning.id == pruning.id)
+                    region_color = pruning.color
+            }
+        }
+        else {
+            for (let folding of foldings.value) {
+                if (props.formData.folding.id == folding.id)
+                    region_color = folding.color
+            }
+        }
+        map_store.regions_color.fill(region_color)
+    }
 
     const delete_plot_section = (plot_section_idx) => {
         props.formData.plot_sections.splice(plot_section_idx, 1)
@@ -200,7 +236,7 @@
             idx: props.formData.plot_sections.length
         })
         map_store.regions.push([])
-        map_store.regions_color.push(get_variety_color(props.formData.variety.id))
+        map_store.regions_color.push(region_color)
         map_store.lines.push([])
         map_store.lines_done.push([])
         map_store.lines_highlighted.push([])
@@ -221,14 +257,6 @@
         }
         else
             map_store.current_region_ind = section_idx
-    }
-
-    const get_variety_color = (variety_id) => {
-        for (let variety of varieties.value) {
-            if (variety_id == variety.id)
-                return variety.color
-        }
-        return "000000"
     }
 
     const create_designation_variety_pruning_folding = () => {
@@ -293,6 +321,11 @@
             }
         }
     }
+
+    watch(() => props.formData.designation.id, () => { set_region_color() })
+    watch(() => props.formData.variety.id, () => { set_region_color() })
+    watch(() => props.formData.pruning.id, () => { set_region_color() })
+    watch(() => props.formData.folding.id, () => { set_region_color() })
 
     defineExpose({
         create_designation_variety_pruning_folding,

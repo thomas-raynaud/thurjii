@@ -3,7 +3,7 @@
         <h2>Paramètres</h2>
         <div class="row">
             <div class="col-auto">
-                <p>Couleur utilisée pour les parcelles :</p>
+                <p>Coloration des parcelles en fonction de :</p>
             </div>
             <div class="col">
                 <select class="form-control" v-model="settings_store.plot_color_type">
