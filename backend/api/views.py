@@ -36,6 +36,8 @@ class PlotSectionViewSet(viewsets.ModelViewSet):
         if len(request.data) == 1 and request.data[0]['properties']['name'] == '':
             plot = Plot.objects.get(pk = plot_id)
             request.data[0]['properties']['name'] = plot.name
+        for i in range(len(request.data)):
+            request.data[i]['properties']['sum_distance_lines'] = 0.0
         serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -93,6 +95,14 @@ class LineViewSet(viewsets.ModelViewSet):
                 )
                 line_state.save()
         # Update plot section's lines length
+        for plot_section in plot_sections:
+            lines = Line.objects.filter(plot_section=plot_section.id)
+            sum_distances = 0.0
+            for line in lines:
+                sum_distances += get_distance(line.location)
+            plot_section.sum_distance_lines = sum_distances
+            plot_section.save()
+
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data['features'], status=status.HTTP_201_CREATED, headers=headers)
 

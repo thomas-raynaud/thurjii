@@ -42,20 +42,15 @@ class Plot(models.Model):
         plot_sections = PlotSection.objects.filter(plot=self.id)
         if len(plot_sections) == 0:
             return 0
-        return float(sum(plot_section.get_sum_distance_lines() for plot_section in plot_sections))
+        return float(sum(plot_section.sum_distance_lines for plot_section in plot_sections))
 
 class PlotSection(models.Model):
     name = models.CharField(max_length=50)
     plot = models.ForeignKey(Plot, on_delete=models.CASCADE)
     region = modelsPG.PolygonField()
+    sum_distance_lines = models.DecimalField(max_digits=8, decimal_places=2)
     def __str__(self):
         return self.name + "(" + self.plot.name + ")"
-    def get_sum_distance_lines(self):
-        lines = Line.objects.filter(plot_section=self.id)
-        sum_distances = 0.0
-        for line in lines:
-            sum_distances += get_distance(line.location)
-        return sum_distances
 
 class Group(models.Model):
     name = models.CharField(max_length=50, unique=True)

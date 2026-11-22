@@ -16,7 +16,7 @@ class PlotSectionSerializer(GeoFeatureModelSerializer):
     class Meta:
         model = PlotSection
         geo_field = "region"
-        fields = [ 'id', 'name', 'area', 'plot' ]
+        fields = [ 'id', 'name', 'area', 'plot', 'sum_distance_lines' ]
 
 class DesignationSerializer(serializers.ModelSerializer):
     class Meta:
