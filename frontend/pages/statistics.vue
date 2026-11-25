@@ -125,6 +125,7 @@
                 let designations_in_progress_map = new Map()
                 let designations_done_map = new Map()
                 for (let plot_task of plot_tasks) {
+                    plot_task.completion = Math.round(plot_task.completion * 10000) / 10000 // round completion in order to detect correctly plot tasks that are done
                     if (plot_task.season == settings_store.current_season && plot_task.task == task.id) {
                         let plot = plots[plot_id_ind_map.get(plot_task.plot)]
                         let total_area_plot = plot.plot_sections.reduce((acc, section) => acc + section.area, 0)
