@@ -25,7 +25,7 @@
 </style>
 
 <script setup>
-    import { useTemplateRef, ref, onMounted, watch } from 'vue'
+    import { useTemplateRef, ref, onMounted, watch, toRaw } from 'vue'
 
     import MapDisplay from './map_display.vue'
     import MapCanvas from './map_canvas.vue'
@@ -361,6 +361,12 @@
                 map_store.selecting_zone = true
                 map_store.zone_selection.start = get_mouse_pos({ x: e.clientX, y: e.clientY }, container.value)
                 map_store.zone_selection.end = map_store.zone_selection.start
+                if (e.shiftKey == true) {
+                    map_store.lines_highlighted_prev = structuredClone(toRaw(map_store.lines_highlighted))
+                }
+                else {
+                    map_store.lines_highlighted_prev = new Array(map_store.lines.length).fill([])
+                }
             }
             canvas.value.draw()
         }
@@ -458,6 +464,9 @@
         if (event.shiftKey == false) {
             map_store.lines_highlighted = new Array(map_store.lines.length).fill([])
         }
+        else {
+            map_store.lines_highlighted = structuredClone(toRaw(map_store.lines_highlighted_prev))
+        }
         let rect = [
             { x: map_store.zone_selection.start.x, y: map_store.zone_selection.start.y },
             { x: map_store.zone_selection.start.x, y: map_store.zone_selection.end.y },
@@ -475,7 +484,7 @@
                         break
                     }
                 }
-                for (let line_highlighed of map_store.lines_highlighted[line_section_ind]) {
+                for (let line_highlighed of map_store.lines_highlighted_prev[line_section_ind]) {
                     if (line.id == line_highlighed.id) {
                         line_already_highlighted = true
                         break
