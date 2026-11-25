@@ -455,7 +455,9 @@
 
     const update_line_selection = (event) => {
         map_store.zone_selection.end = get_mouse_pos({ x: event.clientX, y: event.clientY }, container.value)
-        map_store.lines_highlighted = []
+        if (event.shiftKey == false) {
+            map_store.lines_highlighted = new Array(map_store.lines.length).fill([])
+        }
         let rect = [
             { x: map_store.zone_selection.start.x, y: map_store.zone_selection.start.y },
             { x: map_store.zone_selection.start.x, y: map_store.zone_selection.end.y },
@@ -464,16 +466,22 @@
         ]
         let line_section_ind = 0
         for (let lines_section of map_store.lines) {
-            map_store.lines_highlighted.push([])
             for (let line of lines_section) {
                 let line_already_done = false
+                let line_already_highlighted = false
                 for (let line_done of map_store.lines_done[line_section_ind]) {
                     if (line.id == line_done.id) {
                         line_already_done = true
                         break
                     }
                 }
-                if (line_already_done)
+                for (let line_highlighed of map_store.lines_highlighted[line_section_ind]) {
+                    if (line.id == line_highlighed.id) {
+                        line_already_highlighted = true
+                        break
+                    }
+                }
+                if (line_already_done || line_already_highlighted)
                     continue
                 let line_in_rect = false
                 for (let i = 0; i < line.loc.length - 1; i++) {

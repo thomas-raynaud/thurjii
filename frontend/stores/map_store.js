@@ -25,6 +25,7 @@ export const map_store = reactive({
     lines: [[]],
     lines_done: [[]],
     lines_highlighted: [[]],
+    lines_highlighted_prev: [[]],
 
     show_plot_names: true,
     // Plot section related arrays, all with the same index. Mercator coordinates
